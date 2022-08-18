@@ -34,7 +34,7 @@ android:layout_centerVertical="true"
                 <ImageView
                     android:id="@+id/test_img"
                     android:visibility="gone"
-                    android:layout_width="1080px"
+                    android:layout_width="wrap_content"
                     android:layout_height="1440px"
                     android:src="@drawable/bus" />
 
