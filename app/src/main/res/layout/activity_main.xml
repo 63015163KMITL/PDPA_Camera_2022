@@ -17,7 +17,7 @@
         <!--
 
 android:layout_centerVertical="true"
-               -->
+
 
         <RelativeLayout
             android:id="@+id/GetSizeImg"
@@ -26,58 +26,56 @@ android:layout_centerVertical="true"
             android:layout_height="wrap_content">
 
             <RelativeLayout
-                android:background="#00FF00"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/main_relative_layout">
+                android:id="@+id/main_relative_layout"
+                android:layout_width="1080px"
+                android:layout_height="1920px"
+                android:background="#00FF00">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="1920px"
+                    android:src="@drawable/bus"
+                    android:visibility="gone" />
+
+                <androidx.camera.view.PreviewView
+                    android:id="@+id/previewView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
 
                 <ImageView
                     android:id="@+id/test_img"
-                    android:visibility="gone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="1440px"
-                    android:src="@drawable/bus" />
-
-                <androidx.camera.view.PreviewView
-
-                    android:id="@+id/previewView"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
+                    android:layout_width="1080px"
+                    android:layout_height="1080px"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/frame_grid" />
 
                 <LinearLayout
-                    android:orientation="horizontal"
-                    android:background="#CC000000"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:background="#CC000000"
+                    android:orientation="horizontal">
+
 
                     <TextView
-                        android:textColor="#00ff00"
                         android:id="@+id/text_debug"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:textColor="#00ff00" />
 
                     <TextView
-                        android:layout_marginLeft="10dp"
                         android:id="@+id/text_debug2"
-                        android:textColor="#ff0000"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:textColor="#ff0000" />
 
                 </LinearLayout>
 
             </RelativeLayout>
 
-
-
-
-
         </RelativeLayout>
-
-
-
-
-
-
+        -->
     </RelativeLayout>
 
     <RelativeLayout

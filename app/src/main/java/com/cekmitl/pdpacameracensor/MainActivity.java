@@ -37,6 +37,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -80,38 +82,17 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        //int height = displayMetrics.heightPixels;
-        //int width = displayMetrics.widthPixels;
+        //SET Fullscreen
+        //requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+        //        WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+
+        setContentView(R.layout.new_preview);
 
         txtDebug = (TextView) findViewById(R.id.text_debug);
         txtDebug2 = (TextView) findViewById(R.id.text_debug2);
-
-        double s = 4.21875;
-
-       //ImageView test_img = findViewById(R.id.test_img);
-        //test_img.setLayoutParams(new ViewGroup.LayoutParams(150, 150));
-        //ViewGroup.LayoutParams params = test_img.getLayoutParams();
-        //params.width = Math.round((float)(256 * s));
-        //params.height = Math.round((float)(256 * s));
-        //test_img.setLayoutParams(params);
-
-        //0.818359375 0.33203125 0.3359375 0.30859375
-        //Toast.makeText(this, "X : " + x + " Y : " + y + " W : " + w + " H : " + h, Toast.LENGTH_SHORT).show();
-       // float x = 2140/1280;
-
-        //int n = Integer.parseInt(Math.round(300) + "");
-        //Toast.makeText(this, "n = " + n, Toast.LENGTH_SHORT).show();
-        //Toast.makeText(this, "n 2 = " + 300*1.828125, Toast.LENGTH_SHORT).show();
-
-       //setFocusView(0.158203125,0.28125,0.33203125,0.28515625);
-       //setFocusView(0.818359375,0.33203125,0.3359375,0.30859375);
-
-        //setFocusView(0.208359375,1.3,0.3359375,0.30859375);
-
 
         //0.461358 0.338458 0.200941 0.198085
         //setFocusView(0.461358,0.338458,0.200941,0.198085);
@@ -177,6 +158,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 e.printStackTrace();
             }
         }, getExecutor());
+
+
+
+
+        //setContentView(R.layout.new_preview);
     }
 
 
