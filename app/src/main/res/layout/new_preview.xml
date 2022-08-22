@@ -36,13 +36,27 @@
                 android:layout_height="20dp"
                 android:layout_centerHorizontal="true"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="5dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="15dp"
                 android:layout_marginTop="5dp"
-                android:layout_marginEnd="5dp"
                 android:layout_marginBottom="5dp"
                 android:background="#00000000"
                 android:scaleType="fitCenter"
                 android:src="@drawable/ic_flash_off" />
+
+            <ImageButton
+                android:layout_width="30dp"
+                android:layout_height="20dp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_timmer_3s" />
+
 
         </LinearLayout>
 
@@ -81,13 +95,40 @@
             android:layout_marginBottom="5dp"
             android:orientation="horizontal">
 
+            <ImageButton
+                android:id="@+id/change_resolution"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:background="@drawable/ic_resol_4_3"
+                android:scaleType="fitCenter" />
+
+            <ImageButton
+                android:id="@+id/reverse_camera_button"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginRight="15dp"
+                android:layout_marginBottom="5dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_flip_cam" />
+
 
             <LinearLayout
-
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <ImageView
                     android:id="@+id/icon_recording"
@@ -112,22 +153,24 @@
 
     <!-- CENTER LAYOUT -->
     <RelativeLayout
+        android:id="@+id/main_preview"
         android:orientation="vertical"
-        android:background="#000000"
-        android:layout_width="1080px"
-        android:layout_height="1920px">
+        android:background="#000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
 
         <RelativeLayout
-            android:layout_width="1080px"
-            android:layout_height="1440px"
-            android:background="#000000">
+            android:id="@+id/frame_top_camera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#000">
 
             <RelativeLayout
                 android:id="@+id/main_relative_layout"
                 android:layout_centerVertical="true"
-                android:layout_width="1080px"
-                android:layout_height="1440px"
-                android:background="#0000ff">
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#000">
 
                 <androidx.camera.view.PreviewView
                     android:id="@+id/previewView"
@@ -175,7 +218,7 @@
             android:layout_alignParentBottom="true"
             android:background="#55000000"
             android:orientation="vertical"
-            android:paddingBottom="10dp">
+            android:paddingBottom="5dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -242,7 +285,6 @@
                     android:src="@drawable/ic_camera" />
 
                 <ImageButton
-                    android:id="@+id/reverse_camera_button"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_alignParentRight="true"
@@ -253,7 +295,7 @@
                     android:layout_marginBottom="5dp"
                     android:background="#00000000"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/ic_flip_cam" />
+                    android:src="@drawable/ic_menu" />
 
             </RelativeLayout>
 

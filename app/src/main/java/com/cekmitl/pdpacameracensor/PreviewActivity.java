@@ -30,7 +30,13 @@ public class PreviewActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         String value = intent.getStringExtra("key");
-        Toast.makeText(this, "value = " + value, Toast.LENGTH_SHORT).show();
+        String value_resolution = intent.getStringExtra("resolution");
+
+
+        //byte[] byteArray = getIntent().getByteArrayExtra("image");
+        //Bitmap bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+
+        // Toast.makeText(this, "value = " + value, Toast.LENGTH_SHORT).show();
 
         File file = new File(value);
         Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
@@ -38,8 +44,42 @@ public class PreviewActivity extends AppCompatActivity {
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
 
-        Bitmap rotated = Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getWidth(), myBitmap.getHeight(),
-                matrix, true);
+        //Bitmap rotated = Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getHeight(), (myBitmap.getHeight()/16)*9,
+                //matrix, true);
+
+        int img_height = 0;
+        int img_width = 0;
+        int y = 0;
+        int x = 0;
+
+        if(value_resolution.equals("4:3")){
+            img_height = myBitmap.getWidth();
+            img_width = (myBitmap.getWidth() / 4 ) * 3;
+            y = (myBitmap.getHeight() - img_width) / 2;
+            x = (img_width - myBitmap.getHeight()) / 2;
+
+        }else if(value_resolution.equals("16:9")){
+            img_height = myBitmap.getWidth();
+            img_width = (myBitmap.getWidth() / 16 ) * 9;
+            y = (myBitmap.getHeight() - img_width) / 2;
+            x = 0;//(img_width - myBitmap.getHeight()) / 2;
+
+        }else if(value_resolution.equals("1:1")){
+            img_height = myBitmap.getHeight();
+            img_width = myBitmap.getHeight();
+            y = (myBitmap.getHeight() - img_width) / 2;
+            x = (myBitmap.getWidth() - myBitmap.getHeight()) / 2;
+        }
+
+        Toast.makeText(PreviewActivity.this, "img_height = " + img_height + "\nimg_width = " + img_width + "\ny = " + y  + "\nx = " + x, Toast.LENGTH_SHORT).show();
+
+
+        Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
+//Bitmap rotated = Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getWidth(), myBitmap.getHeight(), matrix, true);
+
+        //Toast.makeText(PreviewActivity.this, "(img_width - myBitmap.getHeight()) / 2 = " + (img_width - myBitmap.getHeight()) / 2 + "\nheight = " + myBitmap.getHeight(), Toast.LENGTH_LONG).show();
+
+
 
 
         //#####################################################################################

@@ -7,11 +7,20 @@
     android:background="#000000"
     tools:context=".PreviewActivity">
 
-    <ImageView
-        android:id="@+id/ImagePreview"
+    <LinearLayout
+        android:gravity="center_vertical"
+        android:background="#000"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:src="@drawable/camera" />
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/ImagePreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+
 
     <LinearLayout
         android:padding="5dp"

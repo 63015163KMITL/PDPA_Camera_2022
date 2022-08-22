@@ -17,6 +17,8 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
 
 import android.Manifest;
+import android.animation.AnimatorSet;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
@@ -33,12 +35,14 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
@@ -65,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     PreviewView previewView;
     private ImageCapture imageCapture;
     private VideoCapture videoCapture;
-    private ImageButton btnGallery, bCapture, btnReverse;
+    private ImageButton btnGallery, bCapture, btnReverse, btnChangResol;
     private boolean statRecord, cam_reverse_state;
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
 
@@ -76,6 +80,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     private TextView tvTimer, txtDebug, txtDebug2;
     private RelativeLayout relativeLyout, fram_camera;
     public int img_width, img_height;
+
+    //Resolution Image
+    private String state_serol = "4:3";
 
 
 
@@ -91,6 +98,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         setContentView(R.layout.new_preview);
 
+        ChangResolutionImage(4, 3);
+
         txtDebug = (TextView) findViewById(R.id.text_debug);
         txtDebug2 = (TextView) findViewById(R.id.text_debug2);
 
@@ -99,8 +108,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         //0 0.356173 0.413889 0.0432099 0.0444444
         //0 0.167901, 0.411574, 0.0469136, 0.0490741
 
-        setFocusView(0.356173, 0.413889, 0.0432099, 0.0444444);
-        setFocusView(0.167901, 0.411574, 0.0469136, 0.0490741);
+        //setFocusView(0.356173, 0.413889, 0.0432099, 0.0444444);
+        //setFocusView(0.167901, 0.411574, 0.0469136, 0.0490741);
 
 
 
@@ -115,10 +124,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             previewView = findViewById(R.id.previewView);                       // Preview Camera X
             fram_camera = findViewById(R.id.fram_camera);
 
+
+
         //PHOTO
             bCapture = findViewById(R.id.bCapture);                             // ปุ่มถ่ายรูป Capture Button
             btnGallery = findViewById(R.id.button_gallery);                     // ปุ่มดูรูปในอัลบั้ม Gallery
             btnReverse = findViewById(R.id.reverse_camera_button);              // ปุ่มดสลับกล้องหน้าหลัง Font / BACK
+            btnChangResol = findViewById(R.id.change_resolution);
 
         //VIDEO
             ImageView imgV = findViewById(R.id.icon_recording);                 // สัญลักษณ์ บันทึกวีดิโอ
@@ -145,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         bCapture.setOnLongClickListener(this);
         btnGallery.setOnClickListener(this);
         btnReverse.setOnClickListener(this);
+        btnChangResol.setOnClickListener(this);
 
 
 
@@ -163,6 +176,94 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
 
         //setContentView(R.layout.new_preview);
+
+
+
+    }
+
+    public static void slideView(View view,
+                                 int currentHeight,
+                                 int newHeight) {
+
+        ValueAnimator slideAnimator = ValueAnimator
+                .ofInt(currentHeight, newHeight)
+                .setDuration(500);
+
+        /* We use an update listener which listens to each tick
+         * and manually updates the height of the view  */
+
+        slideAnimator.addUpdateListener(animation1 -> {
+            Integer value = (Integer) animation1.getAnimatedValue();
+            view.getLayoutParams().height = value.intValue();
+            view.requestLayout();
+        });
+
+        /*  We use an animationSet to play the animation  */
+
+        AnimatorSet animationSet = new AnimatorSet();
+        animationSet.setInterpolator(new AccelerateDecelerateInterpolator());
+        animationSet.play(slideAnimator);
+        animationSet.start();
+    }
+
+    public void ChangResolutionImage(int h, int w){
+        Display display = getWindowManager().getDefaultDisplay();
+        int width = display.getWidth();
+
+
+        img_width = width;
+        img_height = (width / w) * h;
+
+        RelativeLayout view = findViewById(R.id.frame_top_camera);
+        RelativeLayout view2 = findViewById(R.id.main_relative_layout);
+
+        if (h == 1){
+            slideView(view, view.getLayoutParams().height, 1440);
+        }else {
+            slideView(view, view.getLayoutParams().height, img_height);
+        }
+
+        slideView(view2, view2.getLayoutParams().height, img_height);
+
+        /*
+        RelativeLayout view = findViewById(R.id.frame_top_camera);
+        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
+
+        layoutParams.width = img_width;
+        layoutParams.height = img_height;
+        view.setLayoutParams(layoutParams);
+
+        RelativeLayout view2 = findViewById(R.id.main_relative_layout);
+        ViewGroup.LayoutParams layoutParams2 = view2.getLayoutParams();
+
+        layoutParams2.width = img_width;
+        layoutParams2.height = img_height;
+        view2.setLayoutParams(layoutParams2);
+
+         */
+
+
+
+
+
+
+
+        //----------------------------------------------//
+        RelativeLayout view3 = findViewById(R.id.main_preview);
+        ViewGroup.LayoutParams layoutParams3 = view3.getLayoutParams();
+
+        layoutParams3.width = img_width;
+        layoutParams3.height = (width / 9) * 16;
+        view3.setLayoutParams(layoutParams3);
+
+
+
+        //txtDebug.setText("Height = " + img_height + "\nWidht = " + img_width);
+        //Toast.makeText(MainActivity.this, "Height = " + img_height + "\nWidht = " + img_width, Toast.LENGTH_SHORT).show();
+
+
+        //txt.setText("Height = " + height + "\nWidht = " + width);
+
     }
 
 
@@ -189,6 +290,22 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             case R.id.button_gallery:
                 Intent galleryIntent = new Intent(MainActivity.this, GalleryActivity.class);
                 MainActivity.this.startActivity(galleryIntent);
+                break;
+            case R.id.change_resolution:
+                if(state_serol.equals("4:3")){
+                    ChangResolutionImage(16, 9);
+                    state_serol = "16:9";
+                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_16_9);
+                }else if(state_serol.equals("16:9")){
+                    ChangResolutionImage(1, 1);
+                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_1_1);
+                    state_serol = "1:1";
+
+                }else if(state_serol.equals("1:1")){
+                    ChangResolutionImage(4, 3);
+                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_4_3);
+                    state_serol = "4:3";
+                }
                 break;
         }
     }
@@ -351,36 +468,16 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
                             //นำภาพในไฟล์ชั่วคราว ดึงมาใส่ใน Object BitMap
                             Bitmap myBitmap = BitmapFactory.decodeFile(file_temp.getAbsolutePath());
-/*
-                            int x, y, h, w;
-                            double s = 1;
-
-                            double X = 0.461358;
-                            double Y = 0.338458;
-                            double height = 0.200941;
-                            double width = 0.198085;
-
-
-                            //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-                            h = Math.round((float)(height * img_width * s));
-                            w = Math.round((float)(width * img_width * s));
-
-                            x = Math.round((float)(X * img_height * s)) - (w/2);
-                            y = Math.round((float)(Y * img_width * s)) - (h/2);
-
-                            Bitmap newBitmap = Bitmap.createBitmap(myBitmap,x,y,w,h);
-
- */
-                            //getImageUri((MainActivity.this), newBitmap);
-
 
                             //Preview ใน iCon ของ Gallery
                             ImageButton imgBtn = findViewById(R.id.button_gallery);
                             imgBtn.setImageBitmap(myBitmap);
 
+
                             //เปิดหน้า Preview Activity
                             Intent myIntent = new Intent(MainActivity.this, PreviewActivity.class);
                             myIntent.putExtra("key", file_temp.getAbsolutePath()); //Optional parameters
+                            myIntent.putExtra("resolution",state_serol);
                             MainActivity.this.startActivity(myIntent);
                         }
 
@@ -407,21 +504,19 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                ImageView img = (ImageView) findViewById(R.id.test_img);
-                img.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                img_width  = img.getMeasuredWidth();
-                img_height = img.getMeasuredHeight();
+                RelativeLayout mainPreview = (RelativeLayout) findViewById(R.id.main_preview);
+                mainPreview.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                img_width  = mainPreview.getMeasuredWidth();
+                img_height = mainPreview.getMeasuredHeight();
                 txtDebug.setText("Height = " + img_height + "\nWidht = " + img_width);
-                Toast.makeText(MainActivity.this, "Height = " + img_height + "\nWidht = " + img_width, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MainActivity.this, "Height = " + img_height + "\nWidht = " + img_width, Toast.LENGTH_SHORT).show();
+
 
                 //txt.setText("Height = " + height + "\nWidht = " + width);
-
-
-
             }
         });
 
-        Toast.makeText(MainActivity.this, "X Height = " + img_height + "\nX Widht = " + img_width, Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this, "X Height = " + img_height + "\nX Widht = " + img_width, Toast.LENGTH_SHORT).show();
 
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
         h = Math.round((float)(height * 1440 * s));
@@ -449,7 +544,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         params1.setMargins(y,x,0,0);
         rl.addView(focus_frame, params1);
 
-
         //rl.setLayoutParams(params1);
        //rl.addView(focus_frame);
 
@@ -468,9 +562,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         //int heightX = fram_camera.getLayoutParams().width;
 
         //Toast.makeText(this, "width " + String.valueOf(widthX) + " height " + String.valueOf(heightX), Toast.LENGTH_LONG).show();
-
-
-
     }
 
     public Uri getImageUri(Context inContext, Bitmap inImage) {
