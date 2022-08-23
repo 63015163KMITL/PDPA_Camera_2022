@@ -47,6 +47,7 @@ public interface Classifier {
             return detectedClass;
         }
 
+
         @Override
         public String toString() {
             String resultString = "";

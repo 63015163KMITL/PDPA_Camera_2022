@@ -43,7 +43,7 @@ public class YoloV5Classifier implements Classifier {
         numBytesPerChannel = 4; // Floating point
 
         d.INPUT_SIZE = inputSize;
-        d.imgData = ByteBuffer.allocateDirect(1 * d.INPUT_SIZE * d.INPUT_SIZE * 3 * numBytesPerChannel);
+        d.imgData = ByteBuffer.allocateDirect(d.INPUT_SIZE * d.INPUT_SIZE * 3 * numBytesPerChannel);
         d.imgData.order(ByteOrder.nativeOrder());
         d.intValues = new int[d.INPUT_SIZE * d.INPUT_SIZE];
 
@@ -66,7 +66,7 @@ public class YoloV5Classifier implements Classifier {
     private  int output_box;
 
     // Number of threads in the java app
-    private static final int NUM_THREADS = 2;
+    private static final int NUM_THREADS = 4;
 
     /** The loaded TensorFlow Lite model. */
     private MappedByteBuffer tfliteModel;
@@ -82,48 +82,6 @@ public class YoloV5Classifier implements Classifier {
     private int numClass;
 
     private YoloV5Classifier() {
-    }
-    //non maximum suppression
-    protected ArrayList<Recognition> nms(ArrayList<Recognition> list) {
-        ArrayList<Recognition> nmsList = new ArrayList<Recognition>();
-
-        for (int k = 0; k < labels.size(); k++) {
-            //1.find max confidence per class
-            PriorityQueue<Recognition> pq =
-                    new PriorityQueue<Recognition>(
-                            50,
-                            new Comparator<Recognition>() {
-                                @Override
-                                public int compare(final Recognition lhs, final Recognition rhs) {
-                                    // Intentionally reversed to put high confidence at the head of the queue.
-                                    return Float.compare(rhs.getConfidence(), lhs.getConfidence());
-                                }
-                            });
-
-            for (int i = 0; i < list.size(); ++i) {
-                if (list.get(i).getDetectedClass() == k) {
-                    pq.add(list.get(i));
-                }
-            }
-            //2.do non maximum suppression
-            while (pq.size() > 0) {
-                //insert detection with max confidence
-                Recognition[] a = new Recognition[pq.size()];
-                Recognition[] detections = pq.toArray(a);
-                Recognition max = detections[0];
-                nmsList.add(max);
-                pq.clear();
-
-                for (int j = 1; j < detections.length; j++) {
-                    Recognition detection = detections[j];
-                    RectF b = detection.getLocation();
-                    if (box_iou(max.getLocation(), b) < mNmsThresh) {
-                        pq.add(detection);
-                    }
-                }
-            }
-        }
-        return nmsList;
     }
 
     protected float mNmsThresh = 0.6f;
@@ -189,18 +147,20 @@ public class YoloV5Classifier implements Classifier {
             for (int j = 0; j < numClass + 5; ++j) {
                 out[0][i][j] = byteBuffer.getFloat();
             }
+            // ทำการแปลงจากค่าในช่วง [0,1] ให้เป็นตำแหน่งของภาพ (*ด้วยขนาดของภาพ)
             // Denormalize xywh
-            for (int j = 0; j < 4; ++j) {
-                out[0][i][j] *= INPUT_SIZE;
-            }
+//            for (int j = 0; j < 4; ++j) {
+//                out[0][i][j] *= INPUT_SIZE;
+//
+//            }
         }
         for (int i = 0; i < output_box; ++i){
             final int offset = 0;
             final float confidence = out[0][i][4];
             int detectedClass = -1;
             float maxClass = 0;
-
             final float[] classes = new float[labels.size()];
+
             for (int c = 0; c < labels.size(); ++c) {
                 classes[c] = out[0][i][5 + c];
             }
@@ -217,7 +177,6 @@ public class YoloV5Classifier implements Classifier {
                 final float yPos = out[0][i][1];
                 final float w = out[0][i][2];
                 final float h = out[0][i][3];
-
                 final RectF rect = new RectF(
                                 Math.max(0, xPos - w / 2),
                                 Math.max(0, yPos - h / 2),
@@ -228,5 +187,45 @@ public class YoloV5Classifier implements Classifier {
         }
         final ArrayList<Recognition> recognitions = nms(detections);
         return recognitions;
+    }
+
+    //non maximum suppression
+    protected ArrayList<Recognition> nms(ArrayList<Recognition> list) {
+        ArrayList<Recognition> nmsList = new ArrayList<Recognition>();
+
+        for (int k = 0; k < labels.size(); k++) {
+            //1.find max confidence per class
+            PriorityQueue<Recognition> pq = new PriorityQueue<Recognition>(50, new Comparator<Recognition>() {
+                @Override
+                public int compare(final Recognition lhs, final Recognition rhs) {
+                    // Intentionally reversed to put high confidence at the head of the queue.
+                    return Float.compare(rhs.getConfidence(), lhs.getConfidence());
+                }
+            });
+
+            for (int i = 0; i < list.size(); ++i) {
+                if (list.get(i).getDetectedClass() == k) {
+                    pq.add(list.get(i));
+                }
+            }
+            //2.do non maximum suppression
+            while (pq.size() > 0) {
+                //insert detection with max confidence
+                Recognition[] a = new Recognition[pq.size()];
+                Recognition[] detections = pq.toArray(a);
+                Recognition max = detections[0];
+                nmsList.add(max);
+                pq.clear();
+
+                for (int j = 1; j < detections.length; j++) {
+                    Recognition detection = detections[j];
+                    RectF b = detection.getLocation();
+                    if (box_iou(max.getLocation(), b) < mNmsThresh) {
+                        pq.add(detection);
+                    }
+                }
+            }
+        }
+        return nmsList;
     }
 }

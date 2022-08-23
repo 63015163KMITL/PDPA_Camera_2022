@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -20,7 +21,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.4f;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
     private Bitmap img;
     private Classifier detector;
     private Bitmap cropBitmap;
@@ -90,6 +91,13 @@ public class MainActivity extends AppCompatActivity {
         paint.setStrokeWidth(1.5f);
         for (final Classifier.Recognition result : results) {
             final RectF location = result.getLocation();
+
+            // ตำแหน่งที่ได้อยู่ในช่วง [0,1] ต้องนำไปคูณกับขนาดของรูปก่อน
+            location.left = location.left * 640;
+            location.top = location.top * 640;
+            location.right = location.right * 640;
+            location.bottom = location.bottom * 640;
+
             if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
                 if (result.getDetectedClass() == 0){
                     paint.setColor(Color.MAGENTA);
