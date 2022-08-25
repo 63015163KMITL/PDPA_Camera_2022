@@ -10,33 +10,29 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.MediaStore;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+
 import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
-    private Bitmap img;
     private Classifier detector;
     private Bitmap cropBitmap;
-    private Button selectButton, detectButton;
     private ImageView imageView;
     public static final int TF_OD_API_INPUT_SIZE = 640;
     private static final String TF_OD_API_MODEL_FILE = "Sbest-fp16.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        selectButton = findViewById(R.id.cameraButton);
-        detectButton = findViewById(R.id.detectButton);
+        Button selectButton = findViewById(R.id.cameraButton);
         imageView = findViewById(R.id.imageView);
 
         try {
@@ -45,50 +41,41 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        selectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/*");
-                startActivityForResult(intent,100);
-            }
+        selectButton.setOnClickListener(view -> {
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            startActivityForResult(intent,100);
         });
 
-        detectButton.setOnClickListener(v -> {Handler handler = new Handler();
-            new Thread(() -> {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        handleResult(cropBitmap);
-                    }
-                });
-            }).start();
-        });
     }
     // เปิดไฟล์ภาพ
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 100){
+            assert data != null;
             Uri uri = data.getData();
             try {
-                img = MediaStore.Images.Media.getBitmap(this.getContentResolver(),uri);
-                cropBitmap = Utils.processBitmap(img, TF_OD_API_INPUT_SIZE);
+                cropBitmap = Utils.processBitmap(MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri), TF_OD_API_INPUT_SIZE);
                 imageView.setImageBitmap(this.cropBitmap);
+                handleResult(cropBitmap);
             }catch (IOException e){
                 e.printStackTrace();
                 finish();
             }
         }
     }
-
+//    long startTime = 0;
     //จัดการกับ Label คำตอบ
     private void handleResult(Bitmap bitmap) {
+//        startTime = System.currentTimeMillis();
         final List<Classifier.Recognition> results = detector.recognizeImage(cropBitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
+//        long endtime = System.currentTimeMillis() - startTime;
+//        Log.d("time", "time " + String.valueOf(endtime));
         final Canvas canvas = new Canvas(bitmap);
         final Paint paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(1.5f);
+        paint.setStrokeWidth(2.0f);
         for (final Classifier.Recognition result : results) {
             final RectF location = result.getLocation();
 
@@ -98,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             location.right = location.right * 640;
             location.bottom = location.bottom * 640;
 
-            if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
+            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
                 if (result.getDetectedClass() == 0){
                     paint.setColor(Color.MAGENTA);
                     canvas.drawRect(location, paint);
@@ -111,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        imageView.setImageBitmap(bitmap);
+
+//        imageView.setImageBitmap(bitmap);
     }
+
 }

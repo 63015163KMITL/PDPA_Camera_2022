@@ -1,13 +1,18 @@
 package com.example.camera_app;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+
+import androidx.annotation.NonNull;
+
 import java.util.List;
 
 public interface Classifier {
+
     List<Recognition> recognizeImage(Bitmap bitmap);
 
-    public class Recognition {
+    class Recognition {
 
         private final String id;
 
@@ -15,9 +20,9 @@ public interface Classifier {
 
         private final Float confidence;
 
-        private RectF location;
+        private final RectF location;
 
-        private int detectedClass;
+        private final int detectedClass;
 
         public Recognition(final String id, final String title, final Float confidence, final RectF location, int detectedClass) {
             this.id = id;
@@ -27,13 +32,13 @@ public interface Classifier {
             this.detectedClass = detectedClass;
         }
 
-        public String getId() {
-            return id;
-        }
+//        public String getId() {
+//            return id;
+//        }
 
-        public String getTitle() {
-            return title;
-        }
+//        public String getTitle() {
+//            return title;
+//        }
 
         public Float getConfidence() {
             return confidence;
@@ -48,6 +53,8 @@ public interface Classifier {
         }
 
 
+        @SuppressLint("DefaultLocale")
+        @NonNull
         @Override
         public String toString() {
             String resultString = "";
