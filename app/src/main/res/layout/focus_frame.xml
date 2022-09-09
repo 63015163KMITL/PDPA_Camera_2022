@@ -4,8 +4,8 @@
     android:layout_height="match_parent">
 
     <ImageView
-        android:layout_width="5dp"
-        android:layout_height="5dp"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
         android:layout_alignParentBottom="true"
         android:rotation="-90"
         android:src="@drawable/ic_svg_corner_focus" />
@@ -14,20 +14,20 @@
         android:layout_alignParentRight="true"
         android:rotation="90"
         android:src="@drawable/ic_svg_corner_focus"
-        android:layout_width="5dp"
-        android:layout_height="5dp"/>
+        android:layout_width="10dp"
+        android:layout_height="10dp"/>
 
     <ImageView
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:rotation="180"
         android:src="@drawable/ic_svg_corner_focus"
-        android:layout_width="5dp"
-        android:layout_height="5dp"/>
+        android:layout_width="10dp"
+        android:layout_height="10dp"/>
 
     <ImageView
-        android:layout_width="5dp"
-        android:layout_height="5dp"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
         android:rotation="0"
         android:src="@drawable/ic_svg_corner_focus" />
 

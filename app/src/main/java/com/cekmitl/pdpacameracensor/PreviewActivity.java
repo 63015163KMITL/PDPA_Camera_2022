@@ -32,12 +32,6 @@ public class PreviewActivity extends AppCompatActivity {
         String value = intent.getStringExtra("key");
         String value_resolution = intent.getStringExtra("resolution");
 
-
-        //byte[] byteArray = getIntent().getByteArrayExtra("image");
-        //Bitmap bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-
-        // Toast.makeText(this, "value = " + value, Toast.LENGTH_SHORT).show();
-
         File file = new File(value);
         Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
 
@@ -93,7 +87,7 @@ public class PreviewActivity extends AppCompatActivity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getImageUri((PreviewActivity.this), myBitmap);
+                getImageUri((PreviewActivity.this), rotated);
                 //String savedImageURL = MediaStore.Images.Media.insertImage((PreviewActivity.this).getContentResolver(), myBitmap, "filename", null);
                 //บันทึกรูปลง Grallery
                 //Uri savedImageURI = Uri.parse(savedImageURL);
