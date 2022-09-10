@@ -187,12 +187,12 @@
 
 
                     <LinearLayout
-                        android:visibility="visible"
+                        android:visibility="gone"
                         android:id="@+id/cap"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="#55000000"
-                        android:orientation="horizontal">
+                        android:orientation="vertical">
 
 
                         <TextView

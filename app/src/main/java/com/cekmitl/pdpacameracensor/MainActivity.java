@@ -1,5 +1,7 @@
 package com.cekmitl.pdpacameracensor;
 
+import static android.widget.Toast.*;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
@@ -100,8 +102,7 @@ import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener {
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
-    private Bitmap img;
+
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
@@ -129,39 +130,18 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     Handler handler = new Handler();
     Runnable runnable;
-    int delay = 150;
+    int delay = 1;
     int state_pdpd = 0;
 
     //DETECT FACE
-    private static final Logger LOGGER = new Logger();
-
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
+    private Classifier detector;
+    private Bitmap cropBitmap;
+    private ImageView imageView;
     public static final int TF_OD_API_INPUT_SIZE = 640;
-
-    private static final boolean TF_OD_API_IS_QUANTIZED = false;
-
     private static final String TF_OD_API_MODEL_FILE = "Sbest-fp16.tflite";
-
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
 
-    // Minimum detection confidence to track a detection.
-    private static final boolean MAINTAIN_ASPECT = true;
-    private Integer sensorOrientation = 90;
-
-    private Classifier detector;
-
-    private Matrix frameToCropTransform;
-    private Matrix cropToFrameTransform;
-    private MultiBoxTracker tracker;
-    private OverlayView trackingOverlay;
-
-    protected int previewWidth = 0;
-    protected int previewHeight = 0;
-
-    private Bitmap sourceBitmap;
-    private Bitmap cropBitmap;
-
-    private Button selectButton, detectButton;
-    private ImageView imageView;
 
 
     @Override
@@ -190,8 +170,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         //setFocusView(0.356173, 0.413889, 0.0432099, 0.0444444);
         //setFocusView(0.167901, 0.411574, 0.0469136, 0.0490741);
 
-        setFocusView(0.4, 0.4, 0.1, 0.1, 999);
-        setFocusView(0.6, 0.4, 0.1, 0.1, 777);
+       // setFocusView(0.4, 0.4, 0.1, 0.1, 999);
+       // setFocusView(0.6, 0.4, 0.1, 0.1, 777);
 
         top_center = (LinearLayout) findViewById(R.id.top_center);
 
@@ -249,6 +229,12 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         }, getExecutor());
 
 
+        try {
+            detector = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
         Thread t2 = new Thread(new Runnable() {
             public void run() {
@@ -259,26 +245,35 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     final int[] i = {0};
 
                     public void run() {
-                        final List<Classifier.Recognition> results = detector.recognizeImage(previewView.getBitmap());
                         handler.postDelayed(runnable, delay * 1);
-                        txtDebug.setText("COUNTER = " + i[0]);
-                        i[0]--;
+
+                        i[0]++;
                         imgViewTest.post(new Runnable() {
                             @Override
                             public void run() {
                                 int n = 128;
 
-                                final Bitmap bitmap = previewView.getBitmap();
+                                long startTime = System.currentTimeMillis();
+
+                                handleResult();
+                                long endTime = System.currentTimeMillis();
+                                //Toast.makeText(MainActivity.this, "Time = " + (endTime - startTime) + " ms", LENGTH_SHORT).show();
+
+                                txtDebug.setText("COUNTER = " + i[0] + "\nTime = " + (endTime - startTime) + " ms");
+                                //final Bitmap bitmap = previewView.getBitmap();
+                                //cropBitmap =
                                 //image.close();
-                                if(bitmap == null){
-                                    return;
-                                }else {
-                                    cropBitmap = getResizedBitmap(bitmap, 256, 256);
-                                    imgViewTest.setImageBitmap(cropBitmap);
+
+                                //if(bitmap == null){
+                               //     return;
+                                //}else {
+                                //    txtDebug2.setText(bitmap.toString());
+                                    //cropBitmap = bitmap;
+                                   // bitmap =
+                                   // handleResult(getResizedBitmap(bitmap, 256, 256));
 
 
-                                    handleResult(cropBitmap, results);
-                                }
+                               // }
 
 
                             }
@@ -297,6 +292,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         //initBox();
         //ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         //ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
+
+
 
     }
 
@@ -471,9 +468,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
+            makeText(this, "landscape", LENGTH_SHORT).show();
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-            Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+            makeText(this, "portrait", LENGTH_SHORT).show();
         }
     }
 
@@ -584,13 +581,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                         new VideoCapture.OnVideoSavedCallback() {
                             @Override
                             public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
-                                Toast.makeText(MainActivity.this, "Video has been saved successfully.", Toast.LENGTH_SHORT).show();
+                                makeText(MainActivity.this, "Video has been saved successfully.", LENGTH_SHORT).show();
 
                             }
 
                             @Override
                             public void onError(int videoCaptureError, @NonNull String message, @Nullable Throwable cause) {
-                                Toast.makeText(MainActivity.this, "Error saving video: " + message, Toast.LENGTH_SHORT).show();
+                                makeText(MainActivity.this, "Error saving video: " + message, LENGTH_SHORT).show();
                             }
                         }
                 );
@@ -613,7 +610,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     new ImageCapture.OnImageSavedCallback() {
                         @Override
                         public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                            Toast.makeText(MainActivity.this, "Photo has been saved successfully.", Toast.LENGTH_SHORT).show();
+                            makeText(MainActivity.this, "Photo has been saved successfully.", LENGTH_SHORT).show();
 
                             //นำภาพในไฟล์ชั่วคราว ดึงมาใส่ใน Object BitMap
                             Bitmap myBitmap = BitmapFactory.decodeFile(file_temp.getAbsolutePath());
@@ -632,7 +629,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
                         @Override
                         public void onError(@NonNull ImageCaptureException exception) {
-                            Toast.makeText(MainActivity.this, "Error saving photo: " + exception.getMessage(), Toast.LENGTH_SHORT).show();
+                            makeText(MainActivity.this, "Error saving photo: " + exception.getMessage(), LENGTH_SHORT).show();
                         }
                     }
             );
@@ -642,7 +639,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 // END - ตั้งค่ากล้อง Camera X ---------------------------------------------------------------------------------------------
 
-    public void setFocusView(double Y, double X, double height, double width, int str) {
+    public void setFocusView(double X, double Y, double width, double height, int str) {
         //removeView();
         double s = 1;
         int x, y, h, w;
@@ -657,7 +654,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 mainPreview.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                 img_width = mainPreview.getMeasuredWidth();
                 img_height = mainPreview.getMeasuredHeight();
-                txtDebug.setText("Height = " + img_height + "\nWidht = " + img_width);
+                //txtDebug.setText("Height = " + img_height + "\nWidht = " + img_width);
                 //Toast.makeText(MainActivity.this, "Height = " + img_height + "\nWidht = " + img_width, Toast.LENGTH_SHORT).show();
 
 
@@ -684,10 +681,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         h = Math.round((float) (height * height2 * s));
         w = Math.round((float) (width * width2 * s));
 
-        x = Math.round((float) (X * height2 * s)) - (h / 2);
-        y = Math.round((float) (Y * width2 * s)) - (w / 2);
+        x = Math.round((float) (X * height2 * s));
+        y = Math.round((float) (Y * width2 * s));
 
-        txtDebug2.setText("x = " + x + "\ny = " + y);
+        //x = Math.round((float) (X * height2 * s)) - (h / 2);
+        //y = Math.round((float) (Y * width2 * s)) - (w / 2);
+
+        //txtDebug2.setText("x = " + x + "\ny = " + y);
 
 
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
@@ -698,7 +698,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             @Override
             public void onClick(View view) {
 
-                Toast.makeText(MainActivity.this, "CLICK = " + focus_frame.getId(), Toast.LENGTH_SHORT).show();
+                makeText(MainActivity.this, "CLICK = " + focus_frame.getId(), LENGTH_SHORT).show();
             }
         });
 
@@ -710,6 +710,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         params1.height = h;
         params1.width = w;
         params1.setMargins(y, x, 0, 0);
+
+
+        //params1.height = (int) Math.round(height * 1440) ;
+        //params1.width = (int) Math.round(width * 1080);
+        //params1.setMargins( (int) Math.round((Y * 1440) + params1.height),
+        //                    (int) Math.round(X * 1080), 0, 0);
+
         rl.addView(focus_frame, params1);
 
         //rl.setLayoutParams(params1);
@@ -777,94 +784,141 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
 
     //DETECT FACE FUNCTION
+    // เปิดไฟล์ภาพ
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (requestCode == 100){
+            assert data != null;
             Uri uri = data.getData();
             try {
-                img = MediaStore.Images.Media.getBitmap(this.getContentResolver(),uri);
-                this.cropBitmap = Utils.processBitmap(img, TF_OD_API_INPUT_SIZE);
-                imageView.setImageBitmap(this.cropBitmap);
+
+                int w = 512, h = 512;
+
+                Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
+               // bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
+
+               // TextView textView = findViewById(R.id.textView);
+
+                cropBitmap = Utils.processBitmap(MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri), TF_OD_API_INPUT_SIZE);
+
+                String str = "" + Utils.processBitmap(MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri), TF_OD_API_INPUT_SIZE);;
+                //Toast.makeText(this, "cropBitmap : " + str, Toast.LENGTH_SHORT).show();
+                txtDebug2.setText("cropBitmap : " + cropBitmap);
+                //cropBitmap = bmp;
+
+                imageView.setImageBitmap(cropBitmap);
+                handleResult(cropBitmap);
+
             }catch (IOException e){
                 e.printStackTrace();
+                finish();
             }
         }
     }
+    //จัดการกับ Label คำตอบ
+    private void handleResult(Bitmap bitmap) {
+//        startTime = System.currentTimeMillis();
+        int w = 512, h = 512;
+
+        Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
+        Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
+        // Canvas canvas = new Canvas(bmp);
+
+        final Bitmap bm = previewView.getBitmap();
+        if (bm != null) {
+            // bitmap =
+            List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
+            //handleResult(getResizedBitmap(bitmap, 256, 256));
 
 
-    private void initBox() {
-        previewHeight = TF_OD_API_INPUT_SIZE;
-        previewWidth = TF_OD_API_INPUT_SIZE;
-        frameToCropTransform =
-                ImageUtils.getTransformationMatrix(
-                        previewWidth, previewHeight,
-                        TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE,
-                        sensorOrientation, MAINTAIN_ASPECT);
+//        long endtime = System.currentTimeMillis() - startTime;
+//        Log.d("time", "time " + String.valueOf(endtime));
+            final Canvas canvas = new Canvas(bitmap);
+            final Paint paint = new Paint();
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(2.0f);
+            for (final Classifier.Recognition result : results) {
+                final RectF location = result.getLocation();
 
-        cropToFrameTransform = new Matrix();
-        frameToCropTransform.invert(cropToFrameTransform);
+                // ตำแหน่งที่ได้อยู่ในช่วง [0,1] ต้องนำไปคูณกับขนาดของรูปก่อน
+                location.left = location.left * 640;
+                location.top = location.top * 640;
+                location.right = location.right * 640;
+                location.bottom = location.bottom * 640;
 
-        tracker = new MultiBoxTracker(this);
-        trackingOverlay = findViewById(R.id.tracking_overlay);
-        trackingOverlay.addCallback(
-                canvas -> tracker.draw(canvas));
-
-        tracker.setFrameConfiguration(TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE, sensorOrientation);
-
-        try {
-            detector =
-                    YoloV5Classifier.create(
-                            getAssets(),
-                            TF_OD_API_MODEL_FILE,
-                            TF_OD_API_LABELS_FILE,
-                            TF_OD_API_IS_QUANTIZED,
-                            TF_OD_API_INPUT_SIZE);
-        } catch (final IOException e) {
-            e.printStackTrace();
-            LOGGER.e(e, "Exception initializing classifier!");
-            Toast toast =
-                    Toast.makeText(
-                            getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
-            toast.show();
-            finish();
-        }
-    }
-
-    private void handleResult(Bitmap bitmap, List<Classifier.Recognition> results) {
-        final Canvas canvas = new Canvas(bitmap);
-        final Paint paint = new Paint();
-        paint.setColor(Color.MAGENTA);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(2.0f);
-
-        final List<Classifier.Recognition> mappedRecognitions = new LinkedList<Classifier.Recognition>();
-
-        for (final Classifier.Recognition result : results) {
-            final RectF location = result.getLocation();
-            if (location != null && result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
-                if (result.getDetectedClass() == 0){
-                    paint.setColor(Color.MAGENTA);
-                    canvas.drawRect(location, paint);
-                }else if (result.getDetectedClass() == 1){
-                    paint.setColor(Color.BLUE);
-                    canvas.drawRect(location, paint);
-                }else{
-                    paint.setColor(Color.RED);
-                    canvas.drawRect(location, paint);
+                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
+                    if (result.getDetectedClass() == 0) {
+                        paint.setColor(Color.MAGENTA);
+                        canvas.drawRect(location, paint);
+                    } else if (result.getDetectedClass() == 1) {
+                        paint.setColor(Color.BLUE);
+                        canvas.drawRect(location, paint);
+                    } else {
+                        paint.setColor(Color.RED);
+                        canvas.drawRect(location, paint);
+                    }
                 }
-
-//                cropToFrameTransform.mapRect(location);
-//
-//                result.setLocation(location);
-//                mappedRecognitions.add(result);
             }
         }
-//        tracker.trackResults(mappedRecognitions, new Random().nextInt());
-//        trackingOverlay.postInvalidate();
-        imageView.setImageBitmap(bitmap);
     }
+//        imageView.setImageBitmap(bitmap);
 
 
-}
+
+        private void handleResult() {
+//        startTime = System.currentTimeMillis();
+            int w = 512, h = 512;
+            long startTime = System.currentTimeMillis();
+
+
+            long endTime = System.currentTimeMillis();
+
+
+
+            //Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
+            Bitmap bmp = previewView.getBitmap();//Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
+
+            //bmp = getResizedBitmap(bmp, 256,256);
+            // Canvas canvas = new Canvas(bmp);
+
+                if(bmp == null){
+                    makeText(this, "ERROR", LENGTH_SHORT).show();
+                }else {
+                    List<Classifier.Recognition>results = detector.recognizeImage(getResizedBitmap(bmp,640,640));
+                    imgViewTest.setImageBitmap(getResizedBitmap(bmp,256,256));
+                    txtDebug2.setText(results + "");
+
+                    final Canvas canvas = new Canvas(bmp);
+                    final Paint paint = new Paint();
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(2.0f);
+                    for (final Classifier.Recognition result : results) {
+                        final RectF location = result.getLocation();
+
+                        // ตำแหน่งที่ได้อยู่ในช่วง [0,1] ต้องนำไปคูณกับขนาดของรูปก่อน
+                        //location.left = location.left * 640;
+                        //location.top = location.top * 640;
+                       // location.right = location.right * 640;
+                       // location.bottom = location.bottom * 640;
+
+
+                        //                           Y - X - Height - Width
+                        if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
+                            if (result.getDetectedClass() == 0){
+                                setFocusView(location.left, location.top, location.right , location.bottom, 777);
+                            }
+
+                        }
+                }
+            }
+
+                //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
+                //handleResult(getResizedBitmap(bitmap, 256, 256));
+
+
+//        long endtime = System.currentTimeMillis() - startTime;
+//        Log.d("time", "time " + String.valueOf(endtime));
+
+            }
+    }
