@@ -49,6 +49,8 @@ public interface Classifier {
         private RectF location;
 
         private int detectedClass;
+        private float x;
+        private float y;
 
         public Recognition(
                 final String id, final String title, final Float confidence, final RectF location) {
@@ -58,12 +60,14 @@ public interface Classifier {
             this.location = location;
         }
 
-        public Recognition(final String id, final String title, final Float confidence, final RectF location, int detectedClass) {
+        public Recognition(final String id, final String title, final Float confidence, final RectF location, int detectedClass,float x,float y) {
             this.id = id;
             this.title = title;
             this.confidence = confidence;
             this.location = location;
             this.detectedClass = detectedClass;
+            this.x = x;
+            this.y = y;
         }
 
         public String getId() {
@@ -81,6 +85,10 @@ public interface Classifier {
         public RectF getLocation() {
             return new RectF(location);
         }
+
+        public Float getX() { return x;}
+
+        public Float getY() { return y;}
 
         public void setLocation(RectF location) {
             this.location = location;

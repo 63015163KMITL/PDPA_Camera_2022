@@ -639,7 +639,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 // END - ตั้งค่ากล้อง Camera X ---------------------------------------------------------------------------------------------
 
-    public void setFocusView(double X, double Y, double width, double height, int str) {
+    public void setFocusView(double X, double Y, double width, double height, int str , float xPos , float yPos) {
         //removeView();
         int x, y, h, w;
 
@@ -680,9 +680,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
 
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        h = Math.round((float) (height * height2));
-        w = Math.round((float) (width * width2));
-
+        h = Math.round((float) ((2*(height-xPos)) * height2));
+        w = Math.round((float) ((2*(width-yPos)) * width2));
+        Log.d("x", String.valueOf(2*(height-yPos)));
         x = Math.round((float) (X * height2));
         y = Math.round((float) (Y * width2));
 
@@ -906,7 +906,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                         //                           Y - X - Height - Width
                         if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
                             if (result.getDetectedClass() == 0){
-                                setFocusView(location.left, location.top, location.right , location.bottom, 777);
+                                setFocusView(location.left, location.top, location.right , location.bottom, 777,result.getX(),result.getY());
                             }
 
                         }
