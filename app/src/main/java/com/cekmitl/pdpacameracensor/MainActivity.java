@@ -641,12 +641,14 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     public void setFocusView(double X, double Y, double width, double height, int str) {
         //removeView();
-        double s = 1;
         int x, y, h, w;
 
 
-        RelativeLayout rl = (RelativeLayout) findViewById(R.id.main_relative_layout);
-        ViewTreeObserver vto = rl.getViewTreeObserver();
+       //RelativeLayout frameFocusLayout = (RelativeLayout) findViewById(R.id.main_relative_layout);
+        RelativeLayout frameFocusLayout = (RelativeLayout) findViewById(R.id.fram_focus_layout);
+
+
+        ViewTreeObserver vto = frameFocusLayout.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -678,11 +680,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
 
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        h = Math.round((float) (height * height2 * s));
-        w = Math.round((float) (width * width2 * s));
+        h = Math.round((float) (height * height2));
+        w = Math.round((float) (width * width2));
 
-        x = Math.round((float) (X * height2 * s));
-        y = Math.round((float) (Y * width2 * s));
+        x = Math.round((float) (X * height2));
+        y = Math.round((float) (Y * width2));
 
         //x = Math.round((float) (X * height2 * s)) - (h / 2);
         //y = Math.round((float) (Y * width2 * s)) - (w / 2);
@@ -717,7 +719,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         //params1.setMargins( (int) Math.round((Y * 1440) + params1.height),
         //                    (int) Math.round(X * 1080), 0, 0);
 
-        rl.addView(focus_frame, params1);
+        frameFocusLayout.addView(focus_frame, params1);
 
         //rl.setLayoutParams(params1);
         //rl.addView(focus_frame);
@@ -889,11 +891,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     imgViewTest.setImageBitmap(getResizedBitmap(bmp,256,256));
                     txtDebug2.setText(results + "");
 
-                    final Canvas canvas = new Canvas(bmp);
-                    final Paint paint = new Paint();
-                    paint.setStyle(Paint.Style.STROKE);
-                    paint.setStrokeWidth(2.0f);
+                    clearFocus();
                     for (final Classifier.Recognition result : results) {
+
                         final RectF location = result.getLocation();
 
                         // ตำแหน่งที่ได้อยู่ในช่วง [0,1] ต้องนำไปคูณกับขนาดของรูปก่อน
@@ -911,6 +911,12 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
                         }
                 }
+
+
+
+
+
+
             }
 
                 //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
@@ -920,5 +926,17 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 //        long endtime = System.currentTimeMillis() - startTime;
 //        Log.d("time", "time " + String.valueOf(endtime));
 
+            }
+
+            public void clearFocus(){
+                RelativeLayout frameFocusLayout = (RelativeLayout) findViewById(R.id.fram_focus_layout);
+
+                if (null != frameFocusLayout && frameFocusLayout.getChildCount() > 0) {
+                    try {
+                        frameFocusLayout.removeViews (0, frameFocusLayout.getChildCount());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }
     }
