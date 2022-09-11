@@ -228,10 +228,10 @@ public class YoloV5Classifier implements Classifier {
                         Math.min(bitmap.getWidth() - 1, w));
                         */
                 final RectF rect = new RectF(
-                        Math.max(0, yPos - h/2),
                         Math.max(0, xPos - w/2),
-                        Math.min(bitmap.getHeight() - 1, yPos+h/2),
-                        Math.min(bitmap.getWidth() - 1, xPos + w / 2));
+                        Math.max(0, yPos - h/2),
+                        Math.min(bitmap.getWidth() - 1, xPos + w / 2),
+                        Math.min(bitmap.getHeight() - 1, yPos+h/2));
 
                 detections.add(new Recognition("" + offset, labels.get(detectedClass), confidenceInClass, rect, detectedClass,xPos,yPos));
             }

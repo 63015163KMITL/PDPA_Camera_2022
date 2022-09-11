@@ -170,8 +170,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         //setFocusView(0.356173, 0.413889, 0.0432099, 0.0444444);
         //setFocusView(0.167901, 0.411574, 0.0469136, 0.0490741);
 
-       // setFocusView(0.4, 0.4, 0.1, 0.1, 999);
-       // setFocusView(0.6, 0.4, 0.1, 0.1, 777);
+        // setFocusView(0.4, 0.4, 0.1, 0.1, 999);
+        // setFocusView(0.6, 0.4, 0.1, 0.1, 777);
 
         top_center = (LinearLayout) findViewById(R.id.top_center);
 
@@ -238,65 +238,38 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         Thread t2 = new Thread(new Runnable() {
             public void run() {
-                //final List<Classifier.Recognition> results;
-                //cropBitmap = BitmapFactory.decodeResource(MainActivity.this.getResources(),R.drawable.test_img);
-
                 handler.postDelayed(runnable = new Runnable() {
                     final int[] i = {0};
 
                     public void run() {
                         handler.postDelayed(runnable, delay * 1);
-
                         i[0]++;
+
                         imgViewTest.post(new Runnable() {
                             @Override
                             public void run() {
                                 int n = 128;
+                                final Bitmap bitmap = getResizedBitmap(previewView.getBitmap(),640,640);
 
-                                long startTime = System.currentTimeMillis();
+                                if (bitmap == null) {
+                                    return;
+                                } else {
+                                    //long startTime = System.currentTimeMillis();
+                                    handleResult(bitmap);
+                                    //imgViewTest.setImageBitmap(bitmap);
+                                    //long endTime = System.currentTimeMillis();
 
-                                handleResult();
-                                long endTime = System.currentTimeMillis();
-                                //Toast.makeText(MainActivity.this, "Time = " + (endTime - startTime) + " ms", LENGTH_SHORT).show();
-
-                                txtDebug.setText("COUNTER = " + i[0] + "\nTime = " + (endTime - startTime) + " ms");
-                                //final Bitmap bitmap = previewView.getBitmap();
-                                //cropBitmap =
-                                //image.close();
-
-                                //if(bitmap == null){
-                               //     return;
-                                //}else {
-                                //    txtDebug2.setText(bitmap.toString());
-                                    //cropBitmap = bitmap;
-                                   // bitmap =
-                                   // handleResult(getResizedBitmap(bitmap, 256, 256));
-
-
-                               // }
-
-
+                                   // txtDebug.setText("COUNTER = " + i[0] + "\nTime = " + (endTime - startTime) + " ms");
+                                }
                             }
                         });
                     }
                 }, delay * 1);
-
             }
         });
 
         t2.start();
-
-
-
-
-        //initBox();
-        //ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        //ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
-
-
-
     }
-
 
     public static void slideView(View view, int currentHeight, int newHeight) {
         ValueAnimator slideAnimator = ValueAnimator.ofInt(currentHeight, newHeight).setDuration(500);
@@ -346,6 +319,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         animationSet2.setInterpolator(new AccelerateDecelerateInterpolator());
         animationSet2.play(slideAnimator2);
         animationSet2.start();
+
     }
 
     public void ChangResolutionImage(int h, int w) {
@@ -439,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 break;
             case R.id.top_center:
                 if(state_pdpd == 0){
-                    slideView2(top_center, top_center.getLayoutParams().height, 330,top_center.getLayoutParams().width, 1920);
+                    slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
                     state_pdpd = 1;
                 }else {
                     slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
@@ -540,19 +514,22 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 
     public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
-        int width = bm.getWidth();
-        int height = bm.getHeight();
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        // CREATE A MATRIX FOR THE MANIPULATION
-        Matrix matrix = new Matrix();
-        // RESIZE THE BIT MAP
-        matrix.postScale(scaleWidth, scaleHeight);
+        if (bm != null){
+            int width = bm.getWidth();
+            int height = bm.getHeight();
+            float scaleWidth = ((float) newWidth) / width;
+            float scaleHeight = ((float) newHeight) / height;
+            // CREATE A MATRIX FOR THE MANIPULATION
+            Matrix matrix = new Matrix();
+            // RESIZE THE BIT MAP
+            matrix.postScale(scaleWidth, scaleHeight);
 
-        // "RECREATE" THE NEW BITMAP
-        Bitmap resizedBitmap = Bitmap.createBitmap(
-                bm, 0, 0, width, height, matrix, false);
-        return resizedBitmap;
+            // "RECREATE" THE NEW BITMAP
+            Bitmap resizedBitmap = Bitmap.createBitmap(
+                    bm, 0, 0, width, height, matrix, false);
+            return resizedBitmap;
+        }
+        return null;
     }
 
     @SuppressLint("RestrictedApi")
@@ -677,14 +654,18 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         } else if (state_serol.equals("1:1")) {
             height2 = 1080;
         }
-
+//        h = Math.round((float) ((2*(height-xPos)) * height2));
+//        w = Math.round((float) ((2*(width-yPos)) * width2));
+//        Log.d("x", String.valueOf(2*(height-yPos)));
+//        x = Math.round((float) (X * height2));
+//        y = Math.round((float) (Y * width2));
 
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        h = Math.round((float) ((2*(height-xPos)) * height2));
-        w = Math.round((float) ((2*(width-yPos)) * width2));
-        Log.d("x", String.valueOf(2*(height-yPos)));
-        x = Math.round((float) (X * height2));
-        y = Math.round((float) (Y * width2));
+        h = Math.round((float) ((2*(height-yPos)) * height2));
+        w = Math.round((float) ((2*(width-xPos)) * width2));
+//        Log.d("x", String.valueOf(2*(height-yPos)));
+        x = Math.round((float) (X * width2));
+        y = Math.round((float) (Y * height2));
 
         //x = Math.round((float) (X * height2 * s)) - (h / 2);
         //y = Math.round((float) (Y * width2 * s)) - (w / 2);
@@ -711,7 +692,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         RelativeLayout.LayoutParams params1 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params1.height = h;
         params1.width = w;
-        params1.setMargins(y, x, 0, 0);
+        params1.setMargins(x, y, 0, 0);
 
 
         //params1.height = (int) Math.round(height * 1440) ;
@@ -819,20 +800,24 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         }
     }
     //จัดการกับ Label คำตอบ
-    private void handleResult(Bitmap bitmap) {
+    private void handleResult(Bitmap bitmap, int n) {
 //        startTime = System.currentTimeMillis();
         int w = 512, h = 512;
 
-        Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
-        Bitmap bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
-        // Canvas canvas = new Canvas(bmp);
 
         final Bitmap bm = previewView.getBitmap();
         if (bm != null) {
             // bitmap =
+            long startTime = System.currentTimeMillis();
+            handleResult(bitmap);
+            //imgViewTest.setImageBitmap(bitmap);
+
+
             List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
             //handleResult(getResizedBitmap(bitmap, 256, 256));
+            long endTime = System.currentTimeMillis();
 
+            txtDebug.setText("Time = " + (endTime - startTime) + " ms");
 
 //        long endtime = System.currentTimeMillis() - startTime;
 //        Log.d("time", "time " + String.valueOf(endtime));
@@ -868,54 +853,31 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
 
 
-        private void handleResult() {
-//        startTime = System.currentTimeMillis();
-            int w = 512, h = 512;
-            long startTime = System.currentTimeMillis();
-
-
-            long endTime = System.currentTimeMillis();
-
-
+        private void handleResult(Bitmap bitmap) {
 
             //Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
-            Bitmap bmp = previewView.getBitmap();//Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
-
-            //bmp = getResizedBitmap(bmp, 256,256);
-            // Canvas canvas = new Canvas(bmp);
+            Bitmap bmp = bitmap;//Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
 
                 if(bmp == null){
                     makeText(this, "ERROR", LENGTH_SHORT).show();
                 }else {
-                    List<Classifier.Recognition>results = detector.recognizeImage(getResizedBitmap(bmp,640,640));
-                    imgViewTest.setImageBitmap(getResizedBitmap(bmp,256,256));
+
+                    long startTime = System.currentTimeMillis();
+                    List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
+                    long endTime = System.currentTimeMillis();
+
+                    txtDebug.setText("Time = " + (endTime - startTime) + " ms");
                     txtDebug2.setText(results + "");
 
                     clearFocus();
                     for (final Classifier.Recognition result : results) {
-
                         final RectF location = result.getLocation();
-
-                        // ตำแหน่งที่ได้อยู่ในช่วง [0,1] ต้องนำไปคูณกับขนาดของรูปก่อน
-                        //location.left = location.left * 640;
-                        //location.top = location.top * 640;
-                       // location.right = location.right * 640;
-                       // location.bottom = location.bottom * 640;
-
 
                         //                           Y - X - Height - Width
                         if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
-                            if (result.getDetectedClass() == 0){
                                 setFocusView(location.left, location.top, location.right , location.bottom, 777,result.getX(),result.getY());
-                            }
-
                         }
                 }
-
-
-
-
-
 
             }
 
