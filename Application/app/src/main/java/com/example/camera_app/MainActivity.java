@@ -1,7 +1,5 @@
 package com.example.camera_app;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -14,6 +12,9 @@ import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -23,8 +24,8 @@ public class MainActivity extends AppCompatActivity {
     private Classifier detector;
     private Bitmap cropBitmap;
     private ImageView imageView;
-    public static final int TF_OD_API_INPUT_SIZE = 640;
-    private static final String TF_OD_API_MODEL_FILE = "Sbest-fp16.tflite";
+    public static final int TF_OD_API_INPUT_SIZE = 320;
+    private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
 
 
@@ -65,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-//    long startTime = 0;
+    //    long startTime = 0;
     //จัดการกับ Label คำตอบ
     private void handleResult(Bitmap bitmap) {
 //        startTime = System.currentTimeMillis();
@@ -80,10 +81,10 @@ public class MainActivity extends AppCompatActivity {
             final RectF location = result.getLocation();
 
             // ตำแหน่งที่ได้อยู่ในช่วง [0,1] ต้องนำไปคูณกับขนาดของรูปก่อน
-            location.left = location.left * 640;
-            location.top = location.top * 640;
-            location.right = location.right * 640;
-            location.bottom = location.bottom * 640;
+            location.left = location.left * 320;
+            location.top = location.top * 320;
+            location.right = location.right * 320;
+            location.bottom = location.bottom * 320;
 
             if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
                 if (result.getDetectedClass() == 0){

@@ -3,13 +3,17 @@ package com.example.camera_app;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+
 import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.gpu.GpuDelegate;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +33,7 @@ public class YoloV5Classifier implements Classifier {
 
     private ByteBuffer imgData;
     private ByteBuffer outData;
-
+    private MappedByteBuffer tfliteModel;
     private int numClass;
     private Interpreter tfLite;
 
@@ -43,30 +47,35 @@ public class YoloV5Classifier implements Classifier {
             d.labels.add(line);
         }
         br.close();
-        Interpreter.Options options = (new Interpreter.Options());
-//        options.setNumThreads(NUM_THREADS);
-//        options.addDelegate(new NnApiDelegate());
-        options.setNumThreads(7); //7 thread = 280 - 300 ms
-//        options.setUseNNAPI(true);
-//                    options.setUseNNAPI(false);
-//        options.setAllowFp16PrecisionForFp32(true);
-        options.setUseXNNPACK(true);
-        options.setCancellable(true);
-        options.setAllowBufferHandleOutput(true);
-        d.tfLite = new Interpreter(Utils.loadModelFile(assetManager, modelFilename), options);
+
+        try {
+            Interpreter.Options options = (new Interpreter.Options());
+            options.setNumThreads(8);
+            options.setUseXNNPACK(true);
+            options.setCancellable(true);
+            options.setAllowBufferHandleOutput(true);
+            d.tfliteModel = Utils.loadModelFile(assetManager, modelFilename);
+            d.tfLite = new Interpreter(d.tfliteModel, options);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // Pre-allocate buffers.
         int numBytesPerChannel;
         numBytesPerChannel = 4; // Floating point
+
         d.INPUT_SIZE = inputSize;
-        d.imgData = ByteBuffer.allocateDirect(d.INPUT_SIZE * d.INPUT_SIZE * 3 * numBytesPerChannel);
+        d.imgData = ByteBuffer.allocateDirect(1 * d.INPUT_SIZE * d.INPUT_SIZE * 3 * numBytesPerChannel);
         d.imgData.order(ByteOrder.nativeOrder());
         d.intValues = new int[d.INPUT_SIZE * d.INPUT_SIZE];
-        d.output_box = (int) ((Math.pow((inputSize / 32.0), 2) + Math.pow((inputSize / 16.0), 2) + Math.pow((inputSize / 8.0), 2)) * 3);
+
+        d.output_box = (int) ((Math.pow((inputSize / 32), 2) + Math.pow((inputSize / 16), 2) + Math.pow((inputSize / 8), 2)) * 3);
+
         int[] shape = d.tfLite.getOutputTensor(0).shape();
         int numClass = shape[shape.length - 1] - 5;
         d.numClass = numClass;
         d.outData = ByteBuffer.allocateDirect(d.output_box * (numClass + 5) * numBytesPerChannel);
         d.outData.order(ByteOrder.nativeOrder());
-
         return d;
     }
 
@@ -106,16 +115,46 @@ public class YoloV5Classifier implements Classifier {
     }
 
     protected void convertBitmapToByteBuffer(Bitmap bitmap) {
-        bitmap.getPixels(intValues, 0, 640, 0, 0, 640, 640);
+        bitmap.getPixels(intValues, 0, 320, 0, 0, 320, 320);
 
         imgData.rewind();
-        for (int i = 0; i < 640; ++i) {
-            for (int j = 0; j < 640; ++j) {
-                int pixelValue = intValues[i * 640 + j];
+        for (int i = 0; i < 320; ++i) {
+            for (int j = 0; j < 320; ++j) {
+                int pixelValue = intValues[i * 320 + j];
                 imgData.putFloat((((pixelValue >> 16) & 0xFF)) / 255.0f);
                 imgData.putFloat((((pixelValue >> 8) & 0xFF)) / 255.0f);
                 imgData.putFloat(((pixelValue & 0xFF)) / 255.0f);
             }
+        }
+    }
+
+    private final Interpreter.Options tfliteOptions = new Interpreter.Options();
+    GpuDelegate gpuDelegate = null;
+
+    @Override
+    public void useGpu() {
+        if (gpuDelegate == null) {
+            gpuDelegate = new GpuDelegate();
+            tfliteOptions.addDelegate(gpuDelegate);
+            recreateInterpreter();
+        }
+    }
+
+    @Override
+    public void close() {
+        tfLite.close();
+        tfLite = null;
+        if (gpuDelegate != null) {
+            gpuDelegate.close();
+            gpuDelegate = null;
+        }
+        tfliteModel = null;
+    }
+
+    private void recreateInterpreter() {
+        if (tfLite != null) {
+            tfLite.close();
+            tfLite = new Interpreter(tfliteModel, tfliteOptions);
         }
     }
 

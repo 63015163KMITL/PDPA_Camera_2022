@@ -12,6 +12,10 @@ public interface Classifier {
 
     List<Recognition> recognizeImage(Bitmap bitmap);
 
+    void useGpu();
+
+    void close();
+
     class Recognition {
 
         private final String id;

@@ -11,7 +11,7 @@ android {
         targetSdk 32
         versionCode 1
         versionName "1.0"
-
+        applicationId "opencv.org"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -27,6 +27,13 @@ android {
     }
     buildFeatures {
         mlModelBinding true
+    }
+    sourceSets {
+        main {
+            jni {
+                srcDirs 'src\\main\\jni', 'src\\main\\jniLibs'
+            }
+        }
     }
 }
 
