@@ -39,6 +39,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Rational;
@@ -102,7 +103,7 @@ import java.util.List;
 
 
 
-public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener{
+public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener, Runnable{
 
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
@@ -132,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     Handler handler = new Handler();
     Runnable runnable;
-    int delay = 500;
+    public int delay = 500;
     int state_pdpd = 0;
 
     //DETECT FACE
@@ -146,8 +147,12 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
 
     public Thread t2, t3;
+    public boolean threadState = true;
+    //public Handler handler;
+    //public Runnable runnable;
 
     public List<Classifier.Recognition> grobal_results;
+    public int processTime;
 
 
 
@@ -242,49 +247,88 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             e.printStackTrace();
         }
 
-        t2 = new Thread(new Runnable() {
-            public void run() {
-                handler.postDelayed(runnable = new Runnable() {
+run();
+        //t2.interrupt();
 
-                    public void run() {
-                        handler.postDelayed(runnable, delay * 1);
-
-                        previewView.post(new Runnable() {
-                            @Override
-                            public void run() {
-
-                                final Bitmap bitmap = getResizedBitmap(previewView.getBitmap(),640,640);
-                                if (bitmap != null) {
-                                    realTimePreview = bitmap;
-                                    try {
-                                        DecodClassifire(grobal_results);
-                                        Log.e("TEST", "DecodClassifire OK");
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-
-                                    //imgViewTest.setImageBitmap(bitmap);
-                                    //handleResult(bitmap);
-                                    //return;
-                                }
-                            }
+        //FaceDetection myAsyncTasks = new FaceDetection();
+        //myAsyncTasks.execute();
+    }
 
 
+    @SuppressLint("RestrictedApi")
+    @Override
+    public void onClick(View view) {
 
-                        });
+        //Thread.currentThread().interrupt();
+        //t2.interrupt();
+        handler.removeCallbacks(runnable);
+        //threadState = false;
+        Log.e("THREAD","THREAD T2 JOIN");
+        switch (view.getId()) {
+            case R.id.bCapture:
+                if (statRecord == false) {
+                    capturePhoto();
+                } else if (statRecord == true) {
+                    bCapture.setImageResource(R.drawable.ic_camera);
+                    videoCapture.stopRecording();
+                    statRecord = false;
+                }
+                break;
+            case R.id.reverse_camera_button:
+                flipCamera();
+                break;
+            case R.id.button_gallery:
+                Intent galleryIntent = new Intent(MainActivity.this, GalleryActivity.class);
+                MainActivity.this.startActivity(galleryIntent);
+                break;
+            case R.id.change_resolution:
+                if (state_serol.equals("4:3")) {
+                    ChangResolutionImage(16, 9);
+                    state_serol = "16:9";
+                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_16_9);
+                } else if (state_serol.equals("16:9")) {
+                    ChangResolutionImage(1, 1);
+                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_1_1);
+                    state_serol = "1:1";
 
-                    }
-                }, delay * 1);
-            }
+                } else if (state_serol.equals("1:1")) {
+                    ChangResolutionImage(4, 3);
+                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_4_3);
+                    state_serol = "4:3";
+                }
+                break;
+            case R.id.top_center:
+                //t2.interrupt();
 
-        });
+                if(state_pdpd == 0){
+                    slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
+                    state_pdpd = 1;
+                }else {
+                    slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
+                    state_pdpd = 0;
+                }
+                //
+                break;
+        }
+        //threadState = true;
+        try {
+            t2.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        handler.postDelayed(runnable, delay);
 
-        t2.start();
+    }
 
-        FaceDetection myAsyncTasks = new FaceDetection();
-        myAsyncTasks.execute();
-
-
+    @Override
+    public boolean onLongClick(View view) {
+        switch (view.getId()) {
+            case R.id.bCapture:
+                bCapture.setImageResource(R.drawable.ic_recording);
+                recordVideo();
+                break;
+        }
+        return statRecord = true;
     }
 
     public static void slideView(View view, int currentHeight, int newHeight) {
@@ -391,64 +435,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 
 
-    @SuppressLint("RestrictedApi")
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.bCapture:
-                if (statRecord == false) {
-                    capturePhoto();
-                } else if (statRecord == true) {
-                    bCapture.setImageResource(R.drawable.ic_camera);
-                    videoCapture.stopRecording();
-                    statRecord = false;
-                }
-                break;
-            case R.id.reverse_camera_button:
-                flipCamera();
-                break;
-            case R.id.button_gallery:
-                Intent galleryIntent = new Intent(MainActivity.this, GalleryActivity.class);
-                MainActivity.this.startActivity(galleryIntent);
-                break;
-            case R.id.change_resolution:
-                if (state_serol.equals("4:3")) {
-                    ChangResolutionImage(16, 9);
-                    state_serol = "16:9";
-                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_16_9);
-                } else if (state_serol.equals("16:9")) {
-                    ChangResolutionImage(1, 1);
-                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_1_1);
-                    state_serol = "1:1";
 
-                } else if (state_serol.equals("1:1")) {
-                    ChangResolutionImage(4, 3);
-                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_4_3);
-                    state_serol = "4:3";
-                }
-                break;
-            case R.id.top_center:
-                if(state_pdpd == 0){
-                    slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
-                    state_pdpd = 1;
-                }else {
-                    slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
-                    state_pdpd = 0;
-                }
-                break;
-        }
-    }
-
-    @Override
-    public boolean onLongClick(View view) {
-        switch (view.getId()) {
-            case R.id.bCapture:
-                bCapture.setImageResource(R.drawable.ic_recording);
-                recordVideo();
-                break;
-        }
-        return statRecord = true;
-    }
 
 
     // ตั้งค่ากล้อง Camera X ---------------------------------------------------------------------------------------------
@@ -786,94 +773,18 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
 
     //DETECT FACE FUNCTION
-    // เปิดไฟล์ภาพ
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 100){
-            assert data != null;
-            Uri uri = data.getData();
-            try {
-
-                int w = 512, h = 512;
-
-                Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
-               // bmp = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
-
-               // TextView textView = findViewById(R.id.textView);
-
-                cropBitmap = Utils.processBitmap(MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri), TF_OD_API_INPUT_SIZE);
-
-                String str = "" + Utils.processBitmap(MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri), TF_OD_API_INPUT_SIZE);;
-                //Toast.makeText(this, "cropBitmap : " + str, Toast.LENGTH_SHORT).show();
-                txtDebug2.setText("cropBitmap : " + cropBitmap);
-                //cropBitmap = bmp;
-
-                imageView.setImageBitmap(cropBitmap);
-                handleResult(cropBitmap);
-
-            }catch (IOException e){
-                e.printStackTrace();
-                finish();
-            }
-        }
-    }
-    //จัดการกับ Label คำตอบ
-    private void handleResult(Bitmap bitmap, int n) {
-//        startTime = System.currentTimeMillis();
-        int w = 512, h = 512;
-
-
-        final Bitmap bm = previewView.getBitmap();
-        if (bm != null) {
-            // bitmap =
-            long startTime = System.currentTimeMillis();
-            handleResult(bitmap);
-            //imgViewTest.setImageBitmap(bitmap);
-
-
-            List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
-            //handleResult(getResizedBitmap(bitmap, 256, 256));
-            long endTime = System.currentTimeMillis();
-
-            txtDebug.setText("Time = " + (endTime - startTime) + " ms");
-
-//        long endtime = System.currentTimeMillis() - startTime;
-//        Log.d("time", "time " + String.valueOf(endtime));
-            final Canvas canvas = new Canvas(bitmap);
-            final Paint paint = new Paint();
-            paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(2.0f);
-            for (final Classifier.Recognition result : results) {
-                final RectF location = result.getLocation();
-
-                // ตำแหน่งที่ได้อยู่ในช่วง [0,1] ต้องนำไปคูณกับขนาดของรูปก่อน
-                location.left = location.left * 640;
-                location.top = location.top * 640;
-                location.right = location.right * 640;
-                location.bottom = location.bottom * 640;
-
-                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
-                    if (result.getDetectedClass() == 0) {
-                        paint.setColor(Color.MAGENTA);
-                        canvas.drawRect(location, paint);
-                    } else if (result.getDetectedClass() == 1) {
-                        paint.setColor(Color.BLUE);
-                        canvas.drawRect(location, paint);
-                    } else {
-                        paint.setColor(Color.RED);
-                        canvas.drawRect(location, paint);
-                    }
-                }
-            }
-        }
-    }
-//        imageView.setImageBitmap(bitmap);DecodClassifire imageClassifier
-
 
         public List<Classifier.Recognition> imageClassifier(Bitmap bitmap) {
+            long startTime = System.currentTimeMillis();
             List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
-            Log.e("TEST", "imageClassifier OK");
+            long endTime = System.currentTimeMillis();
+
+            Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
+
+            processTime = (int) (endTime - startTime);
+            //delay = processTime;
+
+            Log.e("TEST", "imageClassifier OK : Time = " + processTime);
             return results;
         }
 
@@ -895,13 +806,12 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             //Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
             Bitmap bmp = bitmap;//Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
 
-                if(bmp == null){
-                    makeText(this, "ERROR", LENGTH_SHORT).show();
-                }else {
-
+                if(bmp != null){
                     long startTime = System.currentTimeMillis();
                     List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
                     long endTime = System.currentTimeMillis();
+                    processTime = (int) (endTime - startTime);
+                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
 
                     txtDebug.setText("Time = " + (endTime - startTime) + " ms");
                     txtDebug2.setText(results + "");
@@ -943,15 +853,48 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 return previewView.getBitmap();
             }
 
+    @Override
+    public void run() {
+        t2 = new Thread(new Runnable() {
+            public void run() {
+                if(!t2.isInterrupted()) {
+                    handler.postDelayed(runnable = new Runnable() {
+                        public void run() {
+                            handler.postDelayed(runnable, delay * 1);
+                            previewView.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final Bitmap bitmap2 = getResizedBitmap(previewView.getBitmap(),640,640);
+                                    if (bitmap2 != null) {
+                                        try {
+                                            handleResult(bitmap2);
+                                            txtDebug.setText("Time = " + processTime + " ms");
+                                            Log.e("TEST", "DecodClassifire OK");
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }, delay * 1);
+                }
+            }
+        });
+        t2.start();
+
+    }
 
 
- class FaceDetection extends AsyncTask<String, Void, String>{
+    class FaceDetection extends AsyncTask<String, Void, String>{
 
     @Override
     protected String doInBackground(String... strings) {
         while (true){
+            //Log.e("THREAD","AsyncTask");
             try {
                 grobal_results = imageClassifier(realTimePreview);
+
                 //Log.e("TEST", "imageClassifier OK");
             } catch (Exception e) {
                 e.printStackTrace();
