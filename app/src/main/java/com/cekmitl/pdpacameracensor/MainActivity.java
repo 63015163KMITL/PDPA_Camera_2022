@@ -109,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
     public PreviewView previewView;
+    public ImageView previewView2;
     private ImageCapture imageCapture, imageCaptureX;
     private VideoCapture videoCapture;
     private ImageAnalysis imageAnalysis;
@@ -196,6 +197,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         //ส่วนสร้าง Object ต่าง ๆ --------------------------------------------------------------------------------------
         previewView = findViewById(R.id.previewView);                       // Preview Camera X
+        previewView2 = findViewById(R.id.previewView2);
         fram_camera = findViewById(R.id.fram_camera);
 
         //PHOTO
@@ -249,11 +251,56 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             e.printStackTrace();
         }
 
-        run();
+        //run();
         //t2.interrupt();
 
         //FaceDetection myAsyncTasks = new FaceDetection();
         //myAsyncTasks.execute();
+
+        t2 = new Thread(new Runnable() {
+            public void run() {
+                handler.postDelayed(runnable = new Runnable() {
+                    public void run() {
+                        handler.postDelayed(runnable, delay * 1);
+                        previewView.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                long startTime = System.currentTimeMillis();
+                                final Bitmap bitmap2 = getResizedBitmap(previewView.getBitmap(), TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
+                                try {
+                                    //Bitmap returnedBitmap = previewView.getBitmap();
+
+                                    //Log.e("THREAD","AsyncTask OK");
+                                    if (bitmap2 != null) {
+                                        try {
+                                            handleResult(bitmap2);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    Log.e("THREAD","OK");
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    Log.e("THREAD","ERROR : " + e);
+                                }
+
+                                long endTime = System.currentTimeMillis();
+                                txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
+
+
+                                // processTime = (int) (endTime - startTime);
+//                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
+
+
+                            }
+                        });
+                    }
+                }, delay * 1);
+            }
+        });
+        t2.start();
+
+
     }
 
 
@@ -261,10 +308,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     @Override
     public void onClick(View view) {
         //x = false;
-        t2.interrupt();
+        //t2.interrupt();
         //Thread.currentThread().interrupt();
         //t2.interrupt();
-        //handler.removeCallbacks(runnable);
         //threadState = false;
 //        Log.e("THREAD","THREAD T2 JOIN");
         switch (view.getId()) {
@@ -304,10 +350,16 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 //t2.interrupt();
 
                 if(state_pdpd == 0){
-                    slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
+                    //slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
+                    top_center.setBackgroundResource(R.drawable.bg_line_round_stroke);
+                    handler.removeCallbacks(runnable);
                     state_pdpd = 1;
                 }else {
-                    slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
+                    //slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
+                    top_center.setBackgroundResource(R.drawable.bg_round_stroke);
+                    handler.postDelayed(runnable, delay);
+
+
                     state_pdpd = 0;
                 }
                 //
@@ -315,12 +367,12 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         }
         //threadState = true;
         //x = true;
-        try {
-            t2.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        //handler.postDelayed(runnable, delay);
+        //try {
+           // t2.sleep(1000);
+       // } catch (InterruptedException e) {
+          //  e.printStackTrace();
+       //}
+
 
     }
 
@@ -481,6 +533,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         Preview preview = new Preview.Builder()
                 .build();
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
+        //preview.setSurfaceProvider((Preview.SurfaceProvider) previewView2);
+
 
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
@@ -506,20 +560,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     @Override
     public void analyze(@NonNull ImageProxy image) {
-        //Log.d("TAG", "analyze: got the frame at: " + image.getImageInfo().getTimestamp());
-
-        final Bitmap bitmap = getResizedBitmap(previewView.getBitmap(),TF_OD_API_INPUT_SIZE,TF_OD_API_INPUT_SIZE);
-        if (bitmap != null) {
-            realTimePreview = bitmap;
-        } else {
-
-        }
-        //final Bitmap bitmap = getResizedBitmap(previewView.getBitmap(),TF_OD_API_INPUT_SIZE,TF_OD_API_INPUT_SIZE);
-        //if (bitmap == null) {
-        //    return;
-        //} else {
-            //handleResult(bitmap);
-       //}
+        Log.e("IMG","Image Analysis now");
         image.close();
     }
 
@@ -807,6 +848,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
                     long endTime = System.currentTimeMillis();
                     processTime = (int) (endTime - startTime);
+
+
 //                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
 
                   //  txtDebug.setText("Time = " + (endTime - startTime) + " ms");
@@ -820,9 +863,12 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                         if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
                                 setFocusView(location.left, location.top, location.right , location.bottom, 777,result.getX(),result.getY());
                         }
+
                     }
 
             }
+
+                //imgViewTest.setImageBitmap(bitmap);
 
                 //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
                 //handleResult(getResizedBitmap(bitmap, 256, 256));
@@ -859,21 +905,25 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                             previewView.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                        long startTime = System.currentTimeMillis();
+                                    long startTime = System.currentTimeMillis();
+                                    final Bitmap bitmap2 = getResizedBitmap(previewView.getBitmap(), TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
+                                    try {
+                                        //Bitmap returnedBitmap = previewView.getBitmap();
 
-                                        final Bitmap bitmap2 = getResizedBitmap(previewView.getBitmap(), TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
+                                        //Log.e("THREAD","AsyncTask OK");
                                         if (bitmap2 != null) {
                                             try {
                                                 handleResult(bitmap2);
-                                                //realTimePreview = bitmap2;
-                                                //DecodClassifire(grobal_results);
-
-                                                //txtDebug.setText("Time = " + processTime + " ms");
-//                                            Log.e("TEST", "DecodClassifire OK");
                                             } catch (Exception e) {
                                                 e.printStackTrace();
                                             }
                                         }
+                                        Log.e("THREAD","OK");
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        Log.e("THREAD","ERROR : " + e);
+                                    }
+
                                         long endTime = System.currentTimeMillis();
                                         txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
 
@@ -895,16 +945,39 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     class FaceDetection extends AsyncTask<String, Void, String>{
 
+    @SuppressLint("WrongThread")
     @Override
     protected String doInBackground(String... strings) {
         while (true){
-            Log.e("THREAD","AsyncTask");
             try {
-                grobal_results = imageClassifier(realTimePreview);
+                View view = previewView;
+                //Bitmap bitmap2;
+                //bitmap2 = previewView.getBitmap();
 
-                Log.e("TEST", "imageClassifier OK");
+                Bitmap returnedBitmap = Bitmap.createBitmap(view.getWidth(),
+                        view.getHeight(), Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(returnedBitmap);
+                Drawable bgDrawable = view.getBackground();
+                if (bgDrawable != null)
+                    bgDrawable.draw(canvas);/*from ww w . j  a v  a  2  s.  c om*/
+                else
+                    canvas.drawColor(Color.WHITE);
+                view.draw(canvas);
+
+                imgViewTest.setImageBitmap(returnedBitmap);
+
+                //Log.e("THREAD","AsyncTask OK");
+                if (returnedBitmap != null) {
+                    try {
+                        handleResult(returnedBitmap);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                Log.e("THREAD","OK");
             } catch (Exception e) {
                 e.printStackTrace();
+                Log.e("THREAD","ERROR : " + e);
             }
         }
     }

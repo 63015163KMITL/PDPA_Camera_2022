@@ -3,7 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1215" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/bg_gallory.xml" value="0.217" />
+        <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/bg_line_round_stroke.xml" value="0.1215" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/bg_round_stroke.xml" value="0.2285" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/circle.xml" value="0.2285" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/focus_frame.xml" value="0.217" />
