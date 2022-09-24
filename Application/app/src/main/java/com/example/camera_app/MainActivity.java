@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int TF_OD_API_INPUT_SIZE = 320;
     private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
-
+    private TextView txt ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Button selectButton = findViewById(R.id.cameraButton);
         imageView = findViewById(R.id.imageView);
-
+        txt = findViewById(R.id.textView);
         try {
             detector = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
         } catch (IOException e) {
@@ -66,13 +67,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-    //    long startTime = 0;
+        long startTime = 0;
     //จัดการกับ Label คำตอบ
     private void handleResult(Bitmap bitmap) {
-//        startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
         final List<Classifier.Recognition> results = detector.recognizeImage(cropBitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
-//        long endtime = System.currentTimeMillis() - startTime;
-//        Log.d("time", "time " + String.valueOf(endtime));
+        long endtime = System.currentTimeMillis() - startTime;
+        txt.setText(String.valueOf(endtime));
         final Canvas canvas = new Canvas(bitmap);
         final Paint paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);

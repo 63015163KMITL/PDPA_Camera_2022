@@ -50,9 +50,9 @@ public class YoloV5Classifier implements Classifier {
 
         try {
             Interpreter.Options options = (new Interpreter.Options());
-            options.setNumThreads(8);
+            options.setNumThreads(5);
             options.setUseXNNPACK(true);
-            options.setCancellable(true);
+//            options.setCancellable(true);
             options.setAllowBufferHandleOutput(true);
             d.tfliteModel = Utils.loadModelFile(assetManager, modelFilename);
             d.tfLite = new Interpreter(d.tfliteModel, options);
@@ -131,25 +131,7 @@ public class YoloV5Classifier implements Classifier {
     private final Interpreter.Options tfliteOptions = new Interpreter.Options();
     GpuDelegate gpuDelegate = null;
 
-    @Override
-    public void useGpu() {
-        if (gpuDelegate == null) {
-            gpuDelegate = new GpuDelegate();
-            tfliteOptions.addDelegate(gpuDelegate);
-            recreateInterpreter();
-        }
-    }
 
-    @Override
-    public void close() {
-        tfLite.close();
-        tfLite = null;
-        if (gpuDelegate != null) {
-            gpuDelegate.close();
-            gpuDelegate = null;
-        }
-        tfliteModel = null;
-    }
 
     private void recreateInterpreter() {
         if (tfLite != null) {
@@ -231,15 +213,32 @@ public class YoloV5Classifier implements Classifier {
                 final float yPos = out[0][i][1];
                 final float w = out[0][i][2];
                 final float h = out[0][i][3];
+
+                final float[] loc = new float[4];
                 final RectF rect = new RectF(
                                 Math.max(0, xPos - w / 2),
                                 Math.max(0, yPos - h / 2),
                                 Math.min(bitmap.getWidth() - 1, xPos + w / 2),
                                 Math.min(bitmap.getHeight() - 1, yPos + h / 2));
+
+                loc[0] = Math.max(0, xPos - w / 2);
+                loc[1] = Math.max(0, yPos - h / 2);
+                loc[2] = Math.min(bitmap.getWidth() - 1, xPos + w / 2);
+                loc[3] = Math.min(bitmap.getHeight() - 1, yPos + h / 2);
                 detections.add(new Recognition("" + offset, labels.get(detectedClass), confidenceInClass, rect, detectedClass));
             }
         }
         return nms(detections);
+    }
+
+    @Override
+    public void useGpu() {
+
+    }
+
+    @Override
+    public void close() {
+
     }
 
     //non maximum suppression
