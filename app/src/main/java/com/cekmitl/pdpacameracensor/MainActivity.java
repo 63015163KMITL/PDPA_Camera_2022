@@ -133,16 +133,18 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     Handler handler = new Handler();
     Runnable runnable;
-    public int delay = 500;
+    public int delay = 5;
     int state_pdpd = 0;
 
+    public boolean x = true;
+
     //DETECT FACE
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
     private Classifier detector;
     private Bitmap cropBitmap;
     private ImageView imageView;
-    public static final int TF_OD_API_INPUT_SIZE = 640;
-    private static final String TF_OD_API_MODEL_FILE = "Sbest-fp16.tflite";
+    public static final int TF_OD_API_INPUT_SIZE = 320;
+    private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
 
 
@@ -247,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             e.printStackTrace();
         }
 
-run();
+        run();
         //t2.interrupt();
 
         //FaceDetection myAsyncTasks = new FaceDetection();
@@ -258,12 +260,13 @@ run();
     @SuppressLint("RestrictedApi")
     @Override
     public void onClick(View view) {
-
+        //x = false;
+        t2.interrupt();
         //Thread.currentThread().interrupt();
         //t2.interrupt();
-        handler.removeCallbacks(runnable);
+        //handler.removeCallbacks(runnable);
         //threadState = false;
-        Log.e("THREAD","THREAD T2 JOIN");
+//        Log.e("THREAD","THREAD T2 JOIN");
         switch (view.getId()) {
             case R.id.bCapture:
                 if (statRecord == false) {
@@ -311,12 +314,13 @@ run();
                 break;
         }
         //threadState = true;
+        //x = true;
         try {
             t2.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        handler.postDelayed(runnable, delay);
+        //handler.postDelayed(runnable, delay);
 
     }
 
@@ -504,13 +508,13 @@ run();
     public void analyze(@NonNull ImageProxy image) {
         //Log.d("TAG", "analyze: got the frame at: " + image.getImageInfo().getTimestamp());
 
-        final Bitmap bitmap = getResizedBitmap(previewView.getBitmap(),640,640);
+        final Bitmap bitmap = getResizedBitmap(previewView.getBitmap(),TF_OD_API_INPUT_SIZE,TF_OD_API_INPUT_SIZE);
         if (bitmap != null) {
             realTimePreview = bitmap;
         } else {
 
         }
-        //final Bitmap bitmap = getResizedBitmap(previewView.getBitmap(),640,640);
+        //final Bitmap bitmap = getResizedBitmap(previewView.getBitmap(),TF_OD_API_INPUT_SIZE,TF_OD_API_INPUT_SIZE);
         //if (bitmap == null) {
         //    return;
         //} else {
@@ -609,7 +613,6 @@ run();
                             myIntent.putExtra("resolution", state_serol);
                             MainActivity.this.startActivity(myIntent);
                         }
-
                         @Override
                         public void onError(@NonNull ImageCaptureException exception) {
                             makeText(MainActivity.this, "Error saving photo: " + exception.getMessage(), LENGTH_SHORT).show();
@@ -728,16 +731,15 @@ run();
         //Toast.makeText(this, "width " + String.valueOf(widthX) + " height " + String.valueOf(heightX), Toast.LENGTH_LONG).show();
     }
 
-    public Uri getImageUri(Context inContext, Bitmap inImage) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
-        return Uri.parse(path);
-    }
+//    public Uri getImageUri(Context inContext, Bitmap inImage) {
+//        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+//        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+//        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+//        return Uri.parse(path);
+//    }
 
     // การถ่ายรูป
     private void capturePhoto2() {
-
         //สร้างตำแหน่งเก็บไฟล์ภาพชั่วคราว
         File file_temp;
         try {
@@ -766,12 +768,6 @@ run();
         }
     }
 
-
-
-
-
-
-
     //DETECT FACE FUNCTION
 
         public List<Classifier.Recognition> imageClassifier(Bitmap bitmap) {
@@ -779,12 +775,12 @@ run();
             List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
             long endTime = System.currentTimeMillis();
 
-            Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
+//            Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
 
             processTime = (int) (endTime - startTime);
             //delay = processTime;
 
-            Log.e("TEST", "imageClassifier OK : Time = " + processTime);
+//            Log.e("TEST", "imageClassifier OK : Time = " + processTime);
             return results;
         }
 
@@ -792,11 +788,11 @@ run();
             clearFocus();
             for (final Classifier.Recognition results2 : results) {
                 final RectF location = results2.getLocation();
-                Log.e("TEST", "FOR Classifier.Recognition results OK");
+//                Log.e("TEST", "FOR Classifier.Recognition results OK");
                 //                           Y - X - Height - Width
                 if (results2.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
                     setFocusView(location.left, location.top, location.right , location.bottom, 777,results2.getX(),results2.getY());
-                    Log.e("TEST", "SET FRAME OK");
+//                    Log.e("TEST", "SET FRAME OK");
                 }
             }
         }
@@ -811,10 +807,10 @@ run();
                     List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
                     long endTime = System.currentTimeMillis();
                     processTime = (int) (endTime - startTime);
-                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
+//                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
 
-                    txtDebug.setText("Time = " + (endTime - startTime) + " ms");
-                    txtDebug2.setText(results + "");
+                  //  txtDebug.setText("Time = " + (endTime - startTime) + " ms");
+                   // txtDebug2.setText(results + "");
 
                     clearFocus();
                     for (final Classifier.Recognition result : results) {
@@ -857,28 +853,39 @@ run();
     public void run() {
         t2 = new Thread(new Runnable() {
             public void run() {
-                if(!t2.isInterrupted()) {
                     handler.postDelayed(runnable = new Runnable() {
                         public void run() {
                             handler.postDelayed(runnable, delay * 1);
                             previewView.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    final Bitmap bitmap2 = getResizedBitmap(previewView.getBitmap(),640,640);
-                                    if (bitmap2 != null) {
-                                        try {
-                                            handleResult(bitmap2);
-                                            txtDebug.setText("Time = " + processTime + " ms");
-                                            Log.e("TEST", "DecodClassifire OK");
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
+                                        long startTime = System.currentTimeMillis();
+
+                                        final Bitmap bitmap2 = getResizedBitmap(previewView.getBitmap(), TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
+                                        if (bitmap2 != null) {
+                                            try {
+                                                handleResult(bitmap2);
+                                                //realTimePreview = bitmap2;
+                                                //DecodClassifire(grobal_results);
+
+                                                //txtDebug.setText("Time = " + processTime + " ms");
+//                                            Log.e("TEST", "DecodClassifire OK");
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
                                         }
-                                    }
+                                        long endTime = System.currentTimeMillis();
+                                        txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
+
+
+                                    // processTime = (int) (endTime - startTime);
+//                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
+
+
                                 }
                             });
                         }
                     }, delay * 1);
-                }
             }
         });
         t2.start();
@@ -891,11 +898,11 @@ run();
     @Override
     protected String doInBackground(String... strings) {
         while (true){
-            //Log.e("THREAD","AsyncTask");
+            Log.e("THREAD","AsyncTask");
             try {
                 grobal_results = imageClassifier(realTimePreview);
 
-                //Log.e("TEST", "imageClassifier OK");
+                Log.e("TEST", "imageClassifier OK");
             } catch (Exception e) {
                 e.printStackTrace();
             }

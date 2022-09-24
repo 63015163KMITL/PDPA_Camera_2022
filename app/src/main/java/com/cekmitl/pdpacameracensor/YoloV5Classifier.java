@@ -3,16 +3,8 @@ package com.cekmitl.pdpacameracensor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
-import android.os.Build;
-import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
-import org.tensorflow.lite.Tensor;
-import com.cekmitl.pdpacameracensor.MainActivity;
-import com.cekmitl.pdpacameracensor.Logger;
-import com.cekmitl.pdpacameracensor.Utils;
-import org.tensorflow.lite.gpu.GpuDelegate;
-import org.tensorflow.lite.nnapi.NnApiDelegate;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -20,9 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -68,7 +58,7 @@ public class YoloV5Classifier implements Classifier {
         Interpreter.Options options = (new Interpreter.Options());
 //        options.setNumThreads(NUM_THREADS);
 //        options.addDelegate(new NnApiDelegate());
-        options.setNumThreads(7); //7 thread = 280 - 300 ms
+        options.setNumThreads(5); //7 thread = 280 - 300 ms
 //        options.setUseNNAPI(true);
 //                    options.setUseNNAPI(false);
 //        options.setAllowFp16PrecisionForFp32(true);
@@ -128,39 +118,17 @@ public class YoloV5Classifier implements Classifier {
     }
 
     protected void convertBitmapToByteBuffer(Bitmap bitmap) {
-        bitmap.getPixels(intValues, 0, 640, 0, 0, 640, 640);
-
+        bitmap.getPixels(intValues, 0, INPUT_SIZE, 0, 0, INPUT_SIZE, INPUT_SIZE);
         imgData.rewind();
-        for (int i = 0; i < 640; ++i) {
-            for (int j = 0; j < 640; ++j) {
-                int pixelValue = intValues[i * 640 + j];
+        for (int i = 0; i < INPUT_SIZE; ++i) {
+            for (int j = 0; j < INPUT_SIZE; ++j) {
+                int pixelValue = intValues[i * INPUT_SIZE + j];
                 imgData.putFloat((((pixelValue >> 16) & 0xFF)) / 255.0f);
                 imgData.putFloat((((pixelValue >> 8) & 0xFF)) / 255.0f);
                 imgData.putFloat(((pixelValue & 0xFF)) / 255.0f);
             }
         }
     }
-
-//    private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
-//        ByteBuffer byteBuffer;
-//        byteBuffer = ByteBuffer.allocateDirect(INPUT_SIZE * d.INPUT_SIZE * 3 * numBytesPerChannel);
-//        byteBuffer.order(ByteOrder.nativeOrder());
-//        int[] intValues = new int[640 * 640];
-//        bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0,
-//                bitmap.getWidth(), bitmap.getHeight());
-//        int pixel = 0;
-//        for (int i = 0; i < 640; ++i) {
-//            for (int j = 0; j < 640; ++j) {
-//                final int val = intValues[pixel++];
-//                byteBuffer.putFloat(
-//                        (((val >> 16) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
-//                byteBuffer.putFloat(
-//                        (((val >> 8) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
-//                byteBuffer.putFloat((((val) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
-//            }
-//        }
-//        return byteBuffer;
-//    }
 
     //    long startTime = 0;
     public ArrayList<Recognition> recognizeImage(Bitmap bitmap) {
@@ -186,12 +154,6 @@ public class YoloV5Classifier implements Classifier {
             for (int j = 0; j < numClass + 5; ++j) {
                 out[0][i][j] = byteBuffer.getFloat();
             }
-            // ทำการแปลงจากค่าในช่วง [0,1] ให้เป็นตำแหน่งของภาพ (*ด้วยขนาดของภาพ)
-            // Denormalize xywh
-//            for (int j = 0; j < 4; ++j) {
-//                out[0][i][j] *= INPUT_SIZE;
-//
-//            }
         }
         for (int i = 0; i < output_box; ++i){
             final int offset = 0;
@@ -199,9 +161,7 @@ public class YoloV5Classifier implements Classifier {
             int detectedClass = -1;
             float maxClass = 0;
             final float[] classes = new float[labels.size()];
-
             System.arraycopy(out[0][i], 5, classes, 0, labels.size());
-
             for (int c = 0; c < labels.size(); ++c) {
                 if (classes[c] > maxClass) {
                     detectedClass = c;
@@ -215,18 +175,6 @@ public class YoloV5Classifier implements Classifier {
                 final float w = out[0][i][2];
                 final float h = out[0][i][3];
 
-                //final RectF rect = new RectF(
-               //         Math.max(0, xPos),
-                //        Math.max(0, yPos),
-                //        Math.min(bitmap.getWidth() - 1, xPos + w),
-                //        Math.min(bitmap.getHeight() - 1, yPos + h));
-/*
-                final RectF rect = new RectF(
-                        yPos - h/2,
-                        xPos - w/2,
-                        Math.min(bitmap.getHeight() - 1, h),
-                        Math.min(bitmap.getWidth() - 1, w));
-                        */
                 final RectF rect = new RectF(
                         Math.max(0, xPos - w/2),
                         Math.max(0, yPos - h/2),
@@ -239,36 +187,11 @@ public class YoloV5Classifier implements Classifier {
         return nms(detections);
     }
 
-    @Override
-    public void enableStatLogging(boolean debug) {
-
-    }
-
-    @Override
-    public String getStatString() {
-        return null;
-    }
-
-    @Override
-    public void close() {
-
-    }
-
-    @Override
-    public void setNumThreads(int num_threads) {
-
-    }
-
-    @Override
-    public void setUseNNAPI(boolean isChecked) {
-
-    }
 
     protected ArrayList<Recognition> nms(ArrayList<Recognition> list) {
         ArrayList<Recognition> nmsList = new ArrayList<>();
 
         for (int k = 0; k < labels.size(); k++) {
-
             //1.find max confidence per class
             PriorityQueue<Recognition> pq = new PriorityQueue<>(50, (lhs, rhs) -> {
                 // Intentionally reversed to put high confidence at the head of the queue.
@@ -282,7 +205,6 @@ public class YoloV5Classifier implements Classifier {
             }
             //2.do non maximum suppression
             while (pq.size() > 0) {
-
                 //insert detection with max confidence
                 Recognition[] a = new Recognition[pq.size()];
                 Recognition[] detections = pq.toArray(a);

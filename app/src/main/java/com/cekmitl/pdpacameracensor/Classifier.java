@@ -11,18 +11,6 @@ import java.util.List;
 public interface Classifier {
     List<Recognition> recognizeImage(Bitmap bitmap);
 
-    void enableStatLogging(final boolean debug);
-
-    String getStatString();
-
-    void close();
-
-    void setNumThreads(int num_threads);
-
-    void setUseNNAPI(boolean isChecked);
-
-    abstract float getObjThresh();
-
     /**
      * An immutable result returned by a Classifier describing what was recognized.
      */
@@ -51,14 +39,6 @@ public interface Classifier {
         private int detectedClass;
         private float x;
         private float y;
-
-        public Recognition(
-                final String id, final String title, final Float confidence, final RectF location) {
-            this.id = id;
-            this.title = title;
-            this.confidence = confidence;
-            this.location = location;
-        }
 
         public Recognition(final String id, final String title, final Float confidence, final RectF location, int detectedClass,float x,float y) {
             this.id = id;
@@ -90,38 +70,38 @@ public interface Classifier {
 
         public Float getY() { return y;}
 
-        public void setLocation(RectF location) {
-            this.location = location;
-        }
+//        public void setLocation(RectF location) {
+//            this.location = location;
+//        }
 
         public int getDetectedClass() {
             return detectedClass;
         }
 
-        public void setDetectedClass(int detectedClass) {
-            this.detectedClass = detectedClass;
-        }
+//        public void setDetectedClass(int detectedClass) {
+//            this.detectedClass = detectedClass;
+//        }
 
-        @Override
-        public String toString() {
-            String resultString = "";
-            if (id != null) {
-                resultString += "[" + id + "] ";
-            }
-
-            if (title != null) {
-                resultString += title + " ";
-            }
-
-            if (confidence != null) {
-                resultString += String.format("(%.1f%%) ", confidence * 100.0f);
-            }
-
-            if (location != null) {
-                resultString += location + " ";
-            }
-
-            return resultString.trim();
-        }
+//        @Override
+//        public String toString() {
+//            String resultString = "";
+//            if (id != null) {
+//                resultString += "[" + id + "] ";
+//            }
+//
+//            if (title != null) {
+//                resultString += title + " ";
+//            }
+//
+//            if (confidence != null) {
+//                resultString += String.format("(%.1f%%) ", confidence * 100.0f);
+//            }
+//
+//            if (location != null) {
+//                resultString += location + " ";
+//            }
+//
+//            return resultString.trim();
+//        }
     }
 }
