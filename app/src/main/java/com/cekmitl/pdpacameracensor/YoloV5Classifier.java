@@ -59,11 +59,9 @@ public class YoloV5Classifier implements Classifier {
 //        options.setNumThreads(NUM_THREADS);
 //        options.addDelegate(new NnApiDelegate());
         options.setNumThreads(5); //7 thread = 280 - 300 ms
-//        options.setUseNNAPI(true);
-//                    options.setUseNNAPI(false);
-//        options.setAllowFp16PrecisionForFp32(true);
+
         options.setUseXNNPACK(true);
-        options.setCancellable(true);
+//        options.setCancellable(true);
         options.setAllowBufferHandleOutput(true);
         d.tfLite = new Interpreter(Utils.loadModelFile(assetManager, modelFilename), options);
         int numBytesPerChannel;
@@ -84,10 +82,6 @@ public class YoloV5Classifier implements Classifier {
 
     public float getObjThresh() {
         return MainActivity.MINIMUM_CONFIDENCE_TF_OD_API;
-    }
-
-
-    private YoloV5Classifier() {
     }
 
     protected float mNmsThresh = 0.6f;

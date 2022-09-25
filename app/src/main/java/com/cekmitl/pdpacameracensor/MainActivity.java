@@ -17,38 +17,34 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.lifecycle.LifecycleOwner;
 
 import android.Manifest;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
+import android.graphics.drawable.BitmapDrawable;
+import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.util.Rational;
 import android.util.Size;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -57,51 +53,18 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ConfigurationInfo;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.RectF;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Handler;
-import android.provider.MediaStore;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
-import org.tensorflow.lite.DataType;
-import org.tensorflow.lite.support.image.TensorImage;
-import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
-import java.io.IOException;
-import java.net.URI;
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
 import java.util.List;
-
-
 
 public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener, Runnable{
 
@@ -109,122 +72,63 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
     public PreviewView previewView;
-    public ImageView previewView2;
-    private ImageCapture imageCapture, imageCaptureX;
+    private ImageCapture imageCapture;
     private VideoCapture videoCapture;
+    private ImageButton bCapture;
+    private ImageButton btnChangResol;
     private ImageAnalysis imageAnalysis;
-    private ImageButton btnGallery, bCapture, btnReverse, btnChangResol;
-    private boolean statRecord, cam_reverse_state;
+    private boolean statRecord;
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
-
     private ImageView imgViewTest;
-    public Bitmap realTimePreview;
-
     private ProcessCameraProvider cameraProvider;
-    private CameraSelector cameraSelector;
-    private RelativeLayout GetSizeImg;
 
-    private TextView tvTimer, txtDebug, txtDebug2;
+    private TextView txtDebug;
     private LinearLayout top_center;
-    private RelativeLayout relativeLyout, fram_camera, head_layout;
     public int img_width = 0, img_height = 0;
 
     //Resolution Image
     private String state_serol = "4:3";
 
-    Handler handler = new Handler();
-    Runnable runnable;
-    public int delay = 5;
     int state_pdpd = 0;
-
-    public boolean x = true;
 
     //DETECT FACE
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
     private Classifier detector;
-    private Bitmap cropBitmap;
-    private ImageView imageView;
     public static final int TF_OD_API_INPUT_SIZE = 320;
     private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
-
-
-    public Thread t2, t3;
-    public boolean threadState = true;
-    //public Handler handler;
-    //public Runnable runnable;
-
-    public List<Classifier.Recognition> grobal_results;
+    public Thread t2;
     public int processTime;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // remove title
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        //getWindow().getDecorView().setSystemUiVisibility(  View.SYSTEM_UI_FLAG_HIDE_NAVIGATION| View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
-
         setContentView(R.layout.new_preview);
-
         ChangResolutionImage(4, 3);
 
-        txtDebug = (TextView) findViewById(R.id.text_debug);
-        txtDebug2 = (TextView) findViewById(R.id.text_debug2);
+        frameFocusLayout = findViewById(R.id.fram_focus_layout);
+        txtDebug = findViewById(R.id.text_debug);
 
-        imgViewTest = (ImageView) findViewById(R.id.test_preview);
-
-        //0.461358 0.338458 0.200941 0.198085
-        //setFocusView(0.461358,0.338458,0.200941,0.198085);
-        //0 0.356173 0.413889 0.0432099 0.0444444
-        //0 0.167901, 0.411574, 0.0469136, 0.0490741
-
-        //setFocusView(0.356173, 0.413889, 0.0432099, 0.0444444);
-        //setFocusView(0.167901, 0.411574, 0.0469136, 0.0490741);
-
-        // setFocusView(0.4, 0.4, 0.1, 0.1, 999);
-        // setFocusView(0.6, 0.4, 0.1, 0.1, 777);
-
-        top_center = (LinearLayout) findViewById(R.id.top_center);
-
+        imgViewTest = findViewById(R.id.test_preview);
+        top_center = findViewById(R.id.top_center);
 
         //ลบ Action Bar ออก
         ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
         actionBar.hide();
 
         //ส่วนสร้าง Object ต่าง ๆ --------------------------------------------------------------------------------------
         previewView = findViewById(R.id.previewView);                       // Preview Camera X
-        previewView2 = findViewById(R.id.previewView2);
-        fram_camera = findViewById(R.id.fram_camera);
 
         //PHOTO
         bCapture = findViewById(R.id.bCapture);                             // ปุ่มถ่ายรูป Capture Button
-        btnGallery = findViewById(R.id.button_gallery);                     // ปุ่มดูรูปในอัลบั้ม Gallery
-        btnReverse = findViewById(R.id.reverse_camera_button);              // ปุ่มดสลับกล้องหน้าหลัง Font / BACK
+        ImageButton btnGallery = findViewById(R.id.button_gallery);                     // ปุ่มดูรูปในอัลบั้ม Gallery
+        ImageButton btnReverse = findViewById(R.id.reverse_camera_button);              // ปุ่มดสลับกล้องหน้าหลัง Font / BACK
         btnChangResol = findViewById(R.id.change_resolution);
         btnChangResol.setBackgroundResource(R.drawable.ic_resol_4_3);
-
-        //VIDEO
-        ImageView imgV = findViewById(R.id.icon_recording);                 // สัญลักษณ์ บันทึกวีดิโอ
-        //Animation startAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.blink);
-        //imgV.startAnimation(startAnimation);
-        tvTimer = findViewById(R.id.textViewTimer);
-        //END - ส่วนสร้าง Object ต่าง ๆ --------------------------------------------------------------------------------------
-
-        //Canvas ---------------------------------------------------------------------------------------------------------
-        relativeLyout = findViewById(R.id.main_relative_layout);
-        head_layout = findViewById(R.id.main_relative_layout);
-        //MyView myView = new MyView(this);
-        //relativeLyout.addView(myView);
-        //END - Canvas ---------------------------------------------------------------------------------------------------
-
-        // Set ค่าเริ่มต้นตัวแปร ------------------------------------------------------------------------------------------------
         statRecord = false;                                                 //bRecord = findViewById(R.id.bRecord);
-        cam_reverse_state = true;                                           //true = Back Camera, false = Font Camera
-        // END - Set ค่าเริ่มต้นตัวแปร ------------------------------------------------------------------------------------------
 
         bCapture.setOnClickListener(this);
         bCapture.setOnLongClickListener(this);
@@ -244,80 +148,47 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             }
         }, getExecutor());
 
-
         try {
             detector = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        //run();
-        //t2.interrupt();
-
-        //FaceDetection myAsyncTasks = new FaceDetection();
-        //myAsyncTasks.execute();
-
-        t2 = new Thread(new Runnable() {
+        new Thread(new Runnable() {
             public void run() {
-                handler.postDelayed(runnable = new Runnable() {
-                    public void run() {
-                        handler.postDelayed(runnable, delay * 1);
-                        previewView.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                long startTime = System.currentTimeMillis();
-                                final Bitmap bitmap2 = getResizedBitmap(previewView.getBitmap(), TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
-                                try {
-                                    //Bitmap returnedBitmap = previewView.getBitmap();
+                while (true) {
+                    handleResult();
 
-                                    //Log.e("THREAD","AsyncTask OK");
-                                    if (bitmap2 != null) {
-                                        try {
-                                            handleResult(bitmap2);
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                    Log.e("THREAD","OK");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    Log.e("THREAD","ERROR : " + e);
-                                }
-
-                                long endTime = System.currentTimeMillis();
-                                txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
-
-
-                                // processTime = (int) (endTime - startTime);
-//                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
-
-
-                            }
-                        });
-                    }
-                }, delay * 1);
+                }
             }
-        });
-        t2.start();
+        }).start();
 
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        run();
+    }
+
+    @Override
+    public void run() {
+
+        setBox();
+        frameFocusLayout.postDelayed(this,50);
 
     }
 
 
-    @SuppressLint("RestrictedApi")
+    @SuppressLint({"RestrictedApi", "NonConstantResourceId"})
     @Override
     public void onClick(View view) {
-        //x = false;
-        //t2.interrupt();
-        //Thread.currentThread().interrupt();
-        //t2.interrupt();
-        //threadState = false;
-//        Log.e("THREAD","THREAD T2 JOIN");
         switch (view.getId()) {
             case R.id.bCapture:
-                if (statRecord == false) {
+                if (!statRecord) {
                     capturePhoto();
-                } else if (statRecord == true) {
+                } else {
                     bCapture.setImageResource(R.drawable.ic_camera);
                     videoCapture.stopRecording();
                     statRecord = false;
@@ -331,74 +202,52 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 MainActivity.this.startActivity(galleryIntent);
                 break;
             case R.id.change_resolution:
-                if (state_serol.equals("4:3")) {
-                    ChangResolutionImage(16, 9);
-                    state_serol = "16:9";
-                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_16_9);
-                } else if (state_serol.equals("16:9")) {
-                    ChangResolutionImage(1, 1);
-                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_1_1);
-                    state_serol = "1:1";
+                switch (state_serol) {
+                    case "4:3":
+                        ChangResolutionImage(16, 9);
+                        state_serol = "16:9";
+                        btnChangResol.setBackgroundResource(R.drawable.ic_resol_16_9);
+                        break;
+                    case "16:9":
+                        ChangResolutionImage(1, 1);
+                        btnChangResol.setBackgroundResource(R.drawable.ic_resol_1_1);
+                        state_serol = "1:1";
 
-                } else if (state_serol.equals("1:1")) {
-                    ChangResolutionImage(4, 3);
-                    btnChangResol.setBackgroundResource(R.drawable.ic_resol_4_3);
-                    state_serol = "4:3";
+                        break;
+                    case "1:1":
+                        ChangResolutionImage(4, 3);
+                        btnChangResol.setBackgroundResource(R.drawable.ic_resol_4_3);
+                        state_serol = "4:3";
+                        break;
                 }
                 break;
             case R.id.top_center:
-                //t2.interrupt();
-
                 if(state_pdpd == 0){
-                    //slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
-                    top_center.setBackgroundResource(R.drawable.bg_line_round_stroke);
-                    handler.removeCallbacks(runnable);
+                    slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
                     state_pdpd = 1;
                 }else {
-                    //slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
-                    top_center.setBackgroundResource(R.drawable.bg_round_stroke);
-                    handler.postDelayed(runnable, delay);
-
-
+                    slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
                     state_pdpd = 0;
                 }
-                //
                 break;
         }
-        //threadState = true;
-        //x = true;
-        //try {
-           // t2.sleep(1000);
-       // } catch (InterruptedException e) {
-          //  e.printStackTrace();
-       //}
-
-
     }
 
     @Override
     public boolean onLongClick(View view) {
-        switch (view.getId()) {
-            case R.id.bCapture:
-                bCapture.setImageResource(R.drawable.ic_recording);
-                recordVideo();
-                break;
+        if (view.getId() == R.id.bCapture) {
+            bCapture.setImageResource(R.drawable.ic_recording);
+            recordVideo();
         }
         return statRecord = true;
     }
 
     public static void slideView(View view, int currentHeight, int newHeight) {
         ValueAnimator slideAnimator = ValueAnimator.ofInt(currentHeight, newHeight).setDuration(500);
-
-        /* We use an update listener which listens to each tick
-         * and manually updates the height of the view  */
         slideAnimator.addUpdateListener(animation1 -> {
-            Integer value = (Integer) animation1.getAnimatedValue();
-            view.getLayoutParams().height = value.intValue();
+            view.getLayoutParams().height = (Integer) animation1.getAnimatedValue();
             view.requestLayout();
         });
-
-        /*  We use an animationSet to play the animation  */
         AnimatorSet animationSet = new AnimatorSet();
         animationSet.setInterpolator(new AccelerateDecelerateInterpolator());
         animationSet.play(slideAnimator);
@@ -406,45 +255,37 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 
     public static void slideView2(View view, int currentHeight, int newHeight, int currentWidth, int newWidth) {
-
         ValueAnimator slideAnimator = ValueAnimator.ofInt(currentHeight, newHeight).setDuration(600);
         ValueAnimator slideAnimator2 = ValueAnimator.ofInt(currentWidth, newWidth).setDuration(600);
 
         /* We use an update listener which listens to each tick
          * and manually updates the height of the view  */
         slideAnimator.addUpdateListener(animation1 -> {
-            Integer value = (Integer) animation1.getAnimatedValue();
-            view.getLayoutParams().height = value.intValue();
+            view.getLayoutParams().height = (Integer) animation1.getAnimatedValue();
             view.requestLayout();
         });
 
         slideAnimator2.addUpdateListener(animation1 -> {
-            Integer value = (Integer) animation1.getAnimatedValue();
-            view.getLayoutParams().width = value.intValue();
+            view.getLayoutParams().width = (Integer) animation1.getAnimatedValue();
             view.requestLayout();
         });
-
         /*  We use an animationSet to play the animation  */
         AnimatorSet animationSet = new AnimatorSet();
         animationSet.setInterpolator(new AccelerateDecelerateInterpolator());
         animationSet.play(slideAnimator);
         animationSet.start();
-
         /*  We use an animationSet to play the animation  */
         AnimatorSet animationSet2 = new AnimatorSet();
         animationSet2.setInterpolator(new AccelerateDecelerateInterpolator());
         animationSet2.play(slideAnimator2);
         animationSet2.start();
-
     }
 
     public void ChangResolutionImage(int h, int w) {
         Display display = getWindowManager().getDefaultDisplay();
         int width = display.getWidth();
-
         img_width = width;
         img_height = (width / w) * h;
-
         RelativeLayout view = findViewById(R.id.frame_top_camera);
         RelativeLayout view2 = findViewById(R.id.main_relative_layout);
 
@@ -456,24 +297,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         slideView(view2, view2.getLayoutParams().height, img_height);
 
-        /*
-        RelativeLayout view = findViewById(R.id.frame_top_camera);
-        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-
-        layoutParams.width = img_width;
-        layoutParams.height = img_height;
-        view.setLayoutParams(layoutParams);
-
-        RelativeLayout view2 = findViewById(R.id.main_relative_layout);
-        ViewGroup.LayoutParams layoutParams2 = view2.getLayoutParams();
-
-        layoutParams2.width = img_width;
-        layoutParams2.height = img_height;
-        view2.setLayoutParams(layoutParams2);
-
-         */
-
-        //----------------------------------------------//
         RelativeLayout view3 = findViewById(R.id.main_preview);
         ViewGroup.LayoutParams layoutParams3 = view3.getLayoutParams();
 
@@ -481,22 +304,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         layoutParams3.height = (width / 9) * 16;
         view3.setLayoutParams(layoutParams3);
 
-
-        //txtDebug.setText("Height = " + ((width / w) * h) + "\nWidht = " + width);
-        //Toast.makeText(MainActivity.this, "Height = " + img_height + "\nWidht = " + img_width, Toast.LENGTH_SHORT).show();
-
-
-        // txtDebug2.setText("Height = " + (width / 9) * 16 + "\nWidht = " + img_width);
-
     }
-
-
-
-
 
     // ตั้งค่ากล้อง Camera X ---------------------------------------------------------------------------------------------
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
         // Checks the orientation of the screen
@@ -511,7 +323,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         return ContextCompat.getMainExecutor(this);
     }
 
-
     //ตรวจสอบการใช้งาน ว่าขณะนี้ใช้กล้องหน้า หรือกล้องหลังอยู่
     private void flipCamera() {
         if (lensFacing == CameraSelector.LENS_FACING_BACK) {
@@ -522,20 +333,23 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         startCameraX(cameraProvider);
     }
 
-
     // เริ่มต้นการทำงานของ Camera X
     @SuppressLint("RestrictedApi")
     private void startCameraX(ProcessCameraProvider cameraProvider) {
         cameraProvider.unbindAll();
-        cameraSelector = new CameraSelector.Builder()
+        CameraSelector cameraSelector = new CameraSelector.Builder()
                 .requireLensFacing(lensFacing)
                 .build();
         Preview preview = new Preview.Builder()
                 .build();
+
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
-        //preview.setSurfaceProvider((Preview.SurfaceProvider) previewView2);
 
+        imageAnalysis = new ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build();
 
+        //imageAnalysis.setAnalyzer(getExecutor(), this);
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
@@ -544,50 +358,33 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         // Video capture use case
         videoCapture = new VideoCapture.Builder()
-                .setVideoFrameRate(60)
+                .setVideoFrameRate(30)
                 .build();
 
-        // Image analysis use case
-        imageAnalysis = new ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build();
-
-        //imageAnalysis.setAnalyzer(getExecutor(), this);
-
-        //bind to lifecycle:
-        cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, preview,imageCapture, videoCapture);
+        cameraProvider.bindToLifecycle(this, cameraSelector, preview,imageAnalysis,imageCapture);
     }
 
     @Override
     public void analyze(@NonNull ImageProxy image) {
-        Log.e("IMG","Image Analysis now");
+//        Log.d("TAG", "analyze: ");
+
+        long startTime = System.currentTimeMillis();
+        @SuppressLint("UnsafeOptInUsageError") Bitmap bm = Utils.toBitmap(image.getImage());
         image.close();
-    }
+        bm = Utils.getResizedBitmap(bm, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
+        Matrix matrix = new Matrix();
+        matrix.postRotate(90);
+        tempBitmap = Bitmap.createBitmap(bm, 0, 0, 320, 320,
+                matrix, false);
 
-    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
-        if (bm != null){
-            int width = bm.getWidth();
-            int height = bm.getHeight();
-            float scaleWidth = ((float) newWidth) / width;
-            float scaleHeight = ((float) newHeight) / height;
-            // CREATE A MATRIX FOR THE MANIPULATION
-            Matrix matrix = new Matrix();
-            // RESIZE THE BIT MAP
-            matrix.postScale(scaleWidth, scaleHeight);
 
-            // "RECREATE" THE NEW BITMAP
-            Bitmap resizedBitmap = Bitmap.createBitmap(
-                    bm, 0, 0, width, height, matrix, false);
-            return resizedBitmap;
-        }
-        return null;
+        long endTime = System.currentTimeMillis();
+        txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
     }
 
     @SuppressLint("RestrictedApi")
     private void recordVideo() {
         if (videoCapture != null) {
-
-
             long timestamp = System.currentTimeMillis();
 
             ContentValues contentValues = new ContentValues();
@@ -610,7 +407,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                             @Override
                             public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
                                 makeText(MainActivity.this, "Video has been saved successfully.", LENGTH_SHORT).show();
-
                             }
 
                             @Override
@@ -628,7 +424,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     // การถ่ายรูป
     private void capturePhoto() {
-
         //สร้างตำแหน่งเก็บไฟล์ภาพชั่วคราว
         File file_temp;
         try {
@@ -646,8 +441,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                             //Preview ใน iCon ของ Gallery
                             ImageButton imgBtn = findViewById(R.id.button_gallery);
                             imgBtn.setImageBitmap(myBitmap);
-
-
                             //เปิดหน้า Preview Activity
                             Intent myIntent = new Intent(MainActivity.this, PreviewActivity.class);
                             myIntent.putExtra("key", file_temp.getAbsolutePath()); //Optional parameters
@@ -670,114 +463,39 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         //removeView();
         int x, y, h, w;
 
-
-       //RelativeLayout frameFocusLayout = (RelativeLayout) findViewById(R.id.main_relative_layout);
-        RelativeLayout frameFocusLayout = (RelativeLayout) findViewById(R.id.fram_focus_layout);
-
-
-        ViewTreeObserver vto = frameFocusLayout.getViewTreeObserver();
-        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                RelativeLayout mainPreview = (RelativeLayout) findViewById(R.id.main_preview);
-                mainPreview.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                img_width = mainPreview.getMeasuredWidth();
-                img_height = mainPreview.getMeasuredHeight();
-                //txtDebug.setText("Height = " + img_height + "\nWidht = " + img_width);
-                //Toast.makeText(MainActivity.this, "Height = " + img_height + "\nWidht = " + img_width, Toast.LENGTH_SHORT).show();
-
-
-                //txt.setText("Height = " + height + "\nWidht = " + width);
-            }
-        });
-
-        //Toast.makeText(MainActivity.this, "X Height = " + img_height + "\nX Widht = " + img_width, Toast.LENGTH_SHORT).show();
-
         Display display = getWindowManager().getDefaultDisplay();
         int width2 = display.getWidth();
         int height2 = 0;
 
-        if (state_serol.equals("4:3")) {
-            height2 = 1440;
-        } else if (state_serol.equals("16:9")) {
-            height2 = 1920;
-        } else if (state_serol.equals("1:1")) {
-            height2 = 1080;
+        switch (state_serol) {
+            case "4:3":
+                height2 = 1440;
+                break;
+            case "16:9":
+                height2 = 1920;
+                break;
+            case "1:1":
+                height2 = 1080;
+                break;
         }
-//        h = Math.round((float) ((2*(height-xPos)) * height2));
-//        w = Math.round((float) ((2*(width-yPos)) * width2));
-//        Log.d("x", String.valueOf(2*(height-yPos)));
-//        x = Math.round((float) (X * height2));
-//        y = Math.round((float) (Y * width2));
-
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
         h = Math.round((float) ((2*(height-yPos)) * height2));
         w = Math.round((float) ((2*(width-xPos)) * width2));
-//        Log.d("x", String.valueOf(2*(height-yPos)));
         x = Math.round((float) (X * width2));
         y = Math.round((float) (Y * height2));
 
-        //x = Math.round((float) (X * height2 * s)) - (h / 2);
-        //y = Math.round((float) (Y * width2 * s)) - (w / 2);
-
-        //txtDebug2.setText("x = " + x + "\ny = " + y);
-
-
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-        View focus_frame = inflater.inflate(R.layout.focus_frame, null);
+        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
         focus_frame.setId(str);
 
-        focus_frame.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                makeText(MainActivity.this, "CLICK = " + focus_frame.getId(), LENGTH_SHORT).show();
-            }
-        });
-
-        //RelativeLayout focus_frame = (RelativeLayout) findViewById(R.layout.focus_frame);
-        //RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,RelativeLayout.LayoutParams.WRAP_CONTENT);
-        //lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-
+        focus_frame.setOnClickListener(view -> makeText(MainActivity.this, "CLICK = " + focus_frame.getId(), LENGTH_SHORT).show());
         RelativeLayout.LayoutParams params1 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params1.height = h;
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
 
-
-        //params1.height = (int) Math.round(height * 1440) ;
-        //params1.width = (int) Math.round(width * 1080);
-        //params1.setMargins( (int) Math.round((Y * 1440) + params1.height),
-        //                    (int) Math.round(X * 1080), 0, 0);
-
         frameFocusLayout.addView(focus_frame, params1);
-
-        //rl.setLayoutParams(params1);
-        //rl.addView(focus_frame);
-
-        // Button myButton = new Button(this);
-        //ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(300, 300);
-        //lp.setMargins(left, top, 0, 0);
-        //lp.setMargins();
-        //l.addView(focus_frame, params1);
-
-        // Toast.makeText(this, previewView.getMeasuredHeight() + ":" + previewView.getMeasuredHeight(), Toast.LENGTH_SHORT).show();
-
-        //int widthX = fram_camera.getWidth();
-        //int heightX = fram_camera.getHeight();
-
-        // int widthX = fram_camera.getLayoutParams().height;
-        //int heightX = fram_camera.getLayoutParams().width;
-
-        //Toast.makeText(this, "width " + String.valueOf(widthX) + " height " + String.valueOf(heightX), Toast.LENGTH_LONG).show();
     }
-
-//    public Uri getImageUri(Context inContext, Bitmap inImage) {
-//        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-//        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-//        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
-//        return Uri.parse(path);
-//    }
 
     // การถ่ายรูป
     private void capturePhoto2() {
@@ -793,13 +511,10 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                             //นำภาพในไฟล์ชั่วคราว ดึงมาใส่ใน Object BitMap
                             Bitmap myBitmap = BitmapFactory.decodeFile(file_temp.getAbsolutePath());
                             imgViewTest.setImageBitmap(myBitmap);
-
-                           // Toast.makeText(MainActivity.this, "A", Toast.LENGTH_SHORT).show();
                         }
 
                         @Override
                         public void onError(@NonNull ImageCaptureException exception) {
-                           // Toast.makeText(MainActivity.this, "B", Toast.LENGTH_SHORT).show();
                         }
                     }
             );
@@ -809,182 +524,33 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         }
     }
 
+    List<Classifier.Recognition> results = null;
     //DETECT FACE FUNCTION
+    public void handleResult() {
+            if(tempBitmap != null){
+                results = detector.recognizeImage(tempBitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
+            }
+    }
 
-        public List<Classifier.Recognition> imageClassifier(Bitmap bitmap) {
-            long startTime = System.currentTimeMillis();
-            List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
-            long endTime = System.currentTimeMillis();
+    public void setBox() {
 
-//            Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
-
-            processTime = (int) (endTime - startTime);
-            //delay = processTime;
-
-//            Log.e("TEST", "imageClassifier OK : Time = " + processTime);
-            return results;
-        }
-
-        public void DecodClassifire(List<Classifier.Recognition> results) {
+        if (results != null) {
             clearFocus();
-            for (final Classifier.Recognition results2 : results) {
-                final RectF location = results2.getLocation();
-//                Log.e("TEST", "FOR Classifier.Recognition results OK");
-                //                           Y - X - Height - Width
-                if (results2.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
-                    setFocusView(location.left, location.top, location.right , location.bottom, 777,results2.getX(),results2.getY());
-//                    Log.e("TEST", "SET FRAME OK");
+            for (final Classifier.Recognition result : results) {
+                final RectF location = result.getLocation();
+                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY());
+//                Log.d("TAG", "handleResult: ");
                 }
             }
         }
+    }
 
-        public void handleResult(Bitmap bitmap) {
-
-            //Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
-            Bitmap bmp = bitmap;//Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
-
-                if(bmp != null){
-                    long startTime = System.currentTimeMillis();
-                    List<Classifier.Recognition> results = detector.recognizeImage(bitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
-                    long endTime = System.currentTimeMillis();
-                    processTime = (int) (endTime - startTime);
-
-
-//                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
-
-                  //  txtDebug.setText("Time = " + (endTime - startTime) + " ms");
-                   // txtDebug2.setText(results + "");
-
-                    clearFocus();
-                    for (final Classifier.Recognition result : results) {
-                        final RectF location = result.getLocation();
-
-                        //                           Y - X - Height - Width
-                        if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
-                                setFocusView(location.left, location.top, location.right , location.bottom, 777,result.getX(),result.getY());
-                        }
-
-                    }
-
-            }
-
-                //imgViewTest.setImageBitmap(bitmap);
-
-                //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
-                //handleResult(getResizedBitmap(bitmap, 256, 256));
-
-
-//        long endtime = System.currentTimeMillis() - startTime;
-//        Log.d("time", "time " + String.valueOf(endtime));
-
-            }
-
-            public void clearFocus(){
-                RelativeLayout frameFocusLayout = (RelativeLayout) findViewById(R.id.fram_focus_layout);
-
+    RelativeLayout frameFocusLayout;
+    public void clearFocus(){
                 if (null != frameFocusLayout && frameFocusLayout.getChildCount() > 0) {
-                    try {
-                        frameFocusLayout.removeViews (0, frameFocusLayout.getChildCount());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    frameFocusLayout.removeViews (0, frameFocusLayout.getChildCount());
                 }
-            }
-
-            public Bitmap getPreview(){
-                return previewView.getBitmap();
-            }
-
-    @Override
-    public void run() {
-        t2 = new Thread(new Runnable() {
-            public void run() {
-                    handler.postDelayed(runnable = new Runnable() {
-                        public void run() {
-                            handler.postDelayed(runnable, delay * 1);
-                            previewView.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    long startTime = System.currentTimeMillis();
-                                    final Bitmap bitmap2 = getResizedBitmap(previewView.getBitmap(), TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
-                                    try {
-                                        //Bitmap returnedBitmap = previewView.getBitmap();
-
-                                        //Log.e("THREAD","AsyncTask OK");
-                                        if (bitmap2 != null) {
-                                            try {
-                                                handleResult(bitmap2);
-                                            } catch (Exception e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                        Log.e("THREAD","OK");
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                        Log.e("THREAD","ERROR : " + e);
-                                    }
-
-                                        long endTime = System.currentTimeMillis();
-                                        txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
-
-
-                                    // processTime = (int) (endTime - startTime);
-//                    Log.e("THREAD","Time = " + (endTime - startTime) + " ms");
-
-
-                                }
-                            });
-                        }
-                    }, delay * 1);
-            }
-        });
-        t2.start();
-
     }
-
-
-    class FaceDetection extends AsyncTask<String, Void, String>{
-
-    @SuppressLint("WrongThread")
-    @Override
-    protected String doInBackground(String... strings) {
-        while (true){
-            try {
-                View view = previewView;
-                //Bitmap bitmap2;
-                //bitmap2 = previewView.getBitmap();
-
-                Bitmap returnedBitmap = Bitmap.createBitmap(view.getWidth(),
-                        view.getHeight(), Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(returnedBitmap);
-                Drawable bgDrawable = view.getBackground();
-                if (bgDrawable != null)
-                    bgDrawable.draw(canvas);/*from ww w . j  a v  a  2  s.  c om*/
-                else
-                    canvas.drawColor(Color.WHITE);
-                view.draw(canvas);
-
-                imgViewTest.setImageBitmap(returnedBitmap);
-
-                //Log.e("THREAD","AsyncTask OK");
-                if (returnedBitmap != null) {
-                    try {
-                        handleResult(returnedBitmap);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-                Log.e("THREAD","OK");
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.e("THREAD","ERROR : " + e);
-            }
-        }
-    }
-
-     @Override
-     protected void onPostExecute(String s) {
-        super.onPostExecute(s);
-     }
- }
+    Bitmap tempBitmap = null;
 }
