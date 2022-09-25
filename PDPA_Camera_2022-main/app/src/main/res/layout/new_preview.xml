@@ -167,7 +167,9 @@
                         <androidx.camera.view.PreviewView
                             android:id="@+id/previewView"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent" />
+                            android:layout_height="match_parent" >
+
+                        </androidx.camera.view.PreviewView>
 
                         <RelativeLayout
                             android:id="@+id/fram_focus_layout"
@@ -177,13 +179,13 @@
                         </RelativeLayout>
                     </FrameLayout>
 
-                    <ImageView
-                        android:id="@+id/test_img"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:adjustViewBounds="true"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/ic_frame_grid" />
+<!--                    <ImageView-->
+<!--                        android:id="@+id/test_img"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="match_parent"-->
+<!--                        android:adjustViewBounds="true"-->
+<!--                        android:scaleType="fitXY"-->
+<!--                        android:src="@drawable/ic_frame_grid" />-->
 
 
 
