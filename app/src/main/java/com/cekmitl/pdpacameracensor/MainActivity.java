@@ -28,21 +28,15 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.Image;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.view.Display;
 import android.view.LayoutInflater;
-import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -55,16 +49,16 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import android.graphics.RectF;
 import android.widget.Toast;
 
 import java.util.List;
+
+
 
 public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener, Runnable{
 
@@ -156,9 +150,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         new Thread(new Runnable() {
             public void run() {
+                Log.e("AAA","while loop OK");
                 while (true) {
                     handleResult();
-
                 }
             }
         }).start();
@@ -175,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     @Override
     public void run() {
 
+        Log.e("A","RUN OK");
         setBox();
         frameFocusLayout.postDelayed(this,50);
 
@@ -223,7 +218,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 break;
             case R.id.top_center:
                 if(state_pdpd == 0){
-                    slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
+                    slideView2(top_center, top_center.getLayoutParams().height, 300,top_center.getLayoutParams().width, 1050);
+                    //slideView2(top_center, top_center.getLayoutParams().height, 2500,top_center.getLayoutParams().width, 2500);
                     state_pdpd = 1;
                 }else {
                     slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
@@ -255,8 +251,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 
     public static void slideView2(View view, int currentHeight, int newHeight, int currentWidth, int newWidth) {
-        ValueAnimator slideAnimator = ValueAnimator.ofInt(currentHeight, newHeight).setDuration(600);
-        ValueAnimator slideAnimator2 = ValueAnimator.ofInt(currentWidth, newWidth).setDuration(600);
+        ValueAnimator slideAnimator = ValueAnimator.ofInt(currentHeight, newHeight).setDuration(300);
+        ValueAnimator slideAnimator2 = ValueAnimator.ofInt(currentWidth, newWidth).setDuration(300);
 
         /* We use an update listener which listens to each tick
          * and manually updates the height of the view  */
@@ -282,6 +278,15 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 
     public void ChangResolutionImage(int h, int w) {
+
+        if(h == 16 && w == 9){
+            state_serol = "16:9";
+        }else if(h == 4 && w == 3){
+            state_serol = "4:3";
+        }else if(h == 1 && w == 1){
+            state_serol = "1:1";
+        }
+
         Display display = getWindowManager().getDefaultDisplay();
         int width = display.getWidth();
         img_width = width;
@@ -349,24 +354,25 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
-        //imageAnalysis.setAnalyzer(getExecutor(), this);
+
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setTargetResolution(new Size(1080, 1440))
                 .build();
+        imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Video capture use case
         videoCapture = new VideoCapture.Builder()
                 .setVideoFrameRate(30)
                 .build();
 
-        cameraProvider.bindToLifecycle(this, cameraSelector, preview,imageAnalysis,imageCapture);
+        cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis, imageCapture);
     }
 
     @Override
     public void analyze(@NonNull ImageProxy image) {
-//        Log.d("TAG", "analyze: ");
+        Log.d("TAG", "analyze: ");
 
         long startTime = System.currentTimeMillis();
         @SuppressLint("UnsafeOptInUsageError") Bitmap bm = Utils.toBitmap(image.getImage());
@@ -376,6 +382,10 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         matrix.postRotate(90);
         tempBitmap = Bitmap.createBitmap(bm, 0, 0, 320, 320,
                 matrix, false);
+
+        if(lensFacing == CameraSelector.LENS_FACING_FRONT){
+            tempBitmap = flip(tempBitmap);
+        }
 
 
         long endTime = System.currentTimeMillis();
@@ -433,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     new ImageCapture.OnImageSavedCallback() {
                         @Override
                         public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                            makeText(MainActivity.this, "Photo has been saved successfully.", LENGTH_SHORT).show();
+                            //makeText(MainActivity.this, "Photo has been saved successfully.", LENGTH_SHORT).show();
 
                             //นำภาพในไฟล์ชั่วคราว ดึงมาใส่ใน Object BitMap
                             Bitmap myBitmap = BitmapFactory.decodeFile(file_temp.getAbsolutePath());
@@ -459,14 +469,15 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 // END - ตั้งค่ากล้อง Camera X ---------------------------------------------------------------------------------------------
 
-    public void setFocusView(double X, double Y, double width, double height, int str, float xPos, float yPos) {
-        //removeView();
-        int x, y, h, w;
+    public void setFocusView(double X, double Y, double width, double height, int str, float xPos, float yPos, int type) {
 
+        Log.e("A","setFocusView OK");
+        //removeView();
+        int x = 0, y = 0, h = 0, w = 0;
         Display display = getWindowManager().getDefaultDisplay();
         int width2 = display.getWidth();
         int height2 = 0;
-
+/*
         switch (state_serol) {
             case "4:3":
                 height2 = 1440;
@@ -478,50 +489,60 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 height2 = 1080;
                 break;
         }
+ */
+        if(state_serol == "16:9"){
+            height2 = 1920;
+        }else if(state_serol == "4:3"){
+            height2 = 1440;
+        }else if(state_serol == "1:1"){
+            height2 = 1080;
+        }
+
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        h = Math.round((float) ((2*(height-yPos)) * height2));
-        w = Math.round((float) ((2*(width-xPos)) * width2));
-        x = Math.round((float) (X * width2));
-        y = Math.round((float) (Y * height2));
+        h = (int) Math.round((float) ((2 * (height-yPos)) * height2));
+        w = (int) Math.round((float) ((2 * (width-xPos)) * width2));
+        x = (int) Math.round((float) (X * width2));
+        y = (int) Math.round((float) (Y * height2));
+
+        //Toast.makeText(this, "w = " + w + "/nh = " + h, LENGTH_SHORT).show();
+        txtDebug.setText("w = " + w + "\nh = " + h);
+
 
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
-        focus_frame.setId(str);
 
-        focus_frame.setOnClickListener(view -> makeText(MainActivity.this, "CLICK = " + focus_frame.getId(), LENGTH_SHORT).show());
-        RelativeLayout.LayoutParams params1 = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
+/*
+        if ((h > 70 || w > 70) && ((h < 130 || w < 130))){
+            focus_frame = inflater.inflate(R.layout.focus_frame_m, null);
+        }else if ((h > 0 || w > 0) && ((h < 70 || w < 70))){
+            focus_frame = inflater.inflate(R.layout.focus_frame_s, null);
+        }
+
+ */
+        //if(type == 1){
+        //    focus_frame = inflater.inflate(R.layout.focus_frame, null);
+        //}else if(type == 0){
+        //    focus_frame = inflater.inflate(R.layout.emoji_layout, null);
+        //}
+
+
+
+        //
+        focus_frame.setId(str);
+        int strId = focus_frame.getId();
+        focus_frame.setOnClickListener(view -> makeText(MainActivity.this, "CLICK = " + strId, LENGTH_SHORT).show());
+        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params1.height = h;
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
 
+        TextView txt = new TextView(this);
+        txt.setTextSize(6);
+        txt.setText(h + "x" + w);
+
+
         frameFocusLayout.addView(focus_frame, params1);
-    }
-
-    // การถ่ายรูป
-    private void capturePhoto2() {
-        //สร้างตำแหน่งเก็บไฟล์ภาพชั่วคราว
-        File file_temp;
-        try {
-            file_temp = File.createTempFile("geek", ".jpg", null);
-
-            imageCapture.takePicture(new ImageCapture.OutputFileOptions.Builder(file_temp).build(), getExecutor(),
-                    new ImageCapture.OnImageSavedCallback() {
-                        @Override
-                        public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                            //นำภาพในไฟล์ชั่วคราว ดึงมาใส่ใน Object BitMap
-                            Bitmap myBitmap = BitmapFactory.decodeFile(file_temp.getAbsolutePath());
-                            imgViewTest.setImageBitmap(myBitmap);
-                        }
-
-                        @Override
-                        public void onError(@NonNull ImageCaptureException exception) {
-                        }
-                    }
-            );
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        frameFocusLayout.addView(txt, params1);
     }
 
     List<Classifier.Recognition> results = null;
@@ -533,16 +554,25 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 
     public void setBox() {
-
         if (results != null) {
+            Log.e("AAA","results != NULL");
             clearFocus();
+                //canvasView.setImageBitmap(bitmap);
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY());
-//                Log.d("TAG", "handleResult: ");
+                    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 1);
+                    Log.e("AAA","setFocusView OK");
+                //}else if (result.getDetectedClass() == 1){
+                //    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 1);
+                //}else{
+                    //setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 2);
+
                 }
             }
+
+        }else {
+            Log.e("AAA","results = NULL");
         }
     }
 
@@ -553,4 +583,15 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 }
     }
     Bitmap tempBitmap = null;
+
+    public Bitmap flip(Bitmap d)
+    {
+        Matrix m = new Matrix();
+        m.preScale(1, -1);
+        Bitmap dst = Bitmap.createBitmap(d, 0, 0, d.getWidth(), d.getHeight(), m, false);
+        dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
+        return dst;
+    }
+
+
 }
