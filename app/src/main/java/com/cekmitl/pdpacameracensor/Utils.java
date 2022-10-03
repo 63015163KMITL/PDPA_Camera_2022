@@ -75,7 +75,7 @@ public class Utils {
 
         YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 40, out);
+        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 75, out);
 
         byte[] imageBytes = out.toByteArray();
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
@@ -101,22 +101,6 @@ public class Utils {
         return (float) (1. / (1. + Math.exp(-x)));
     }
 
-//    public static Bitmap scale(Context context, String filePath) {
-//        AssetManager assetManager = context.getAssets();
-//
-//        InputStream istr;
-//        Bitmap bitmap = null;
-//        try {
-//            istr = assetManager.open(filePath);
-//            bitmap = BitmapFactory.decodeStream(istr);
-//            bitmap = Bitmap.createScaledBitmap(bitmap, MainActivity.TF_OD_API_INPUT_SIZE, MainActivity.TF_OD_API_INPUT_SIZE, false);
-//        } catch (IOException e) {
-//            // handle exception
-//            Log.e("getBitmapFromAsset", "getBitmapFromAsset: " + e.getMessage());
-//        }
-//
-//        return bitmap;
-//    }
 
     public static Bitmap getBitmapFromAsset(Context context, String filePath) {
         AssetManager assetManager = context.getAssets();
@@ -131,7 +115,6 @@ public class Utils {
             // handle exception
             Log.e("getBitmapFromAsset", "getBitmapFromAsset: " + e.getMessage());
         }
-
         return bitmap;
     }
 

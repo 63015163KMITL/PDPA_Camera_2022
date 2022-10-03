@@ -29,7 +29,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
@@ -43,7 +42,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -51,10 +49,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import android.graphics.RectF;
-import android.widget.Toast;
+
 
 import java.util.List;
 
@@ -70,10 +69,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     private VideoCapture videoCapture;
     private ImageButton bCapture;
     private ImageButton btnChangResol;
-    private ImageAnalysis imageAnalysis;
     private boolean statRecord;
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
-    private ImageView imgViewTest;
     private ProcessCameraProvider cameraProvider;
 
     private TextView txtDebug;
@@ -88,12 +85,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     //DETECT FACE
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
     private Classifier detector;
-    public static final int TF_OD_API_INPUT_SIZE = 320;
-    private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
+    public static final int TF_OD_API_INPUT_SIZE = 224;
+    private static final String TF_OD_API_MODEL_FILE = "n_224.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
-    public Thread t2;
     public int processTime;
-
+    private Thread detectThread;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         frameFocusLayout = findViewById(R.id.fram_focus_layout);
         txtDebug = findViewById(R.id.text_debug);
 
-        imgViewTest = findViewById(R.id.test_preview);
         top_center = findViewById(R.id.top_center);
 
         //ลบ Action Bar ออก
@@ -148,21 +143,25 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             e.printStackTrace();
         }
 
-        new Thread(new Runnable() {
+        detectThread = new Thread(new Runnable() {
             public void run() {
-                Log.e("AAA","while loop OK");
                 while (true) {
                     handleResult();
+                    try {
+                        detectThread.join(5);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-        }).start();
+        });
+        detectThread.start();
 
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
         run();
     }
 
@@ -171,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         Log.e("A","RUN OK");
         setBox();
-        frameFocusLayout.postDelayed(this,50);
+        frameFocusLayout.postDelayed(this,25);
 
     }
 
@@ -350,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
-        imageAnalysis = new ImageAnalysis.Builder()
+        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
@@ -370,17 +369,18 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis, imageCapture);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void analyze(@NonNull ImageProxy image) {
         Log.d("TAG", "analyze: ");
 
         long startTime = System.currentTimeMillis();
-        @SuppressLint("UnsafeOptInUsageError") Bitmap bm = Utils.toBitmap(image.getImage());
+        @SuppressLint("UnsafeOptInUsageError") Bitmap bm = Utils.toBitmap(Objects.requireNonNull(image.getImage()));
         image.close();
         bm = Utils.getResizedBitmap(bm, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
-        tempBitmap = Bitmap.createBitmap(bm, 0, 0, 320, 320,
+        tempBitmap = Bitmap.createBitmap(bm, 0, 0, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE,
                 matrix, false);
 
         if(lensFacing == CameraSelector.LENS_FACING_FRONT){
@@ -389,7 +389,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
 
         long endTime = System.currentTimeMillis();
-        txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
+//        txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
     }
 
     @SuppressLint("RestrictedApi")
@@ -469,32 +469,21 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 // END - ตั้งค่ากล้อง Camera X ---------------------------------------------------------------------------------------------
 
-    public void setFocusView(double X, double Y, double width, double height, int str, float xPos, float yPos, int type) {
+    @SuppressLint("SetTextI18n")
+    public void setFocusView(double X, double Y, double width, double height, int str, float xPos, float yPos) {
 
-        Log.e("A","setFocusView OK");
+
         //removeView();
-        int x = 0, y = 0, h = 0, w = 0;
+        int x, y, h, w;
         Display display = getWindowManager().getDefaultDisplay();
         int width2 = display.getWidth();
         int height2 = 0;
-/*
-        switch (state_serol) {
-            case "4:3":
-                height2 = 1440;
-                break;
-            case "16:9":
-                height2 = 1920;
-                break;
-            case "1:1":
-                height2 = 1080;
-                break;
-        }
- */
-        if(state_serol == "16:9"){
+
+        if(Objects.equals(state_serol, "16:9")){
             height2 = 1920;
-        }else if(state_serol == "4:3"){
+        }else if(Objects.equals(state_serol, "4:3")){
             height2 = 1440;
-        }else if(state_serol == "1:1"){
+        }else if(Objects.equals(state_serol, "1:1")){
             height2 = 1080;
         }
 
@@ -505,7 +494,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         y = (int) Math.round((float) (Y * height2));
 
         //Toast.makeText(this, "w = " + w + "/nh = " + h, LENGTH_SHORT).show();
-        txtDebug.setText("w = " + w + "\nh = " + h);
+ //       txtDebug.setText("w = " + w + "\nh = " + h);
 
 
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
@@ -517,7 +506,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         }else if ((h > 0 || w > 0) && ((h < 70 || w < 70))){
             focus_frame = inflater.inflate(R.layout.focus_frame_s, null);
         }
-
  */
         //if(type == 1){
         //    focus_frame = inflater.inflate(R.layout.focus_frame, null);
@@ -536,36 +524,36 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
 
-        TextView txt = new TextView(this);
-        txt.setTextSize(6);
-        txt.setText(h + "x" + w);
+   //     TextView txt = new TextView(this);
+ //       txt.setTextSize(6);
+   //     txt.setText(h + "x" + w);
 
 
         frameFocusLayout.addView(focus_frame, params1);
-        frameFocusLayout.addView(txt, params1);
+   //     frameFocusLayout.addView(txt, params1);
     }
 
     List<Classifier.Recognition> results = null;
     //DETECT FACE FUNCTION
     public void handleResult() {
-            if(tempBitmap != null){
-                results = detector.recognizeImage(tempBitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
-            }
+        if(tempBitmap != null){
+            results = detector.recognizeImage(tempBitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
+        }
     }
 
     public void setBox() {
         if (results != null) {
             Log.e("AAA","results != NULL");
             clearFocus();
-                //canvasView.setImageBitmap(bitmap);
+            //canvasView.setImageBitmap(bitmap);
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 1);
+                    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY());
                     Log.e("AAA","setFocusView OK");
-                //}else if (result.getDetectedClass() == 1){
-                //    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 1);
-                //}else{
+                    //}else if (result.getDetectedClass() == 1){
+                    //    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 1);
+                    //}else{
                     //setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 2);
 
                 }
@@ -578,9 +566,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     RelativeLayout frameFocusLayout;
     public void clearFocus(){
-                if (null != frameFocusLayout && frameFocusLayout.getChildCount() > 0) {
-                    frameFocusLayout.removeViews (0, frameFocusLayout.getChildCount());
-                }
+        if (null != frameFocusLayout && frameFocusLayout.getChildCount() > 0) {
+            frameFocusLayout.removeViews (0, frameFocusLayout.getChildCount());
+        }
     }
     Bitmap tempBitmap = null;
 

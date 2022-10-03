@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity"
-    android:background="#ff0000"
-    android:paddingTop="0dp">
+    android:background="#000000"
+    android:paddingTop="30dp">
 
     <LinearLayout
         android:background="#000000"
@@ -21,7 +21,7 @@
             android:background="#99000000"
             android:orientation="horizontal"
             android:paddingLeft="10dp"
-            android:paddingTop="5dp"
+            android:paddingTop="10dp"
             android:layout_marginBottom="10dp"
             android:paddingRight="10dp">
 
@@ -169,28 +169,23 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent" >
 
-                            <RelativeLayout
-                                android:id="@+id/fram_focus_layout"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent">
-
-                            </RelativeLayout>
                         </androidx.camera.view.PreviewView>
 
-                        <ImageView
-                            android:id="@+id/canvas"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"/>
+                        <RelativeLayout
+                            android:id="@+id/fram_focus_layout"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content">
 
+                        </RelativeLayout>
                     </FrameLayout>
 
-                    <ImageView
-                        android:id="@+id/test_img"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:adjustViewBounds="true"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/ic_frame_grid" />
+<!--                    <ImageView-->
+<!--                        android:id="@+id/test_img"-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="match_parent"-->
+<!--                        android:adjustViewBounds="true"-->
+<!--                        android:scaleType="fitXY"-->
+<!--                        android:src="@drawable/ic_frame_grid" />-->
 
 
 
