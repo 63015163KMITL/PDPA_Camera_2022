@@ -25,9 +25,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -55,8 +52,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
     private Bitmap largeIcon;
     private ImageView imageView, ImagePreview;
-    public static final int TF_OD_API_INPUT_SIZE = 640;
-    private static final String TF_OD_API_MODEL_FILE = "Sbest-fp16.tflite";
+    public static final int TF_OD_API_INPUT_SIZE = 320;
+    private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
 
     public Bitmap tempBitmap = null;
@@ -185,25 +182,18 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
 /*
         //#####################################################################################
-
         ImageView imgPreView = findViewById(R.id.ImagePreview);
         //imgPreView.setImageBitmap(getResizedBitmap(rotated,1080,1440));
-
         //imgPreView.setImageResource(R.drawable.test);
-
         Intent intent = getIntent();
         String value = intent.getStringExtra("key");
         String value_resolution = intent.getStringExtra("resolution");
-
         File file = new File(value);
         Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
-
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
-
         Bitmap rotated = Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getHeight(), (myBitmap.getHeight()/16)*9,
         matrix, true);
-
         Button btnSave = findViewById(R.id.button_save_image);
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -213,12 +203,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 //บันทึกรูปลง Grallery
                 //Uri savedImageURI = Uri.parse(savedImageURL);
                 //Toast.makeText(PreviewActivity.this, "savedImageURL = " + contentValues, Toast.LENGTH_SHORT).show();
-
                 file.delete();
                 finish();
             }
         });
-
         ImageButton btnCancel = findViewById(R.id.button_cancel);
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -300,50 +288,33 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             imgPreView.setImageBitmap(getResizedBitmap(largeIcon, fW, fH));
 
             /*
-
             int height = FrameImagePreview.getHeight();
             float f = (height / (float)largeIcon.getHeight());
-
-
             Log.e("IMG","height = " + height);
             Log.e("IMG","f = " + f);
-
             int fW = Math.round( f * (float)largeIcon.getWidth());
             int fH = Math.round( f * (float)largeIcon.getHeight());
-
             float x = largeIcon.getHeight() / 1440f;
             int xfW = (int)largeIcon.getWidth() / (int)x;
-
             Log.e("XFW","XFW = " + xfW);
-
             Log.e("XFW","Image H = " + largeIcon.getHeight());
             Log.e("XFW","Image W = " + largeIcon.getWidth());
             Log.e("XFW","Image X = " + x);
-
             Log.e("XFW","Image A = " + Math.round(largeIcon.getWidth() / x));
-
             RelativeLayout main_layout = (RelativeLayout) findViewById(R.id.main_layout);
-
             int head_layout_height = getHeightOfView(HeadLayout);
             int bottom_layout_height = getHeightOfView(bottom_layout);
             int main_layout_height = getHeightOfView(frameFocusLayout);
-
             Log.e("XXX","Image X = " + (main_layout_height - head_layout_height - bottom_layout_height));
-
             //int fW = Math.round(largeIcon.getWidth() / x);
             //int fH = main_layout_height - head_layout_height - bottom_layout_height;
-
             global_img_width = fW;
             getGlobal_img_height = fH;
-
             FrameImagePreview.getLayoutParams().height = fH;
             FrameImagePreview.getLayoutParams().width = fW;
-
             Log.e("IMG","FW = " + fW);
             Log.e("IMG","FH = " + fH);
-
             imgPreView.setImageBitmap(getResizedBitmap(largeIcon, fW, fH));
-
              */
         }
 
@@ -616,7 +587,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 height2 = 1080;
                 break;
         }
-
         if(state_serol == "16:9"){
             height2 = 1920;
         }else if(state_serol == "4:3"){
@@ -655,7 +625,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         } else if ((h > 0 || w > 0) && ((h < 70 || w < 70))) {
             focus_frame = inflater.inflate(R.layout.focus_frame_s, null);
         }
-
  */
         //if(type == 1){
         //    focus_frame = inflater.inflate(R.layout.focus_frame, null);
@@ -735,7 +704,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         if (bmp == null) {
             makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
-            List<Classifier.Recognition> results = detector.recognizeImage(getResizedBitmap(bmp, 640, 640));
+            List<Classifier.Recognition> results = detector.recognizeImage(getResizedBitmap(bmp, 320, 320));
             int i = 0;
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
@@ -772,5 +741,3 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         return contentview.getMeasuredHeight();
     }
 }
-
-
