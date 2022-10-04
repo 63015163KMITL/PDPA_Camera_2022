@@ -79,7 +79,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     //Resolution Image
     private String state_serol = "4:3";
-
+    private static final Object mPauseLock = new Object();
+    private static boolean mPaused = false;
     int state_pdpd = 0;
 
     //DETECT FACE
@@ -89,7 +90,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     private static final String TF_OD_API_MODEL_FILE = "n_224.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
     public int processTime;
-    private Thread detectThread;
+    public static boolean isWorking = false;
+    public static Thread detectThread;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.new_preview);
         ChangResolutionImage(4, 3);
-
+        isWorking = true;
         frameFocusLayout = findViewById(R.id.fram_focus_layout);
         txtDebug = findViewById(R.id.text_debug);
 
@@ -146,17 +148,38 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         detectThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
+                    Log.e("A","HandleResult");
                     handleResult();
                     try {
-                        detectThread.join(5);
+                        detectThread.join(20);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    synchronized (mPauseLock){
+                            while (mPaused){
+                                try {
+                                    mPauseLock.wait();
+                                } catch (InterruptedException e) {
+                                }
+                            }
+                        }
                 }
             }
         });
         detectThread.start();
+    }
 
+    public static void pauseThread() {
+        synchronized (mPauseLock) {
+            mPaused = true;
+        }
+    }
+
+    public static void resumeThread() {
+        synchronized (mPauseLock) {
+            mPaused = false;
+            mPauseLock.notifyAll();
+        }
     }
 
     @Override
@@ -167,10 +190,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     @Override
     public void run() {
+        if (isWorking){
+//            Log.d("TAG", "run: ");
+            setBox();
+        }
+//        Log.e("A","Set box");
 
-        Log.e("A","RUN OK");
-        setBox();
-        frameFocusLayout.postDelayed(this,25);
+        frameFocusLayout.postDelayed(this,20);
 
     }
 
@@ -374,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     public void analyze(@NonNull ImageProxy image) {
         Log.d("TAG", "analyze: ");
 
-        long startTime = System.currentTimeMillis();
+//        long startTime = System.currentTimeMillis();
         @SuppressLint("UnsafeOptInUsageError") Bitmap bm = Utils.toBitmap(Objects.requireNonNull(image.getImage()));
         image.close();
         bm = Utils.getResizedBitmap(bm, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
@@ -388,7 +414,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         }
 
 
-        long endTime = System.currentTimeMillis();
+//        long endTime = System.currentTimeMillis();
 //        txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
     }
 
@@ -452,10 +478,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                             ImageButton imgBtn = findViewById(R.id.button_gallery);
                             imgBtn.setImageBitmap(myBitmap);
                             //เปิดหน้า Preview Activity
+                            isWorking = false;
+                            pauseThread();
                             Intent myIntent = new Intent(MainActivity.this, PreviewActivity.class);
                             myIntent.putExtra("key", file_temp.getAbsolutePath()); //Optional parameters
                             myIntent.putExtra("resolution", state_serol);
                             MainActivity.this.startActivity(myIntent);
+
                         }
                         @Override
                         public void onError(@NonNull ImageCaptureException exception) {
@@ -542,9 +571,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
 
     public void setBox() {
+        clearFocus();
         if (results != null) {
-            Log.e("AAA","results != NULL");
-            clearFocus();
+
             //canvasView.setImageBitmap(bitmap);
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
@@ -558,9 +587,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
                 }
             }
-
-        }else {
-            Log.e("AAA","results = NULL");
         }
     }
 
