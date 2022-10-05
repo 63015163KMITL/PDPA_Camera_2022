@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:background="#000"
+                android:background="#00000000"
                 android:rotation="0">
 
                 <RelativeLayout
@@ -37,6 +37,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" />
                 </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/Touch_ImagePreview"
+                    android:background="#00000000"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
 
             </RelativeLayout>
 
@@ -69,13 +75,13 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:id="@+id/HeadLayout2"
+        android:id="@+id/HeadLayout"
         android:layout_width="match_parent"
         android:layout_height="55dp"
         android:layout_centerHorizontal="true"
         android:background="@drawable/gb_fade_black_top"
         android:gravity="center_vertical"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -84,7 +90,7 @@
             android:gravity="left">
 
             <ImageButton
-                android:id="@+id/button_cancel2"
+                android:id="@+id/button_back"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
                 android:layout_marginLeft="10dp"
@@ -145,14 +151,14 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:id="@+id/HeadLayout"
+        android:id="@+id/HeadLayout2"
         android:layout_width="match_parent"
         android:layout_height="55dp"
         android:layout_below="@id/HeadLayout2"
         android:layout_centerHorizontal="true"
         android:background="@drawable/gb_fade_black_top"
         android:gravity="center_vertical"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -623,11 +629,13 @@
         android:visibility="gone"
         android:id="@+id/menu_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="70dp"
+        android:gravity="center_vertical"
         android:layout_alignParentBottom="true"
         android:layout_margin="25dp"
         android:background="@drawable/bg_round_gray"
-        android:padding="20dp">
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -638,12 +646,13 @@
             android:orientation="horizontal">
 
             <RelativeLayout
+                android:layout_gravity="center"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_alignParentLeft="true"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
@@ -665,8 +674,10 @@
                 </LinearLayout>
 
                 <RelativeLayout
+                    android:id="@+id/button_edit"
+                    android:background="#00FFFFFF"
                     android:layout_width="match_parent"
-                    android:layout_height="25dp"/>
+                    android:layout_height="50dp"/>
 
             </RelativeLayout>
 
@@ -682,12 +693,13 @@
             android:orientation="horizontal">
 
             <RelativeLayout
+                android:layout_gravity="center"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_alignParentLeft="true"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
@@ -709,8 +721,9 @@
                 </LinearLayout>
 
                 <RelativeLayout
+                    android:id="@+id/button_info"
                     android:layout_width="match_parent"
-                    android:layout_height="25dp"/>
+                    android:layout_height="50dp"/>
 
             </RelativeLayout>
 
@@ -726,12 +739,13 @@
             android:orientation="horizontal">
 
             <RelativeLayout
+                android:layout_gravity="center"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:layout_alignParentLeft="true"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
@@ -753,8 +767,9 @@
                 </LinearLayout>
 
                 <RelativeLayout
+                    android:id="@+id/button_delete"
                     android:layout_width="match_parent"
-                    android:layout_height="25dp"/>
+                    android:layout_height="50dp"/>
 
             </RelativeLayout>
 
