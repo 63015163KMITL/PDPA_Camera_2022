@@ -95,7 +95,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.hide();
-
         setContentView(R.layout.activity_preview);
 
         layout_face_detect = (LinearLayout) findViewById(R.id.layout_face_detect);
@@ -418,7 +417,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     boolean state_ImagePreview = true;
     boolean state_Edite_Mode = true;
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        MainActivity.resumeThread();
+        MainActivity.isWorking = true;
 
+    }
 
     @Override
     public void onClick(View view) {
