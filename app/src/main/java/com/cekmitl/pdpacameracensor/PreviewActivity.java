@@ -167,7 +167,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         //Animation
 
-/*
+
         Intent intent = getIntent();
         String value = intent.getStringExtra("key");
         String value_resolution = intent.getStringExtra("resolution");
@@ -209,7 +209,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
         Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
-
+/*
         //#####################################################################################
         ImageView imgPreView = findViewById(R.id.ImagePreview);
         //imgPreView.setImageBitmap(getResizedBitmap(rotated,1080,1440));
@@ -288,8 +288,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        //largeIcon = rotated;
-        largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
+        largeIcon = rotated;
+        //largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
 
         //Bitmap largeIcon = myBitmap;
 
