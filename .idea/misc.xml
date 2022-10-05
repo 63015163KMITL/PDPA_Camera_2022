@@ -4,7 +4,10 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/bg_gallory.xml" value="0.217" />
+        <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/bg_round_gray.xml" value="0.1575" />
+        <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/bg_round_gray_2.xml" value="0.1575" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/bg_round_stroke.xml" value="0.2285" />
+        <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/bg_round_white.xml" value="0.1575" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/circle.xml" value="0.2285" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/focus_frame.xml" value="0.217" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/drawable/frame_grid.xml" value="0.135" />
@@ -18,8 +21,9 @@
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/activity_image_detail.xml" value="0.13677536231884058" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/activity_main2.xml" value="0.11854103343465046" />
-        <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/activity_preview.xml" value="0.13360507246376813" />
+        <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/activity_preview.xml" value="0.25" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/card_layout.xml" value="0.13677536231884058" />
+        <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/dialog_layout.xml" value="0.33" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/focus_frame.xml" value="0.33" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/new_preview.xml" value="0.1" />
         <entry key="..\:/Users/aqqza/AndroidStudioProjects/PDPACameraCensor/app/src/main/res/layout/test_layout.xml" value="0.20878623188405798" />

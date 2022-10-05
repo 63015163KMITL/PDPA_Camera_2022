@@ -9,12 +9,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.RectF;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -23,8 +26,10 @@ import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -44,6 +49,15 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public ImageButton button_hide_face_detect, button_face_detect, button_blur, button_stricker, button_paint;
     public RelativeLayout option_layout, frameFocusLayout, FrameImagePreview, button_bar, HeadLayout, HeadLayout2;
     public LinearLayout listView, bottom_layout, menu_bar;
+
+    //RelativLayout Button Menu Bar
+    public RelativeLayout button_edit, button_info, button_delete;
+
+    //RelativeLayout Touch ImagePreview
+    public RelativeLayout Touch_ImagePreview;
+
+    //RelativeLayout Head Menu Bar
+    public ImageButton button_back;
 
     //DETECT FACE
     private Classifier detector;
@@ -127,8 +141,24 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         menu_bar = (LinearLayout) findViewById(R.id.menu_bar);
 
-        ImagePreview.setOnClickListener(this);
+        //RelativLayout Button Menu Bar (Edit / Info / Delete)
+        button_edit = (RelativeLayout) findViewById(R.id.button_edit);
+        button_info = (RelativeLayout) findViewById(R.id.button_info);
+        button_delete = (RelativeLayout) findViewById(R.id.button_delete);
 
+        button_edit.setOnClickListener(this);
+        button_info.setOnClickListener(this);
+        button_delete.setOnClickListener(this);
+
+        //RelativeLayout Touch ImagePreview
+        Touch_ImagePreview = (RelativeLayout) findViewById(R.id.Touch_ImagePreview);
+        Touch_ImagePreview.setOnClickListener(this);
+
+        //RelativeLayout Head Menu Bar
+        button_back = (ImageButton) findViewById(R.id.button_back);
+        button_back.setOnClickListener(this);
+
+        ImagePreview.setOnClickListener(this);
 
 
         // SET GONE Layout
@@ -138,7 +168,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         //Animation
 
-
+/*
         Intent intent = getIntent();
         String value = intent.getStringExtra("key");
         String value_resolution = intent.getStringExtra("resolution");
@@ -180,7 +210,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
         Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
-/*
+
         //#####################################################################################
         ImageView imgPreView = findViewById(R.id.ImagePreview);
         //imgPreView.setImageBitmap(getResizedBitmap(rotated,1080,1440));
@@ -194,28 +224,59 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         matrix.postRotate(90);
         Bitmap rotated = Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getHeight(), (myBitmap.getHeight()/16)*9,
         matrix, true);
-        Button btnSave = findViewById(R.id.button_save_image);
+     */
+        ImageButton btnSave = (ImageButton) findViewById(R.id.button_save_image);
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getImageUri((PreviewActivity.this), myBitmap);
+
+                TextView okay_text, cancel_text;
+                Dialog dialog = new Dialog(PreviewActivity.this);
+
+                dialog.setContentView(R.layout.dialog_layout);
+                dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                //dialog.setCancelable(false);
+                //dialog.getWindow().getAttributes().windowAnimations = R.style.animation;
+
+                okay_text = dialog.findViewById(R.id.button_dialog_ok);
+                cancel_text = dialog.findViewById(R.id.button_dialog_cancel);
+
+                okay_text.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        Toast.makeText(PreviewActivity.this, "okay clicked", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                cancel_text.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        Toast.makeText(PreviewActivity.this, "Cancel clicked", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                dialog.show();
+              //  getImageUri((PreviewActivity.this), myBitmap);
                 //String savedImageURL = MediaStore.Images.Media.insertImage((PreviewActivity.this).getContentResolver(), myBitmap, "filename", null);
                 //บันทึกรูปลง Grallery
                 //Uri savedImageURI = Uri.parse(savedImageURL);
                 //Toast.makeText(PreviewActivity.this, "savedImageURL = " + contentValues, Toast.LENGTH_SHORT).show();
-                file.delete();
-                finish();
+             //   file.delete();
+             //   finish();
             }
         });
         ImageButton btnCancel = findViewById(R.id.button_cancel);
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                file.delete();
-                finish();
+              //  file.delete();
+              //  finish();
             }
         });
-*/
+
 
         try {
             Log.e("TEST", "detector OK");
@@ -228,8 +289,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        largeIcon = rotated;
-        //largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
+        //largeIcon = rotated;
+        largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
 
         //Bitmap largeIcon = myBitmap;
 
@@ -355,6 +416,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     boolean state_stricker_button = true;
     boolean state_paint_button = true;
     boolean state_ImagePreview = true;
+    boolean state_Edite_Mode = true;
 
 
 
@@ -365,6 +427,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         Animation animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
         animFadeIn.setStartOffset(100);
         Animation animFadeOu = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out);
+
+        //Animation 2 for Menu Bar [Edit - Info - Delete]
+        Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
+        Animation animFadeOu2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out2);
 
         switch (view.getId()) {
             case R.id.button_hide_face_detect:
@@ -481,11 +547,37 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     //button_paint_layout.setLayoutParams(params); //causes layout update
                 }
                 break;
-            case R.id.ImagePreview:
+            case R.id.Touch_ImagePreview:
                 if (state_ImagePreview){
+                    menu_bar.setVisibility(View.VISIBLE);
+                    HeadLayout2.setVisibility(View.VISIBLE);
+
+                    menu_bar.startAnimation(animFadeIn2);
+                    HeadLayout2.startAnimation(animFadeIn2);
+
+                    state_ImagePreview = false;
+                }else {
+                    menu_bar.setVisibility(View.GONE);
+                    HeadLayout2.setVisibility(View.GONE);
+
+                    menu_bar.startAnimation(animFadeOu2);
+                    HeadLayout2.startAnimation(animFadeOu2);
+
+                    state_ImagePreview = true;
+                }
+
+                break;
+            case R.id.button_edit:
+                state_ImagePreview = true;
+                    menu_bar.setVisibility(View.GONE);
+                    HeadLayout2.setVisibility(View.GONE);
+                    Touch_ImagePreview.setVisibility(View.GONE);
+
                     bottom_layout.setVisibility(View.VISIBLE);
                     HeadLayout.setVisibility(View.VISIBLE);
                     button_bar.setVisibility(View.VISIBLE);
+
+
 
                     //int head_layout_height = getHeightOfView(HeadLayout);
                     //int bottom_layout_height = getHeightOfView(bottom_layout);
@@ -523,48 +615,56 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     //slideView2(bottom_layout, 0, old_height_bottom_layout, 0, old_width_bottom_layout);
                     //slideView2(HeadLayout, 0, old_height_header_layout, 0, old_width_header_layout);
                     //button_bar.setVisibility(View.GONE);
-
-
-                    state_ImagePreview = false;
-                }else {
-
-                    slideView2(bottom_layout, bottom_layout.getLayoutParams().height, 0, bottom_layout.getLayoutParams().width, bottom_layout.getLayoutParams().width);
-                    slideView2(HeadLayout, HeadLayout.getLayoutParams().height, 0, HeadLayout.getLayoutParams().width, HeadLayout.getLayoutParams().width);
-
-
-                    RelativeLayout main_layout = (RelativeLayout) findViewById(R.id.preview);
-                    RelativeLayout FrameImagePreview = (RelativeLayout) findViewById(R.id.FrameImagePreview);
-
-                    int head_layout_height = getHeightOfView(HeadLayout);
-                    int bottom_layout_height = getHeightOfView(bottom_layout);
-                    int main_layout_height = main_layout.getHeight() ;
-
-                    int x = main_layout_height + head_layout_height;
-
-                    slideView2(FrameImagePreview, FrameImagePreview.getLayoutParams().height, x, FrameImagePreview.getLayoutParams().width, FrameImagePreview.getLayoutParams().width);
-
-
-
-                    //int head_layout_height = getHeightOfView(HeadLayout);
-                    //int bottom_layout_height = getHeightOfView(bottom_layout);
-
-                    //RelativeLayout main_layout = (RelativeLayout) findViewById(R.id.main_layout);
-
-                    //int x = getHeightOfView(main_layout) - (head_layout_height + bottom_layout_height);
-
-                    //FrameImagePreview
-                    //slideView2(FrameImagePreview, FrameImagePreview.getLayoutParams().height, x, FrameImagePreview.getLayoutParams().width, FrameImagePreview.getLayoutParams().width);
-
-                    //slideView2(bottom_layout, bottom_layout.getLayoutParams().height, 0, bottom_layout.getLayoutParams().width, 0);
-                    //slideView2(HeadLayout, HeadLayout.getLayoutParams().height, 0, HeadLayout.getLayoutParams().width, 0);
-
-                    //bottom_layout.setVisibility(View.GONE);
-                    //HeadLayout.setVisibility(View.GONE);
-                    button_bar.setVisibility(View.GONE);
-
-                    state_ImagePreview = true;
-                }
+                    state_Edite_Mode = false;
+                    menu_bar.setVisibility(View.GONE);
                 break;
+            case R.id.button_info:
+
+                break;
+            case R.id.button_delete:
+
+                break;
+            case R.id.button_back:
+                menu_bar.setVisibility(View.GONE);
+                HeadLayout2.setVisibility(View.GONE);
+                Touch_ImagePreview.setVisibility(View.VISIBLE);
+
+                slideView2(bottom_layout, bottom_layout.getLayoutParams().height, 0, bottom_layout.getLayoutParams().width, bottom_layout.getLayoutParams().width);
+                slideView2(HeadLayout, HeadLayout.getLayoutParams().height, 0, HeadLayout.getLayoutParams().width, HeadLayout.getLayoutParams().width);
+
+
+                RelativeLayout main_layout2 = (RelativeLayout) findViewById(R.id.preview);
+                RelativeLayout FrameImagePreview2 = (RelativeLayout) findViewById(R.id.FrameImagePreview);
+
+                int head_layout_height2 = getHeightOfView(HeadLayout);
+                int bottom_layout_height2 = getHeightOfView(bottom_layout);
+                int main_layout_height2 = main_layout2.getHeight() ;
+
+                int x2 = main_layout_height2 + head_layout_height2;
+
+                slideView2(FrameImagePreview2, FrameImagePreview2.getLayoutParams().height, x2, FrameImagePreview2.getLayoutParams().width, FrameImagePreview2.getLayoutParams().width);
+
+
+
+                //int head_layout_height = getHeightOfView(HeadLayout);
+                //int bottom_layout_height = getHeightOfView(bottom_layout);
+
+                //RelativeLayout main_layout = (RelativeLayout) findViewById(R.id.main_layout);
+
+                //int x = getHeightOfView(main_layout) - (head_layout_height + bottom_layout_height);
+
+                //FrameImagePreview
+                //slideView2(FrameImagePreview, FrameImagePreview.getLayoutParams().height, x, FrameImagePreview.getLayoutParams().width, FrameImagePreview.getLayoutParams().width);
+
+                //slideView2(bottom_layout, bottom_layout.getLayoutParams().height, 0, bottom_layout.getLayoutParams().width, 0);
+                //slideView2(HeadLayout, HeadLayout.getLayoutParams().height, 0, HeadLayout.getLayoutParams().width, 0);
+
+                //bottom_layout.setVisibility(View.GONE);
+                //HeadLayout.setVisibility(View.GONE);
+                button_bar.setVisibility(View.GONE);
+                break;
+            //case R.id.button_save_image:
+           //     break;
         }
     }
 
@@ -603,6 +703,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         Bitmap bb = getResizedBitmap(largeIcon, global_img_width, getGlobal_img_height);
         //Bitmap b = crop(bb, x, y, w, h);
+
         if (w > h){
             Bitmap b = crop(bb, x, y, w + 15, w + 15);
             bmp_images.add(b);
@@ -613,12 +714,14 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
 
+
+
         //Toast.makeText(this, "w = " + w + "/nh = " + h, LENGTH_SHORT).show();
 
 
         LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
 
-        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame_m, null);
+        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
 /*
         if ((h > 70 || w > 70) && ((h < 130 || w < 130))) {
             focus_frame = inflater.inflate(R.layout.focus_frame_m, null);
@@ -709,7 +812,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
                 //                           X - Y - Width - Height
-                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
+                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                     if (true) {
                         setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1);
 
@@ -725,11 +828,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     public static Bitmap crop(Bitmap bitmap, float x, float y, float newWidth,
                               float newHeight) {
-        //      int width = bitmap.getWidth();
-        //      int height = bitmap.getHeight();
-
-        //      Logger.debug(BitmapUtils.class, "WIDTH : " + width + " HEIGHT : "
-        //            + height);
         Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, (int)x, (int)y,
                 (int) newWidth, (int) newHeight, null, true);
         return resizedBitmap;
@@ -737,7 +835,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     private int getHeightOfView(View contentview) {
         contentview.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        //contentview.getMeasuredWidth();
         return contentview.getMeasuredHeight();
     }
 }

@@ -359,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setTargetResolution(new Size(1080, 1440))
                 .build();
-        imageAnalysis.setAnalyzer(getExecutor(), this);
+        //imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Video capture use case
         videoCapture = new VideoCapture.Builder()
