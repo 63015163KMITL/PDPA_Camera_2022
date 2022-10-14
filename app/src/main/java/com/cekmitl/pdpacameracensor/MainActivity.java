@@ -29,6 +29,9 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
@@ -385,7 +388,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setTargetResolution(new Size(1080, 1440))
                 .build();
-        imageAnalysis.setAnalyzer(getExecutor(), this);
+        //imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Video capture use case
         videoCapture = new VideoCapture.Builder()
@@ -598,14 +601,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
     Bitmap tempBitmap = null;
 
-    public Bitmap flip(Bitmap d)
-    {
+    public Bitmap flip(Bitmap d) {
         Matrix m = new Matrix();
         m.preScale(1, -1);
         Bitmap dst = Bitmap.createBitmap(d, 0, 0, d.getWidth(), d.getHeight(), m, false);
         dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
         return dst;
     }
-
-
 }
