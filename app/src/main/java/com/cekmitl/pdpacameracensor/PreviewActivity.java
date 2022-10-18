@@ -45,14 +45,9 @@ import java.util.List;
 
 public class PreviewActivity extends AppCompatActivity implements View.OnClickListener, Runnable {
 
-    public Bitmap nowPhotoPreview;                         //Now Photo Preview
-    public int nowPhoto_Height, nowPhoto_Width;     //Now size of photo
-    public int heightPhoto, widthPhoto;             //Real size of photo
-    public int max_fram_focus_layout_height;
-
     public LinearLayout layout_face_detect, layout_blur_radius, layout_stricker_option, layout_paint_option, button_blur_layout, button_stricker_layout, button_paint_layout;
     public ImageButton button_hide_face_detect, button_face_detect, button_blur, button_stricker, button_paint;
-    public RelativeLayout option_layout, fram_focus_layout, FrameImagePreview, button_bar, HeadLayout, HeadLayout2;
+    public RelativeLayout option_layout, fram_focus_layout, FrameImagePreview, FrameImagePreview_TOP, button_bar, HeadLayout, HeadLayout2, main_layout;
     public LinearLayout listView, bottom_layout, menu_bar;
 
     //RelativLayout Button Menu Bar
@@ -70,7 +65,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     //DETECT FACE
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
     private Bitmap largeIcon;
-    private ImageView imageView, ImagePreview;
+    private ImageView imageView, ImagePreview, imgPreView;
     public static final int TF_OD_API_INPUT_SIZE = 320;
     private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
@@ -80,13 +75,28 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     //public String state_serol = "16:9";
 
+    //Dispaly
+    public Display display;
+
     public int old_height_header_layout = 0;
     public int old_width_header_layout = 0;
     public int old_height_bottom_layout = 0;
     public int old_width_bottom_layout = 0;
 
+    //Global Value /////////////////////////////////////////////////////////////////////////////////
+    public int global_preview_height = 0;           //ขนาดของพื้นที่แสดงภาพตัวอย่าง ณ ปัจจุบัน
+    public int global_preview_width = 0;
+    public int global_screen_width = 0;             //ขนาดความกว้างสูงสุดของหน้าจอ
 
-    public int global_img_width, getGlobal_img_height;
+    public Bitmap nowPhotoPreview;                  //Now Photo Preview
+    public int nowPhoto_Height, nowPhoto_Width;     //Now size of photo
+    public int heightPhoto, widthPhoto;             //Real size of photo
+    public int max_fram_focus_layout_height;        //ความกว้างสูงสุดที่สามารถแสดงตัวอย่างได้
+
+    //Animation
+    public Animation animFadeIn2, animFadeOu2, animFadeIn, animFadeOu;
+
+    public int global_img_width, global_img_height;
     public ArrayList<Bitmap> bmp_images = new ArrayList<Bitmap>();
 
     ArrayList<Integer> arrlist = new ArrayList<Integer>();
@@ -101,6 +111,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         assert actionBar != null;
         actionBar.hide();
         setContentView(R.layout.activity_preview);
+
+        display = getWindowManager().getDefaultDisplay();
 
         layout_face_detect = (LinearLayout) findViewById(R.id.layout_face_detect);
 
@@ -169,6 +181,20 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         bottom_layout.setVisibility(View.GONE);
         HeadLayout.setVisibility(View.GONE);
         button_bar.setVisibility(View.GONE);
+
+        //Animation
+        animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
+        animFadeIn.setStartOffset(100);
+        animFadeOu = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out);
+
+        //Animation 2 for Menu Bar [Edit - Info - Delete]
+        animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
+        animFadeOu2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out2);
+
+        main_layout = (RelativeLayout) findViewById(R.id.preview);
+        FrameImagePreview = (RelativeLayout) findViewById(R.id.FrameImagePreview);
+        FrameImagePreview_TOP = (RelativeLayout) findViewById(R.id.FrameImagePreview_TOP);
+        fram_focus_layout = (RelativeLayout) findViewById(R.id.fram_focus_layout);
 
         // Get intent form MainActivity
         Intent intent = getIntent();
@@ -281,47 +307,15 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         //largeIcon = rotated;
         //largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
-        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
+        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.test);
 
-        ImageView imgPreView = findViewById(R.id.ImagePreview);
+        imgPreView = findViewById(R.id.ImagePreview);
         imgPreView.setImageBitmap(nowPhotoPreview);
         ////imgPreView.setBackgroundResource(R.drawable.test);
 
         //Bitmap largeIcon = myBitmap;
 
-        Display display = getWindowManager().getDefaultDisplay();
-        int display_width = display.getWidth();
-
-        FrameImagePreview = (RelativeLayout) findViewById(R.id.FrameImagePreview);
-        int a = (int) (display_width / nowPhotoPreview.getHeight()) * nowPhotoPreview.getHeight();
-
-        if (nowPhotoPreview.getWidth() > nowPhotoPreview.getHeight()){
-            float f = ((float) display_width / (float)nowPhotoPreview.getWidth());
-
-            int fW = Math.round( f * (float)nowPhotoPreview.getWidth());
-            int fH = Math.round( f * (float)nowPhotoPreview.getHeight());
-
-            global_img_width = fW;
-            getGlobal_img_height = fH;
-
-            fram_focus_layout.getLayoutParams().height = fH;
-            fram_focus_layout.getLayoutParams().width = fW;
-
-            imgPreView.setImageBitmap(getResizedBitmap(nowPhotoPreview, fW, fH));
-        }else if (nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight()){
-            float f = ((float) display_width / (float)nowPhotoPreview.getWidth());
-
-            int fW = Math.round( f * (float)nowPhotoPreview.getWidth());
-            int fH = Math.round( f * (float)nowPhotoPreview.getHeight());
-
-            global_img_width = fW;
-            getGlobal_img_height = fH;
-
-            fram_focus_layout.getLayoutParams().height = fH;
-            fram_focus_layout.getLayoutParams().width = fW;
-
-            imgPreView.setImageBitmap(getResizedBitmap(nowPhotoPreview, fW, fH));
-        }
+        adjustImageDisplay(nowPhotoPreview);
 
         //tempBitmap = nowPhotoPreview;
         //handleResult();
@@ -335,8 +329,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         old_height_bottom_layout = getHeightOfView(bottom_layout);
         old_width_bottom_layout = 1080;
 
-        int width2 = ImagePreview.getWidth();//display.getWidth();
-        int height2 = ImagePreview.getHeight();
 
         Log.e("IMG","OnCreate Image  Width ///////////////////////////////////////////////////////");
 
@@ -353,6 +345,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         xMAX_HEIGHT_PREVIEW = fram_focus_layout.getLayoutParams().height;
         xMAX_WIDTH_PREVIEW = fram_focus_layout.getLayoutParams().width;
+
+        //editMode(true);
+        //editMode(false);
     }
 
     public Uri getImageUri(Context inContext, Bitmap inImage) {
@@ -387,19 +382,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     @Override
     public void onClick(View view) {
-
-        //Animation
-        Animation animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in);
-        animFadeIn.setStartOffset(100);
-        Animation animFadeOu = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out);
-
-        //Animation 2 for Menu Bar [Edit - Info - Delete]
-        Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
-        Animation animFadeOu2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_out2);
-
-        RelativeLayout main_layout = (RelativeLayout) findViewById(R.id.preview);
-        RelativeLayout FrameImagePreview = (RelativeLayout) findViewById(R.id.FrameImagePreview);
-        RelativeLayout fram_focus_layout = (RelativeLayout) findViewById(R.id.fram_focus_layout);
 
         if (layout_face_detect_width_MAX < layout_face_detect.getWidth()){
             layout_face_detect_width_MAX = layout_face_detect.getWidth();
@@ -541,64 +523,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
                 break;
             case R.id.button_edit:
-                Log.e("IMG","Enter Edit Mode ///////////////////////////////");
-                Log.e("IMG","   START fram_focus_layout = " + fram_focus_layout.getHeight());
-
-
-                menu_bar.setVisibility(View.GONE);
-                HeadLayout2.setVisibility(View.GONE);
-                Touch_ImagePreview.setVisibility(View.GONE);
-
-                bottom_layout.setVisibility(View.VISIBLE);
-                HeadLayout.setVisibility(View.VISIBLE);
-                button_bar.setVisibility(View.VISIBLE);
-                //fram_focus_layout.setVisibility(View.VISIBLE);
-
-                fram_focus_layout.setVisibility(View.VISIBLE);
-                fram_focus_layout.startAnimation(animFadeIn);
-
-                int head_layout_height = getHeightOfView(HeadLayout);
-                int bottom_layout_height = getHeightOfView(bottom_layout);
-                int main_layout_height = main_layout.getHeight();
-
-                Display display = getWindowManager().getDefaultDisplay();
-
-                int x = main_layout_height - head_layout_height - bottom_layout_height;
-                int newWidthFocusFrame = (x * display.getWidth()) / ImagePreview.getHeight();
-
-                slideView2(FrameImagePreview, FrameImagePreview.getHeight(), x, FrameImagePreview.getLayoutParams().width, newWidthFocusFrame);
-                slideView2(fram_focus_layout, FrameImagePreview.getHeight(), x, FrameImagePreview.getLayoutParams().width, newWidthFocusFrame);
-
-                if(FrameImagePreview.getHeight() > MAX_HEIGHT_PREVIEW){
-                    MAX_HEIGHT_PREVIEW = FrameImagePreview.getHeight();
-                    Log.e("IMG", "   MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW);
-                }
-
-                if(FrameImagePreview.getWidth() > MAX_WIDTH_PREVIEW){
-                    MAX_WIDTH_PREVIEW = FrameImagePreview.getWidth();
-                    Log.e("IMG", "   MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW);
-                }
-
-                nowPhoto_Width = newWidthFocusFrame;
-                nowPhoto_Height = ImagePreview.getHeight();
-
-                slideView2(bottom_layout, 0, old_height_bottom_layout, old_width_bottom_layout, old_width_bottom_layout);
-                slideView2(HeadLayout, 0, old_height_header_layout, old_width_bottom_layout, old_width_header_layout);
-
-                resetSizeOfPhotoPreview();
-
-                handleResult();
-                nowPhotoPreview = getResizedBitmap(nowPhotoPreview, old_width_header_layout,x);
-
-                xMAX_HEIGHT_PREVIEW = max_fram_focus_layout_height;
-                xMAX_WIDTH_PREVIEW = fram_focus_layout.getWidth();
-
-                state_Edite_Mode = false;
-                menu_bar.setVisibility(View.GONE);
-                state_ImagePreview = true;
-
-                Log.e("IMG","   END fram_focus_layout = " + fram_focus_layout.getHeight());
-
+                editMode(true);
                 break;
             case R.id.button_info:
 
@@ -607,50 +532,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
                 break;
             case R.id.button_back:
-                Log.e("IMG","Exit Edit Mode ///////////////////////////////");
-
-                //Recall MenuBar + Header + FliterPreview
-                menu_bar.setVisibility(View.GONE);
-                HeadLayout2.setVisibility(View.GONE);
-                Touch_ImagePreview.setVisibility(View.VISIBLE);
-                fram_focus_layout.setVisibility(View.INVISIBLE);
-
-                //Resize MenuBar + Header
-                slideView2(bottom_layout, bottom_layout.getLayoutParams().height, 0, bottom_layout.getLayoutParams().width, bottom_layout.getLayoutParams().width);
-                slideView2(HeadLayout, HeadLayout.getLayoutParams().height, 0, HeadLayout.getLayoutParams().width, HeadLayout.getLayoutParams().width);
-
-                //int x2 = FrameImagePreview2.getLayoutParams().height;
-                Display display2 = getWindowManager().getDefaultDisplay();
-                nowPhoto_Width = display2.getWidth();
-
-                if(fram_focus_layout.getHeight() > MAX_HEIGHT_PREVIEW){
-                    MAX_HEIGHT_PREVIEW = fram_focus_layout.getHeight();
-                    Log.e("IMG", "   MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW);
-                }
-
-                if(fram_focus_layout.getWidth() > MAX_WIDTH_PREVIEW){
-                    MAX_WIDTH_PREVIEW = fram_focus_layout.getWidth();
-                    Log.e("IMG", "   MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW);
-                }
-
-                nowPhoto_Width = display2.getWidth();
-                nowPhoto_Height = FrameImagePreview.getLayoutParams().height;
-
-                slideView2(FrameImagePreview, FrameImagePreview.getHeight(), MAX_HEIGHT_PREVIEW, FrameImagePreview.getWidth(), MAX_WIDTH_PREVIEW);
-                slideView2(fram_focus_layout, fram_focus_layout.getLayoutParams().height, max_fram_focus_layout_height, FrameImagePreview.getLayoutParams().width, display2.getWidth());
-
-                button_bar.setVisibility(View.GONE);
-
-
-
-                resetSizeOfPhotoPreview();
-                handleResult();
-                nowPhotoPreview = getResizedBitmap(nowPhotoPreview,display2.getWidth(),FrameImagePreview.getLayoutParams().height);
-
-                xMAX_HEIGHT_PREVIEW = fram_focus_layout.getLayoutParams().height;
-                xMAX_WIDTH_PREVIEW = fram_focus_layout.getWidth();
-
-                state_Edite_Mode = true;
+                editMode(false);
                 break;
         }
     }
@@ -661,11 +543,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         int height2 = xMAX_HEIGHT_PREVIEW;
         int width2 = xMAX_WIDTH_PREVIEW;
 
-        Log.e("IMG","setFocusView //////////////////////////////////////" + height2);
-        Log.e("IMG","   xMAX_HEIGHT_PREVIEW = " + xMAX_HEIGHT_PREVIEW);
-        Log.e("IMG","   xMAX_WIDTH_PREVIEW = " + xMAX_WIDTH_PREVIEW);
-        //display.getWidth();
-
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
         h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
         w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
@@ -673,6 +550,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         y = (int) Math.round((float) (Y * height2));
 
         Bitmap bb = getResizedBitmap(nowPhotoPreview, width2, height2);
+        Bitmap b = crop(bb, x, y, w, w);
+        bmp_images.add(b);
+        /*
         if (w > h){
             Bitmap b = crop(bb, x, y, w + 15, w + 15);
             bmp_images.add(b);
@@ -680,6 +560,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             Bitmap b = crop(bb, x, y, h + 15, h + 15);
             bmp_images.add(b);
         }
+
+         */
 
         LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
         @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
@@ -770,6 +652,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         } else {
             List<Classifier.Recognition> results = detector.recognizeImage(getResizedBitmap(nowPhotoPreview, 320, 320));
             int i = 0;
+
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
                 //                           X - Y - Width - Height
@@ -780,6 +663,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 }
                 i++;
             }
+
+            Log.e("IMG","   setFocusView ////////////////////////////////////////////////////////////////////////////");
+            Log.e("IMG","      - Number of faces detected = " + (bmp_images.size()));
+            Log.e("IMG","      - xMAX_HEIGHT_PREVIEW = " + xMAX_HEIGHT_PREVIEW);
+            Log.e("IMG","      - xMAX_WIDTH_PREVIEW = " + xMAX_WIDTH_PREVIEW);
+
             run();
         }
     }
@@ -798,8 +687,18 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //nowPhoto_Width = nowPhotoPreview.getWidth();
         //nowPhoto_Height = nowPhotoPreview.getHeight();
 
-        Log.e("IMG","Reset Size Of PhotoPreview /////////////////////////////////////////////////");
+        Log.e("IMG","   Reset Size Of PhotoPreview /////////////////////////////////////////////////");
 
+        //Log.e("IMG","      - global_screen_width = " + display.getWidth() + "px");
+        Log.e("IMG","      - max_fram_focus_layout_height = " + max_fram_focus_layout_height + "px");
+        //Log.e("IMG","      - global_preview_height = " + global_preview_height + "px");
+        //Log.e("IMG","      - global_preview_width = " + global_preview_width + "px");
+
+        Log.e("IMG","      - nowPhoto_Height = " + nowPhoto_Height + "px");
+        Log.e("IMG","      - nowPhoto_Width = " + nowPhoto_Width + "px");
+
+
+        /*
         Log.e("IMG","   Now Photo Height = " + nowPhoto_Height + "px");
         Log.e("IMG","   Now Photo Width = " + nowPhoto_Width + "px");
 
@@ -808,5 +707,378 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         Log.e("IMG","   NOW FRAME FOCUS HEIGHT = " + fram_focus_layout.getHeight() + "px");
         Log.e("IMG","   max_fram_focus_layout_height = " + max_fram_focus_layout_height);
+
+        //Global Value /////////////////////////////////////////////////////////////////////////////////
+    public int global_preview_height = 0;           //ขนาดของพื้นที่แสดงภาพตัวอย่าง ณ ปัจจุบัน
+    public int global_preview_width = 0;
+    public int global_screen_width = 0;             //ขนาดความกว้างสูงสุดของหน้าจอ
+
+    public Bitmap nowPhotoPreview;                  //Now Photo Preview
+    public int nowPhoto_Height, nowPhoto_Width;     //Now size of photo
+    public int heightPhoto, widthPhoto;             //Real size of photo
+    public int max_fram_focus_layout_height;        //ความกว้างสูงสุดที่สามารถแสดงตัวอย่างได้
+
+         */
+    }
+
+    public void adjustImageDisplay(Bitmap bitmap){
+        if (bitmap != null){
+            Display display = getWindowManager().getDefaultDisplay();
+            int display_width = display.getWidth();
+
+            if (nowPhotoPreview.getWidth() > nowPhotoPreview.getHeight()){                                      //Landscape
+                float f = ((float) display_width / (float)nowPhotoPreview.getWidth());
+
+                int fW = Math.round( f * (float)nowPhotoPreview.getWidth());
+                int fH = Math.round( f * (float)nowPhotoPreview.getHeight());
+
+                global_img_width = fW;
+                global_img_height = fH;
+
+                fram_focus_layout.getLayoutParams().height = fH;
+                fram_focus_layout.getLayoutParams().width = fW;
+
+                imgPreView.setImageBitmap(getResizedBitmap(nowPhotoPreview, fW, fH));
+            }else if (nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight()){                                //Portrait
+                float f = ((float) display_width / (float)nowPhotoPreview.getWidth());
+
+                int fW = Math.round( f * (float)nowPhotoPreview.getWidth());
+                int fH = Math.round( f * (float)nowPhotoPreview.getHeight());
+
+                global_img_width = fW;
+                global_img_height = fH;
+
+                fram_focus_layout.getLayoutParams().height = fH;
+                fram_focus_layout.getLayoutParams().width = fW;
+
+                imgPreView.setImageBitmap(getResizedBitmap(nowPhotoPreview, fW, fH));
+
+            }
+        }
+    }
+
+    public void editMode(boolean b){
+        if (layout_face_detect_width_MAX < layout_face_detect.getWidth()){
+            layout_face_detect_width_MAX = layout_face_detect.getWidth();
+        }
+        if (b){
+            Log.e("IMG","> Enter Edit Mode /////////////////////////////////////////////////////////////////////");
+
+            menu_bar.setVisibility(View.GONE);
+            HeadLayout2.setVisibility(View.GONE);
+            Touch_ImagePreview.setVisibility(View.GONE);
+
+            bottom_layout.setVisibility(View.VISIBLE);
+            HeadLayout.setVisibility(View.VISIBLE);
+            button_bar.setVisibility(View.VISIBLE);
+            fram_focus_layout.setVisibility(View.VISIBLE);
+
+            fram_focus_layout.startAnimation(animFadeIn);
+
+            ///////////////////////////////////////////////////////////////////////////////////////
+
+
+            int head_layout_height = getHeightOfView(HeadLayout);
+            int bottom_layout_height = getHeightOfView(bottom_layout);
+            int main_layout_height = main_layout.getHeight();
+
+            Display display = getWindowManager().getDefaultDisplay();
+
+            int free_height = main_layout_height - head_layout_height - bottom_layout_height;
+            slideView2(FrameImagePreview_TOP, FrameImagePreview_TOP.getHeight(), free_height, FrameImagePreview_TOP.getWidth(), FrameImagePreview_TOP.getWidth());
+            //int newWidthFocusFrame = (free_height * display.getWidth() / ImagePreview.getHeight());
+
+            Log.e("IMG","   CALCULATE________________________________________");
+            //Log.e("IMG","   - head_layout_height = " + head_layout_height);
+            //Log.e("IMG","   - bottom_layout_height = " + bottom_layout_height);
+            //Log.e("IMG","   - main_layout_height = " + main_layout_height);
+            Log.e("IMG","   - imgPreView.getHeight() = " + imgPreView.getHeight());
+            Log.e("IMG","   - free_height = " + free_height);
+            Log.e("IMG","   - free_width = " +  display.getWidth());
+
+            //slideView2(fram_focus_layout, fram_focus_layout.getHeight(), x, fram_focus_layout.getWidth(), newWidthFocusFrame);
+
+            Log.e("IMG","   - ImagePreview.getHeight() = " + imgPreView.getHeight());
+            Log.e("IMG", "   - fram_focus_layout.getHeight() = " + fram_focus_layout.getHeight());
+
+            if(FrameImagePreview.getHeight() > MAX_HEIGHT_PREVIEW){
+                MAX_HEIGHT_PREVIEW = FrameImagePreview.getHeight();
+                Log.e("IMG", "   - MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW);
+            }
+
+            if(FrameImagePreview.getWidth() > MAX_WIDTH_PREVIEW){
+                MAX_WIDTH_PREVIEW = FrameImagePreview.getWidth();
+                Log.e("IMG", "   - MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW);
+            }
+
+            nowPhoto_Width = nowPhotoPreview.getWidth();
+            nowPhoto_Height = nowPhotoPreview.getHeight();
+
+            Log.e("IMG", "   CHECK Orientation ______________________________________________");
+            Log.e("IMG", "      - nowPhotoPreview.getHeight() = " + nowPhotoPreview.getHeight());
+            Log.e("IMG", "      - nowPhotoPreview.getWidth() = " + nowPhotoPreview.getWidth());
+
+            int match_width = display.getWidth();
+            int match_height = (nowPhotoPreview.getHeight() / nowPhotoPreview.getWidth() ) * display.getWidth();
+
+            if (imgPreView.getHeight() > free_height) {                                                       //Landscape
+                Log.e("IMG", "      imgPreView.getHeight > free_height________________________________________________________________");
+                int newHeight = free_height;
+                int newWidth = free_height * 1080 / imgPreView.getHeight();
+
+                slideView2(FrameImagePreview, FrameImagePreview.getHeight(), newHeight, FrameImagePreview.getWidth(), newWidth);
+
+                nowPhotoPreview = getResizedBitmap(nowPhotoPreview, newWidth,newHeight);
+
+                xMAX_HEIGHT_PREVIEW = newHeight;
+                xMAX_WIDTH_PREVIEW = newWidth;
+
+                Log.e("IMG", "      - FrameImagePreview Height = " + FrameImagePreview.getHeight());
+                Log.e("IMG", "      - FrameImagePreview Width = " + FrameImagePreview.getWidth());
+            }else if (match_height < free_height){                                                                                 //Portaite
+                Log.e("IMG", "      imgPreView.getHeight < free_height________________________________________________________________");
+
+                slideView2(FrameImagePreview, FrameImagePreview.getHeight(), imgPreView.getHeight(), FrameImagePreview.getWidth(), display.getWidth());
+                nowPhotoPreview = getResizedBitmap(nowPhotoPreview, display.getWidth(),imgPreView.getHeight());
+
+                xMAX_HEIGHT_PREVIEW = imgPreView.getHeight();
+                xMAX_WIDTH_PREVIEW = display.getWidth();
+
+                Log.e("IMG", "      - FrameImagePreview Height = " + FrameImagePreview.getHeight());
+                Log.e("IMG", "      - FrameImagePreview Width = " + FrameImagePreview.getWidth());
+            }
+
+            Log.e("IMG", "      - match_height = " + match_height);
+            Log.e("IMG", "      - match_width = " + match_width);
+
+            slideView2(bottom_layout, 0, old_height_bottom_layout, old_width_bottom_layout, old_width_bottom_layout);
+            slideView2(HeadLayout, 0, old_height_header_layout, old_width_bottom_layout, old_width_header_layout);
+
+            resetSizeOfPhotoPreview();
+            handleResult();
+
+            state_Edite_Mode = false;
+            menu_bar.setVisibility(View.GONE);
+            state_ImagePreview = true;
+
+            //nowPhotoPreview = getResizedBitmap(nowPhotoPreview, xMAX_WIDTH_PREVIEW,xMAX_HEIGHT_PREVIEW);
+            //nowPhotoPreview = getResizedBitmap(nowPhotoPreview, old_width_header_layout,x);
+            Log.e("IMG", "   NOW PHOTO PREVIEW /////////////////////////////////////////////////////////////////////////////");
+            Log.e("IMG", "   - Height = " + nowPhotoPreview.getHeight());
+            Log.e("IMG", "   - Width = " + nowPhotoPreview.getWidth());
+
+        }else {
+            Log.e("IMG","< Exit Edit Mode /////////////////////////////////////////////////////////////////////");
+
+            Log.e("IMG","   ImagePreview.getHeight() = " + imgPreView.getHeight());
+            Log.e("IMG", "   fram_focus_layout.getHeight() = " + fram_focus_layout.getHeight());
+
+            Log.e("IMG", "   CHECK Orientation ______________________________________________");
+            Log.e("IMG", "      - nowPhotoPreview.getWidth() = " + nowPhotoPreview.getWidth());
+            Log.e("IMG", "      - nowPhotoPreview.getHeight() = " + nowPhotoPreview.getHeight());
+
+            //Recall MenuBar + Header + FliterPreview
+            menu_bar.setVisibility(View.GONE);
+            HeadLayout2.setVisibility(View.GONE);
+            Touch_ImagePreview.setVisibility(View.VISIBLE);
+            //fram_focus_layout.setVisibility(View.INVISIBLE);
+
+            //Resize MenuBar + Header
+            slideView2(bottom_layout, bottom_layout.getLayoutParams().height, 0, bottom_layout.getLayoutParams().width, bottom_layout.getLayoutParams().width);
+            slideView2(HeadLayout, HeadLayout.getLayoutParams().height, 0, HeadLayout.getLayoutParams().width, HeadLayout.getLayoutParams().width);
+
+            ////////////////////////////////////////////////////////////////////////////////////////
+            //int x2 = FrameImagePreview2.getLayoutParams().height;
+            Display display2 = getWindowManager().getDefaultDisplay();
+            nowPhoto_Width = display2.getWidth();
+
+            if(fram_focus_layout.getHeight() > MAX_HEIGHT_PREVIEW){
+                MAX_HEIGHT_PREVIEW = fram_focus_layout.getHeight();
+                Log.e("IMG", "   MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW);
+            }
+
+            if(fram_focus_layout.getWidth() > MAX_WIDTH_PREVIEW){
+                MAX_WIDTH_PREVIEW = fram_focus_layout.getWidth();
+                Log.e("IMG", "   MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW);
+            }
+
+            nowPhoto_Width = nowPhotoPreview.getWidth();
+            nowPhoto_Height = nowPhotoPreview.getHeight();
+
+            //nowPhoto_Width = display2.getWidth();
+            //nowPhoto_Height = max_fram_focus_layout_height;
+            //nowPhoto_Height = FrameImagePreview.getLayoutParams().height;
+
+            slideView2(FrameImagePreview_TOP, FrameImagePreview_TOP.getHeight(), MAX_HEIGHT_PREVIEW, FrameImagePreview_TOP.getWidth(), MAX_WIDTH_PREVIEW);
+
+            slideView2(FrameImagePreview, FrameImagePreview.getLayoutParams().height, MAX_HEIGHT_PREVIEW, FrameImagePreview.getWidth(), MAX_WIDTH_PREVIEW);
+            //slideView2(fram_focus_layout, FrameImagePreview.getLayoutParams().height, max_fram_focus_layout_height, FrameImagePreview.getLayoutParams().width, display2.getWidth());
+
+            button_bar.setVisibility(View.GONE);
+
+            xMAX_HEIGHT_PREVIEW = max_fram_focus_layout_height;
+            xMAX_WIDTH_PREVIEW = display.getWidth();
+
+            resetSizeOfPhotoPreview();
+
+            handleResult();
+
+            state_Edite_Mode = true;
+
+            nowPhotoPreview = getResizedBitmap(nowPhotoPreview, xMAX_WIDTH_PREVIEW, xMAX_HEIGHT_PREVIEW);
+            //nowPhotoPreview = getResizedBitmap(nowPhotoPreview,display.getWidth(),FrameImagePreview.getLayoutParams().height);
+            Log.e("IMG", "   NOW PHOTO PREVIEW /////////////////////////////////////////////////////////////////////////////");
+            Log.e("IMG", "   - Height = " + nowPhotoPreview.getHeight());
+            Log.e("IMG", "   - Width = " + nowPhotoPreview.getWidth());
+        }
+
     }
 }
+
+/*
+
+            menu_bar.setVisibility(View.GONE);
+            HeadLayout2.setVisibility(View.GONE);
+            Touch_ImagePreview.setVisibility(View.GONE);
+
+            bottom_layout.setVisibility(View.VISIBLE);
+            HeadLayout.setVisibility(View.VISIBLE);
+            button_bar.setVisibility(View.VISIBLE);
+            //fram_focus_layout.setVisibility(View.VISIBLE);
+
+            fram_focus_layout.setVisibility(View.VISIBLE);
+            fram_focus_layout.startAnimation(animFadeIn);
+
+            ///////////////////////////////////////////////////////////////////////////////////////
+            int head_layout_height = getHeightOfView(HeadLayout);
+            int bottom_layout_height = getHeightOfView(bottom_layout);
+            int main_layout_height = main_layout.getHeight();
+
+            Display display = getWindowManager().getDefaultDisplay();
+
+            int x = main_layout_height - head_layout_height - bottom_layout_height;
+            int newWidthFocusFrame = (x * display.getWidth() / imgPreView.getHeight());
+
+            Log.e("IMG","   ImagePreview.getHeight() = " + imgPreView.getHeight());
+
+            global_preview_height = x;
+            global_preview_width = newWidthFocusFrame;
+
+            slideView2(FrameImagePreview, FrameImagePreview.getHeight(), x, FrameImagePreview.getWidth(), newWidthFocusFrame);
+            //slideView2(fram_focus_layout, fram_focus_layout.getHeight(), x, fram_focus_layout.getWidth(), newWidthFocusFrame);
+            Log.e("IMG", "   fram_focus_layout.getHeight() = " + fram_focus_layout.getHeight());
+
+            if(FrameImagePreview.getHeight() > MAX_HEIGHT_PREVIEW){
+                MAX_HEIGHT_PREVIEW = FrameImagePreview.getHeight();
+                Log.e("IMG", "   MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW);
+            }
+
+            if(FrameImagePreview.getWidth() > MAX_WIDTH_PREVIEW){
+                MAX_WIDTH_PREVIEW = FrameImagePreview.getWidth();
+                Log.e("IMG", "   MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW);
+            }
+
+            //nowPhoto_Width = newWidthFocusFrame;
+            //nowPhoto_Height = ImagePreview.getHeight();
+
+            nowPhoto_Width = global_preview_width;
+            nowPhoto_Height = global_preview_height;
+
+            Log.e("IMG", "   CHECK Orientation ______________________________________________");
+            Log.e("IMG", "      - nowPhotoPreview.getWidth() = " + nowPhotoPreview.getWidth());
+            Log.e("IMG", "      - nowPhotoPreview.getHeight() = " + nowPhotoPreview.getHeight());
+
+
+            if (nowPhotoPreview.getWidth() > nowPhotoPreview.getHeight()){                              //Landscape
+                Log.e("IMG", "   Photo Orientation = Landscape");
+                xMAX_HEIGHT_PREVIEW = max_fram_focus_layout_height;
+                xMAX_WIDTH_PREVIEW = display.getWidth();
+            }else if(nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight()){
+                Log.e("IMG", "   Photo Orientation = Portaite");
+                xMAX_HEIGHT_PREVIEW = global_preview_height;
+                xMAX_WIDTH_PREVIEW = global_preview_width;
+            }
+
+            //xMAX_HEIGHT_PREVIEW = global_preview_height;
+            //xMAX_WIDTH_PREVIEW = global_preview_width;
+
+            ///////////////////////////////////////////////////////////////////////////////////////
+            slideView2(bottom_layout, 0, old_height_bottom_layout, old_width_bottom_layout, old_width_bottom_layout);
+            slideView2(HeadLayout, 0, old_height_header_layout, old_width_bottom_layout, old_width_header_layout);
+
+            resetSizeOfPhotoPreview();
+            handleResult();
+
+            state_Edite_Mode = false;
+            menu_bar.setVisibility(View.GONE);
+            state_ImagePreview = true;
+
+            nowPhotoPreview = getResizedBitmap(nowPhotoPreview, old_width_header_layout,x);
+            Log.e("IMG", "   NOW PHOTO PREVIEW /////////////////////////////////////////////////////////////////////////////");
+            Log.e("IMG", "   - Height = " + x);
+            Log.e("IMG", "   - Width = " + old_width_header_layout);
+
+ */
+
+
+/*
+if (nowPhotoPreview.getWidth() > nowPhotoPreview.getHeight()){                              //Landscape
+                Log.e("IMG", "      - Photo Orientation = Landscape");
+                xMAX_HEIGHT_PREVIEW = max_fram_focus_layout_height;
+                xMAX_WIDTH_PREVIEW = display.getWidth();
+
+                int newHeightFocusFrame = main_layout_height - head_layout_height - bottom_layout_height;
+                int newWidthFocusFrame = (newHeightFocusFrame * display.getWidth() / imgPreView.getHeight());
+
+                Log.e("IMG", "      - xMAX_HEIGHT_PREVIEW = " + xMAX_HEIGHT_PREVIEW);
+                Log.e("IMG", "      - xMAX_WIDTH_PREVIEW = " + xMAX_WIDTH_PREVIEW);
+
+                Log.e("IMG","   - newHeightFocusFrame = " + newHeightFocusFrame);
+                Log.e("IMG","   - newWidthFocusFrame = " + newWidthFocusFrame);
+
+                //slideView2(FrameImagePreview, FrameImagePreview.getHeight(), newHeightFocusFrame, FrameImagePreview.getWidth(), newWidthFocusFrame);
+            }else if(nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight()){                         //Portaite
+                Log.e("IMG", "      - Photo Orientation = Portaite");
+
+                //newHeightFocusFrame = main_layout_height - head_layout_height - bottom_layout_height;
+                //newWidthFocusFrame = (newHeightFocusFrame * display.getWidth() / imgPreView.getHeight());
+
+                int newHeightFocusFrame = (nowPhotoPreview.getHeight() / nowPhotoPreview.getWidth()) * display.getWidth();
+                int newWidthFocusFrame = display.getWidth();
+                int free_height = main_layout_height - head_layout_height - bottom_layout_height;
+
+                xMAX_HEIGHT_PREVIEW = newHeightFocusFrame;
+                xMAX_WIDTH_PREVIEW = newWidthFocusFrame;
+
+                Log.e("IMG", "      - newHeightFocusFrame = " + newHeightFocusFrame);
+                Log.e("IMG", "      - newWidthFocusFrame = " + newWidthFocusFrame);
+
+                Log.e("IMG", "      - FREE SPACE Height = " + free_height);
+                Log.e("IMG", "      - FREE SPACE Width = " + xMAX_HEIGHT_PREVIEW);
+
+                int match_width = display.getWidth();
+                int match_height = (nowPhoto_Height / nowPhoto_Width ) * display.getWidth();
+
+                if (match_height > free_height) {
+                    match_width = display.getWidth();
+                    match_height = free_height;
+
+                    Log.e("IMG", "      - match_width = " + match_width);
+                    Log.e("IMG", "      - match_height = " + match_height);
+
+                    slideView2(FrameImagePreview, FrameImagePreview.getHeight(), match_width, FrameImagePreview.getWidth(), match_height);
+                }else {
+                    Log.e("IMG", "      - match_width = " + match_width);
+                    Log.e("IMG", "      - match_height = " + match_height);
+                    slideView2(FrameImagePreview, FrameImagePreview.getHeight(), match_height, FrameImagePreview.getWidth(), match_width);
+                }
+
+                Log.e("IMG", "      - xMAX_HEIGHT_PREVIEW = " + xMAX_HEIGHT_PREVIEW);
+                Log.e("IMG", "      - xMAX_WIDTH_PREVIEW = " + xMAX_WIDTH_PREVIEW);
+
+                Log.e("IMG","   - newHeightFocusFrame = " + newHeightFocusFrame);
+                Log.e("IMG","   - newWidthFocusFrame = " + newWidthFocusFrame);
+
+                //slideView2(FrameImagePreview, FrameImagePreview.getHeight(), newHeightFocusFrame, FrameImagePreview.getWidth(), newWidthFocusFrame);
+            }
+ */

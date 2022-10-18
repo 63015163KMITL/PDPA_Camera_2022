@@ -14,27 +14,29 @@
         android:layout_centerVertical="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#FFF">
+        android:background="#00000000">
 
             <RelativeLayout
                 android:layout_centerHorizontal="true"
-                android:id="@+id/FrameImagePreview"
+                android:id="@+id/FrameImagePreview_TOP"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:background="#00F"
+                android:background="#00000000"
                 android:rotation="0">
 
                 <RelativeLayout
+                    android:id="@+id/FrameImagePreview"
+                    android:layout_centerHorizontal="true"
                     android:layout_centerVertical="true"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="#0F0">
+                    android:background="#00000000">
 
                     <ImageView
                         android:layout_centerVertical="true"
                         android:id="@+id/ImagePreview"
-                        android:background="#00FF00"
+                        android:background="#00000000"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
 
@@ -43,7 +45,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_centerInParent="true"
-                        android:background="#55FF0000"/>
+                        android:background="#00000000" />
 
                     <RelativeLayout
                         android:id="@+id/Touch_ImagePreview"
