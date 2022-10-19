@@ -87,10 +87,10 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     int state_pdpd = 0;
 
     //DETECT FACE
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.4f;
     private Classifier detector;
     public static final int TF_OD_API_INPUT_SIZE = 224;
-    private static final String TF_OD_API_MODEL_FILE = "n_224.tflite";
+    private static final String TF_OD_API_MODEL_FILE = "Mask_224-fp16.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
     public int processTime;
     public static boolean isWorking = false;
@@ -388,7 +388,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setTargetResolution(new Size(1080, 1440))
                 .build();
-        //imageAnalysis.setAnalyzer(getExecutor(), this);
+        imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Video capture use case
         videoCapture = new VideoCapture.Builder()
