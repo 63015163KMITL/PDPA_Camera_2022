@@ -26,12 +26,12 @@
             android:exported="false"
             android:hardwareAccelerated="false" />
         <activity
-            android:name=".PreviewActivity"
+            android:name=".MainActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:label="Preview Pictur" />
         <activity
-            android:name=".MainActivity"
+            android:name=".PreviewActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:exported="true"
             android:screenOrientation="portrait">
