@@ -28,6 +28,7 @@
         <activity
             android:name=".PreviewActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:label="Preview Pictur" />
         <activity
             android:name=".MainActivity"

@@ -58,7 +58,7 @@ public class YoloV5Classifier implements Classifier {
         Interpreter.Options options = (new Interpreter.Options());
 //        options.setNumThreads(NUM_THREADS);
 //        options.addDelegate(new NnApiDelegate());
-        options.setNumThreads(5); //7 thread = 280 - 300 ms
+        options.setNumThreads(4); //7 thread = 280 - 300 ms
 
         options.setUseXNNPACK(true);
 //        options.setCancellable(true);
@@ -84,7 +84,7 @@ public class YoloV5Classifier implements Classifier {
         return MainActivity.MINIMUM_CONFIDENCE_TF_OD_API;
     }
 
-    protected float mNmsThresh = 0.6f;
+    protected float mNmsThresh = 0.4f;
     protected float box_iou(RectF a, RectF b) {
         return box_intersection(a, b) / box_union(a, b);
     }
@@ -180,7 +180,6 @@ public class YoloV5Classifier implements Classifier {
         }
         return nms(detections);
     }
-
 
     protected ArrayList<Recognition> nms(ArrayList<Recognition> list) {
         ArrayList<Recognition> nmsList = new ArrayList<>();
