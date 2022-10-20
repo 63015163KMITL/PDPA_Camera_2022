@@ -159,13 +159,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                         e.printStackTrace();
                     }
                     synchronized (mPauseLock){
-                            while (mPaused){
-                                try {
-                                    mPauseLock.wait();
-                                } catch (InterruptedException e) {
-                                }
+                        while (mPaused){
+                            try {
+                                mPauseLock.wait();
+                            } catch (InterruptedException e) {
                             }
                         }
+                    }
                 }
             }
         });
@@ -526,7 +526,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         y = (int) Math.round((float) (Y * height2));
 
         //Toast.makeText(this, "w = " + w + "/nh = " + h, LENGTH_SHORT).show();
- //       txtDebug.setText("w = " + w + "\nh = " + h);
+        //       txtDebug.setText("w = " + w + "\nh = " + h);
 
 
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
@@ -556,13 +556,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
 
-   //     TextView txt = new TextView(this);
- //       txt.setTextSize(6);
-   //     txt.setText(h + "x" + w);
+        //     TextView txt = new TextView(this);
+        //       txt.setTextSize(6);
+        //     txt.setText(h + "x" + w);
 
 
         frameFocusLayout.addView(focus_frame, params1);
-   //     frameFocusLayout.addView(txt, params1);
+        //     frameFocusLayout.addView(txt, params1);
     }
 
     List<Classifier.Recognition> results = null;

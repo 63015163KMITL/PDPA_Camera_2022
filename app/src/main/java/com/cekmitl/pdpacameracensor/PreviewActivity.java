@@ -326,7 +326,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         //largeIcon = rotated;
         //largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
-        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
+        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+        //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
         imgPreView.setImageBitmap(nowPhotoPreview);
@@ -387,23 +388,25 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 //progress * Math.pow(10,-3)
 
                 //Toast.makeText(getApplicationContext(), String.valueOf(progress),Toast.LENGTH_LONG).show();
-                double n = (100 - progress ) * Math.pow(10,-3);
+                double n;// = (100 - progress ) * Math.pow(10,-3);
+                n = (1.0 - (progress / 100.0));
+                Log.e("IMG"," N = " + n);
 
                 Log.e("IMG","LOG FACE //////////////////////////////////////////////////////////");
                 for (int i = 0; i < facePosition.size(); i++){
-                    Log.e("IMG","   - " + facePosition.get(i));
+                    //Log.e("IMG","   - " + facePosition.get(i));
                     String[] a = facePosition.get(i).split("/");
-                    Log.e("IMG","   a = " + Arrays.toString(a));
-                    if((n + "").equals("0.1")){
-                        setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), 0.9);
-                        Log.e("IMG","   Radius = " + 0.9);
-                    }
+                    //Log.e("IMG","   a = " + Arrays.toString(a));
+                    //if((n + "").equals("0.1")){
+                        //setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), 0.9);
+                        //Log.e("IMG","   Radius = " + 0.9);
+                    //}
                     setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), n);
-                    Log.e("IMG","   Radius = " + n);
+                    //Log.e("IMG","   Radius = " + n);
                 }
 
-                Log.e("IMG","   SEEK = " + progress);
-                Log.e("IMG","   0.1d = " + 0.1d);
+                //Log.e("IMG","   SEEK = " + progress);
+                //Log.e("IMG","   0.1d = " + 0.1d);
 
                 //fram_focus_layout.addView(imgBlur, params1);
 
@@ -704,13 +707,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         ImageView imgBlur = new ImageView(this);
 
-        if(seekbar_blur_radius.getProgress() == 0){
-            imgBlur.setBackgroundColor(Color.argb(0,0, 0, 0));
-
-        }else {
-            imgBlur.setImageBitmap(getMosaicsBitmap(b, blurRadius));
-        }
-        makeText(this, "SEEK = " + seekbar_blur_radius.getProgress(), LENGTH_SHORT).show();
+        imgBlur.setImageBitmap(getMosaicsBitmap(b, blurRadius));
+        //makeText(this, "SEEK = " + seekbar_blur_radius.getProgress(), LENGTH_SHORT).show();
         //imgBlur.setImageBitmap(getMosaicsBitmap(getCroppedBitmap(b), 1));
 
         fram_focus_layout.addView(imgBlur, params1);
