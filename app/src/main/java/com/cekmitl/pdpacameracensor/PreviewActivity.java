@@ -388,19 +388,23 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 //progress * Math.pow(10,-3)
 
                 //Toast.makeText(getApplicationContext(), String.valueOf(progress),Toast.LENGTH_LONG).show();
-                double n;// = (100 - progress ) * Math.pow(10,-3);
-                n = (1.0 - (progress / 100.0));
+                //Seek bar 0 - 100 Level
+                //Blur Radius = 0.9-0
+                double n = (100 - progress ) * Math.pow(10,-3);
+                //n = (1.0 - (progress / 100.0));
                 Log.e("IMG"," N = " + n);
 
-                Log.e("IMG","LOG FACE //////////////////////////////////////////////////////////");
+                //Log.e("IMG","LOG FACE //////////////////////////////////////////////////////////");
                 for (int i = 0; i < facePosition.size(); i++){
                     //Log.e("IMG","   - " + facePosition.get(i));
                     String[] a = facePosition.get(i).split("/");
                     //Log.e("IMG","   a = " + Arrays.toString(a));
-                    //if((n + "").equals("0.1")){
-                        //setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), 0.9);
-                        //Log.e("IMG","   Radius = " + 0.9);
-                    //}
+                    Log.e("IMG","   Radius 0.1 = x" + (n + "x"));
+                    if((n + "").equals("0.1")){
+                        setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), 0.9);
+                        Log.e("IMG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
+                    }
                     setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), n);
                     //Log.e("IMG","   Radius = " + n);
                 }
@@ -707,7 +711,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         ImageView imgBlur = new ImageView(this);
 
-        imgBlur.setImageBitmap(getMosaicsBitmap(b, blurRadius));
+        if (blurRadius == 0.1){
+            imgBlur.setImageBitmap(b);
+        }else {
+            imgBlur.setImageBitmap(getMosaicsBitmap(b, blurRadius));
+        }
+
         //makeText(this, "SEEK = " + seekbar_blur_radius.getProgress(), LENGTH_SHORT).show();
         //imgBlur.setImageBitmap(getMosaicsBitmap(getCroppedBitmap(b), 1));
 
@@ -1055,10 +1064,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     }
 
-    public void setBlur(){
-
-    }
-
     public static Bitmap getMosaicsBitmap(Bitmap bmp, double precent) {
         long start = System.currentTimeMillis();
         int bmpW = bmp.getWidth();
@@ -1090,7 +1095,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
         canvas.setBitmap(null);
         long end = System.currentTimeMillis();
-        Log.v("IMG", "DrawTime:" + (end - start));
+        //Log.v("IMG", "DrawTime:" + (end - start));
         return resultBmp;
     }
 
