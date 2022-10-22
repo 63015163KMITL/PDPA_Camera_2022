@@ -29,6 +29,9 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
@@ -84,10 +87,10 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     int state_pdpd = 0;
 
     //DETECT FACE
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.5f;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.4f;
     private Classifier detector;
     public static final int TF_OD_API_INPUT_SIZE = 224;
-    private static final String TF_OD_API_MODEL_FILE = "n_224.tflite";
+    private static final String TF_OD_API_MODEL_FILE = "Mask_224-fp16.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
     public int processTime;
     public static boolean isWorking = false;
@@ -598,14 +601,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
     Bitmap tempBitmap = null;
 
-    public Bitmap flip(Bitmap d)
-    {
+    public Bitmap flip(Bitmap d) {
         Matrix m = new Matrix();
         m.preScale(1, -1);
         Bitmap dst = Bitmap.createBitmap(d, 0, 0, d.getWidth(), d.getHeight(), m, false);
         dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
         return dst;
     }
-
-
 }

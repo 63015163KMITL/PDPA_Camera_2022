@@ -14,35 +14,45 @@
         android:layout_centerVertical="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#000">
+        android:background="#00000000">
 
             <RelativeLayout
                 android:layout_centerHorizontal="true"
-                android:id="@+id/FrameImagePreview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:id="@+id/FrameImagePreview_TOP"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:background="#00000000"
                 android:rotation="0">
 
                 <RelativeLayout
+                    android:id="@+id/FrameImagePreview"
+                    android:layout_centerHorizontal="true"
                     android:layout_centerVertical="true"
-                    android:id="@+id/fram_focus_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="#000">
+                    android:layout_height="match_parent"
+                    android:background="#00000000">
 
                     <ImageView
+                        android:layout_centerVertical="true"
                         android:id="@+id/ImagePreview"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent" />
-                </RelativeLayout>
+                        android:background="#00000000"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
 
-                <RelativeLayout
-                    android:id="@+id/Touch_ImagePreview"
-                    android:background="#00000000"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
+                    <RelativeLayout
+                        android:id="@+id/fram_focus_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_centerInParent="true"
+                        android:background="#00000000" />
+
+                    <RelativeLayout
+                        android:id="@+id/Touch_ImagePreview"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="#00000000" />
+                </RelativeLayout>
 
             </RelativeLayout>
 
@@ -233,90 +243,140 @@
         android:visibility="visible">
 
         <LinearLayout
-            android:id="@+id/layout_face_detect"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:background="@drawable/bg_line_round_stroke"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingLeft="15dp"
-            android:paddingTop="5dp"
-            android:paddingRight="15dp"
-            android:paddingBottom="5dp">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-            <ImageButton
-                android:id="@+id/button_face_detect"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="#00000000"
-                android:padding="5dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_face_detect" />
-
-            <RelativeLayout
+            <LinearLayout
+                android:id="@+id/layout_face_detect"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical">
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:background="@drawable/bg_line_round_stroke"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingLeft="15dp"
+                android:paddingTop="5dp"
+                android:paddingRight="15dp"
+                android:paddingBottom="5dp">
 
-                <HorizontalScrollView
+                <ImageButton
+                    android:id="@+id/button_face_detect"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="#00000000"
+                    android:padding="5dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_face_detect" />
+
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical">
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <LinearLayout
+                            android:id="@+id/listView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="#000000"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingLeft="20dp"
+                            android:paddingRight="30dp">
+
+                            <!--
+                            <ImageButton
+                                android:layout_width="35dp"
+                                android:layout_height="35dp"
+                                android:layout_marginRight="10dp"
+                                android:background="#00000000"
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/ic_flip_cam" />
+                                -->
+                        </LinearLayout>
+
+                    </HorizontalScrollView>
 
                     <LinearLayout
-                        android:id="@+id/listView"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="match_parent"
-                        android:background="#000000"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingLeft="20dp"
-                        android:paddingRight="30dp">
+                        android:layout_alignParentRight="true"
+                        android:background="@drawable/bg_fade_black"
+                        android:gravity="right"
+                        android:paddingLeft="20dp">
 
-                        <!--
                         <ImageButton
+                            android:id="@+id/button_hide_face_detect"
                             android:layout_width="35dp"
-                            android:layout_height="35dp"
-                            android:layout_marginRight="10dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginRight="-10dp"
                             android:background="#00000000"
+                            android:padding="5dp"
                             android:scaleType="fitCenter"
-                            android:src="@drawable/ic_flip_cam" />
-                            -->
+                            android:src="@drawable/ic_back" />
+
                     </LinearLayout>
 
-                </HorizontalScrollView>
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentRight="true"
-                    android:background="@drawable/bg_fade_black"
-                    android:gravity="right"
-                    android:paddingLeft="20dp">
-
-                    <ImageButton
-                        android:id="@+id/button_hide_face_detect"
-                        android:layout_width="35dp"
+                    <ImageView
+                        android:layout_width="20dp"
                         android:layout_height="match_parent"
-                        android:layout_marginRight="-10dp"
-                        android:background="#00000000"
-                        android:padding="5dp"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/ic_back" />
+                        android:background="@drawable/bg_fade_black"
+                        android:paddingRight="0dp"
+                        android:rotation="180" />
 
-                </LinearLayout>
+                </RelativeLayout>
 
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/bg_fade_black"
-                    android:paddingRight="0dp"
-                    android:rotation="180" />
+            </LinearLayout>
 
-            </RelativeLayout>
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_weight="1"
+                    android:singleLine="true"
+                    android:textColor="#FFF"
+                    android:text="CROP"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_weight="1"
+                    android:singleLine="true"
+                    android:textColor="#FFF"
+                    android:text="FLIP"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:textSize="20dp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_weight="1"
+                    android:textColor="#FFF"
+                    android:singleLine="true"
+                    android:text="ROTATE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
 
         </LinearLayout>
+
+
 
 
         <RelativeLayout
