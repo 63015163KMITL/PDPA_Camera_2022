@@ -124,6 +124,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         btnChangResol.setBackgroundResource(R.drawable.ic_resol_4_3);
         statRecord = false;                                                 //bRecord = findViewById(R.id.bRecord);
 
+        ImageButton setting_button = (ImageButton) findViewById(R.id.setting_button);
+        setting_button.setOnClickListener(this);
+
         bCapture.setOnClickListener(this);
         bCapture.setOnLongClickListener(this);
         btnGallery.setOnClickListener(this);
@@ -253,6 +256,10 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     slideView2(top_center, top_center.getLayoutParams().height, 100,top_center.getLayoutParams().width, 220);
                     state_pdpd = 0;
                 }
+                break;
+            case R.id.setting_button:
+                Intent settingActivityIntent = new Intent(MainActivity.this, SettingActivity.class);
+                MainActivity.this.startActivity(settingActivityIntent);
                 break;
         }
     }
