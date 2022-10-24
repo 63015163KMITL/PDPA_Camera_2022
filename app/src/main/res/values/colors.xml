@@ -4,7 +4,7 @@
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF000000</color>
     <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <color name="teal_700">#fbb040</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
@@ -13,6 +13,17 @@
     <color name="seek_bar_secondary_progress">#3399CC</color>
 
     <color name="main_color">#fbb040</color>
+    <color name="main_gray">#EFEFEF</color>
 
+
+    //Light Mode
+    <color name="colorPrimary">#6C63FF</color>
+    <color name="colorPrimaryDark">#2D313D</color>
+    <color name="colorAccent">#03DAC5</color>
+
+    <color name="mainText">#ffffff</color>
+    <color name="textAlt">#8D8F97</color>
+
+    <color name="mainBackground">#2D313D</color>
 
 </resources>

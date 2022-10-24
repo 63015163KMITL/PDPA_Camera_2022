@@ -6,6 +6,7 @@ import static com.cekmitl.pdpacameracensor.MainActivity.slideView2;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 
 
 import android.annotation.SuppressLint;
@@ -119,7 +120,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
         //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //ลบ Action Bar ออก
@@ -127,6 +128,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         assert actionBar != null;
         actionBar.hide();
         setContentView(R.layout.activity_preview);
+
+
 
         display = getWindowManager().getDefaultDisplay();
 

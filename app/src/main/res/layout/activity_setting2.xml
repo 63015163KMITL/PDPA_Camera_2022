@@ -40,40 +40,100 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentLeft="true"
                     android:layout_marginBottom="10dp"
-                    android:text="PDPA"
-                    android:textSize="20dp" />
+                    android:text="PDPA : face detection"
+                    android:textSize="@dimen/font_sub_header" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_round_white"
                     android:orientation="vertical"
-                    android:padding="30dp">
+                    android:paddingLeft="30dp"
+                    android:paddingTop="20dp"
+                    android:paddingRight="30dp"
+                    android:paddingBottom="20dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
-                        <RelativeLayout
+                        <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
 
-                            <TextView
+
+                            <RelativeLayout
                                 android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentLeft="true"
-                                android:text="Face Detection"
-                                android:textSize="24dp" />
+                                android:layout_height="wrap_content">
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_alignParentRight="true"
-                                android:text=">"
-                                android:textSize="24dp" />
+                                <TextView
+                                    android:id="@+id/button_add_face"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentLeft="true"
+                                    android:layout_marginLeft="0dp"
+                                    android:text="Add face"
+                                    android:textSize="@dimen/font_regular" />
 
-                        </RelativeLayout>
+                                <TextView
+                                    android:text=">"
+                                    android:textSize="24dp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentRight="true"  />
+
+                            </RelativeLayout>
+
+                            <RelativeLayout
+                                android:layout_marginTop="15dp"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <TextView
+                                    android:id="@+id/button_add_face_gallry"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentLeft="true"
+                                    android:layout_marginLeft="0dp"
+                                    android:text="Add face frome gallery"
+                                    android:textSize="@dimen/font_regular" />
+
+                                <TextView
+                                    android:text=">"
+                                    android:textSize="24dp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentRight="true"  />
+
+                            </RelativeLayout>
+
+                            <RelativeLayout
+                                android:layout_marginTop="15dp"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <TextView
+                                    android:id="@+id/button_face_gallery"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentLeft="true"
+                                    android:layout_marginLeft="0dp"
+                                    android:text="Face Gallery"
+                                    android:textSize="@dimen/font_regular" />
+
+                                <TextView
+                                    android:text=">"
+                                    android:textSize="24dp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentRight="true"  />
+
+                            </RelativeLayout>
+
+                        </LinearLayout>
+
 
                     </LinearLayout>
 
@@ -97,7 +157,7 @@
                     android:layout_marginTop="20dp"
                     android:layout_marginBottom="10dp"
                     android:text="Genaral"
-                    android:textSize="20dp" />
+                    android:textSize="@dimen/font_sub_header" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -120,12 +180,15 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentLeft="true"
                                 android:text="Grid line"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular"/>
 
                             <Switch
+                                android:id="@+id/switch_grid_line"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_alignParentRight="true" />
+                                android:layout_alignParentRight="true"
+                                android:checked="false"
+                                android:theme="@style/SCBSwitch" />
 
                         </RelativeLayout>
 
@@ -147,12 +210,15 @@
                                 android:layout_alignParentLeft="true"
                                 android:layout_marginLeft="0dp"
                                 android:text="Location tage"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular" />
 
                             <Switch
+                                android:id="@+id/switch_location_tag"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_alignParentRight="true" />
+                                android:layout_alignParentRight="true"
+                                android:checked="false"
+                                android:theme="@style/SCBSwitch"  />
 
                         </RelativeLayout>
 
@@ -173,12 +239,15 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentLeft="true"
                                 android:text="Mirror font camera"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular" />
 
                             <Switch
+                                android:id="@+id/switch_mirroi_font_camera"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_alignParentRight="true" />
+                                android:layout_alignParentRight="true"
+                                android:checked="false"
+                                android:theme="@style/SCBSwitch" />
 
                         </RelativeLayout>
 
@@ -199,12 +268,15 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentLeft="true"
                                 android:text="Preview after shutter"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular" />
 
                             <Switch
+                                android:id="@+id/switch_preview_after_shutter"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_alignParentRight="true" />
+                                android:layout_alignParentRight="true"
+                                android:checked="false"
+                                android:theme="@style/SCBSwitch" />
 
                         </RelativeLayout>
 
@@ -225,12 +297,60 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentLeft="true"
                                 android:text="Volume key shutter"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular" />
 
                             <Switch
+                                android:id="@+id/switch_volume_kaye_shutter"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_alignParentRight="true" />
+                                android:layout_alignParentRight="true"
+                                android:checked="false"
+                                android:theme="@style/SCBSwitch" />
+
+                        </RelativeLayout>
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:orientation="vertical">
+
+                        <RelativeLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <LinearLayout
+                                android:orientation="vertical"
+                                android:layout_alignParentLeft="true"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+
+                                    android:text="Shutter sound"
+                                    android:textColor="#CCC"
+                                    android:textSize="@dimen/font_regular" />
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Prevent photo stealing without permission"
+                                    android:textColor="#CCC"
+                                    android:textSize="14dp" />
+
+                            </LinearLayout>
+
+                            <Switch
+                                android:enabled="false"
+                                android:checked="true"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:theme="@style/SCBSwitch" />
 
                         </RelativeLayout>
 
@@ -256,7 +376,7 @@
                     android:layout_marginTop="20dp"
                     android:layout_marginBottom="10dp"
                     android:text="About"
-                    android:textSize="20dp" />
+                    android:textSize="@dimen/font_sub_header" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -282,14 +402,14 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentLeft="true"
                                 android:text="Version"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentRight="true"
                                 android:text="1.0.0"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular" />
 
                         </RelativeLayout>
 
@@ -309,14 +429,14 @@
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentLeft="true"
                                 android:text="Storage"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentRight="true"
                                 android:text="54.8 MB"
-                                android:textSize="24dp" />
+                                android:textSize="@dimen/font_regular" />
 
                         </RelativeLayout>
 

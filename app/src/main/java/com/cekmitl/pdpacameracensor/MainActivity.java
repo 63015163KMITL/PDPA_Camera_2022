@@ -24,6 +24,7 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -45,6 +46,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -56,6 +58,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import android.graphics.RectF;
+import android.widget.Toast;
 
 
 import java.util.List;
@@ -101,7 +104,23 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.new_preview);
+
+        //SETTING ///////////////////////////////////////////////////////
+        SharedPreferences sh = getSharedPreferences("Setting", MODE_PRIVATE);
+
+        ImageView frame_grid = findViewById(R.id.frame_grid);
+        if(sh.getBoolean("switch_grid_line", true)) {
+            frame_grid.setVisibility(View.VISIBLE);
+        }else {
+            frame_grid.setVisibility(View.INVISIBLE);
+        }
+
+        /////////////////////////////////////////////////////////////////
+
+
+
         ChangResolutionImage(4, 3);
+
         isWorking = true;
         frameFocusLayout = findViewById(R.id.fram_focus_layout);
         txtDebug = findViewById(R.id.text_debug);
@@ -173,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             }
         });
         detectThread.start();
+
     }
 
     public static void pauseThread() {
@@ -190,8 +210,28 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     @Override
     protected void onResume() {
+
+
+        //SETTING ///////////////////////////////////////////////////////
+        SharedPreferences sh = getSharedPreferences("Setting", MODE_PRIVATE);
+
+        ImageView frame_grid = findViewById(R.id.frame_grid);
+        if(sh.getBoolean("switch_grid_line", true)) {
+            frame_grid.setVisibility(View.VISIBLE);
+        }else {
+            frame_grid.setVisibility(View.INVISIBLE);
+        }
+        /////////////////////////////////////////////////////////////////
+
         super.onResume();
         run();
+
+        Toast.makeText(this, "onResume\nswitch_grid_line = " + sh.getBoolean("switch_grid_line", true), LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
     }
 
     @Override
