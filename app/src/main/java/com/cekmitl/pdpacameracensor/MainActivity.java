@@ -17,6 +17,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearSnapHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SnapHelper;
 
 import android.Manifest;
 import android.animation.AnimatorSet;
@@ -39,6 +42,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.view.Display;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,6 +58,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -63,6 +68,19 @@ import android.widget.Toast;
 
 import java.util.List;
 
+import android.os.Bundle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearSnapHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.SnapHelper;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.cekmitl.pdpacameracensor.PickerLayoutManager;
 
 
 public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener, Runnable{
@@ -98,6 +116,10 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     public int processTime;
     public static boolean isWorking = false;
     public static Thread detectThread;
+
+    //Setting valur
+    SharedPreferences setting;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -193,6 +215,30 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         });
         detectThread.start();
 
+        // HorizontalPicker ////////////////////////////////////////////////////////////////////////
+        RecyclerView rv = null;
+        PickerAdapter adapter;
+
+        rv = (RecyclerView) findViewById(R.id.rv);
+
+        PickerLayoutManager pickerLayoutManager = new PickerLayoutManager(this, PickerLayoutManager.HORIZONTAL, false);
+        pickerLayoutManager.setChangeAlpha(true);
+        pickerLayoutManager.setScaleDownBy(0.99f);
+        pickerLayoutManager.setScaleDownDistance(0.8f);
+
+        adapter = new PickerAdapter(this, getData(100), rv);
+        SnapHelper snapHelper = new LinearSnapHelper();
+        snapHelper.attachToRecyclerView(rv);
+        rv.setLayoutManager(pickerLayoutManager);
+        rv.setAdapter(adapter);
+
+        pickerLayoutManager.setOnScrollStopListener(new PickerLayoutManager.onScrollStopListener() {
+            @Override
+            public void selectedView(View view) {
+                Toast.makeText(MainActivity.this, ("Selected value : "+((TextView) view).getText().toString()), Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
     public static void pauseThread() {
@@ -210,13 +256,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
     @Override
     protected void onResume() {
-
-
         //SETTING ///////////////////////////////////////////////////////
-        SharedPreferences sh = getSharedPreferences("Setting", MODE_PRIVATE);
+        setting = getSharedPreferences("Setting", MODE_PRIVATE);
 
         ImageView frame_grid = findViewById(R.id.frame_grid);
-        if(sh.getBoolean("switch_grid_line", true)) {
+        if(setting.getBoolean("switch_grid_line", true)) {
             frame_grid.setVisibility(View.VISIBLE);
         }else {
             frame_grid.setVisibility(View.INVISIBLE);
@@ -225,9 +269,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         super.onResume();
         run();
-
-        Toast.makeText(this, "onResume\nswitch_grid_line = " + sh.getBoolean("switch_grid_line", true), LENGTH_SHORT).show();
-    }
+}
 
     @Override
     protected void onStop() {
@@ -528,12 +570,15 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                             ImageButton imgBtn = findViewById(R.id.button_gallery);
                             imgBtn.setImageBitmap(myBitmap);
                             //เปิดหน้า Preview Activity
-                            isWorking = false;
-                            pauseThread();
-                            Intent myIntent = new Intent(MainActivity.this, PreviewActivity.class);
-                            myIntent.putExtra("key", file_temp.getAbsolutePath()); //Optional parameters
-                            myIntent.putExtra("resolution", state_serol);
-                            MainActivity.this.startActivity(myIntent);
+
+                            if(setting.getBoolean("switch_preview_after_shutter", true)){
+                                isWorking = false;
+                                pauseThread();
+                                Intent myIntent = new Intent(MainActivity.this, PreviewActivity.class);
+                                myIntent.putExtra("key", file_temp.getAbsolutePath()); //Optional parameters
+                                myIntent.putExtra("resolution", state_serol);
+                                MainActivity.this.startActivity(myIntent);
+                            }
 
                         }
                         @Override
@@ -655,4 +700,24 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
         return dst;
     }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //Use volume button to capture
+        if(setting.getBoolean("switch_volume_kaye_shutter", true)){
+            if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) || (keyCode == KeyEvent.KEYCODE_VOLUME_UP)){
+                capturePhoto();
+            }
+        }
+        return true;
+    }
+
+    public List<String> getData(int count) {
+        List<String> data = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            data.add(String.valueOf(i));
+        }
+        return data;
+    }
+
 }

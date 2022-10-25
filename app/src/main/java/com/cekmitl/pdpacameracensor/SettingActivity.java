@@ -6,10 +6,11 @@ import androidx.appcompat.app.AppCompatDelegate;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Switch;
 import android.widget.Toast;
 
-public class SettingActivity extends AppCompatActivity {
+public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
 
     public SharedPreferences sharedPreferences;
     public Switch switch_grid_line, switch_location_tag, switch_mirroi_font_camera, switch_preview_after_shutter, switch_volume_kaye_shutter;
@@ -42,10 +43,17 @@ public class SettingActivity extends AppCompatActivity {
         switch_preview_after_shutter.setChecked(sh.getBoolean("switch_preview_after_shutter", true));
         switch_volume_kaye_shutter.setChecked(sh.getBoolean("switch_volume_kaye_shutter", true));
 
+        switch_grid_line.setOnClickListener(this);
+        switch_location_tag.setOnClickListener(this);
+        switch_mirroi_font_camera.setOnClickListener(this);
+        switch_preview_after_shutter.setOnClickListener(this);
+        switch_volume_kaye_shutter.setOnClickListener(this);
+
     }
 
     @Override
-    protected void onDestroy() {
+    public void onClick(View view) {
+
         sharedPreferences = getSharedPreferences("Setting",MODE_PRIVATE);
         SharedPreferences.Editor setting = sharedPreferences.edit();
 
@@ -56,7 +64,5 @@ public class SettingActivity extends AppCompatActivity {
         setting.putBoolean("switch_volume_kaye_shutter", switch_volume_kaye_shutter.isChecked());
         setting.commit();
 
-        super.onDestroy();
     }
-
 }

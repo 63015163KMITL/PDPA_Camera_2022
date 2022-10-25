@@ -347,7 +347,7 @@
         android:layout_marginBottom="5dp"
         android:background="@drawable/bg_round_stroke"
         android:gravity="center"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:paddingLeft="7dp"
         android:paddingRight="7dp">
 
@@ -358,6 +358,16 @@
             android:text="PDPA"
             android:textColor="#fff"
             android:textSize="18dp" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:clipToPadding="false"
+            android:paddingLeft="183dp"
+            android:paddingRight="183dp" />
 
     </LinearLayout>
 

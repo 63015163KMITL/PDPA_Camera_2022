@@ -329,7 +329,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         //largeIcon = rotated;
         //largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
-        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);

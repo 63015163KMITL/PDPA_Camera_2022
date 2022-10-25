@@ -267,7 +267,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentLeft="true"
-                                android:text="Preview after shutter"
+                                android:text="Preview after capture"
                                 android:textSize="@dimen/font_regular" />
 
                             <Switch
@@ -296,7 +296,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_alignParentLeft="true"
-                                android:text="Volume key shutter"
+                                android:text="Volume key capture"
                                 android:textSize="@dimen/font_regular" />
 
                             <Switch
