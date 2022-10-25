@@ -3,5 +3,6 @@
     android:id="@+id/picker_item"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:textSize="32dp"
-    android:layout_margin="13dp"/>
+    android:textSize="24dp"
+    android:textColor="#FFF"
+    android:layout_margin="5dp"/>

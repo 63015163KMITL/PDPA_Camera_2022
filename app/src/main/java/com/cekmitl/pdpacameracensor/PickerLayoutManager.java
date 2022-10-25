@@ -5,16 +5,18 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.view.View;
 
-
-
 /**
  * Created by adityagohad on 06/06/17.
  */
 
 public class PickerLayoutManager extends LinearLayoutManager {
 
-    private float scaleDownBy = 0.66f;
-    private float scaleDownDistance = 0.9f;
+    //private float scaleDownBy = 0.66f;
+    //private float scaleDownDistance = 0.9f;
+
+    private float scaleDownBy = 0.5f;
+    private float scaleDownDistance = 0.7f;
+
     private boolean changeAlpha = true;
 
     private onScrollStopListener onScrollStopListener;

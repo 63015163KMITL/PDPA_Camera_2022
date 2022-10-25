@@ -1,11 +1,15 @@
 package com.cekmitl.pdpacameracensor;
 
 import android.content.Context;
-import androidx.recyclerview.widget.RecyclerView;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.TextView;
+
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
@@ -23,6 +27,7 @@ public class PickerAdapter extends RecyclerView.Adapter<PickerAdapter.TextVH> {
         this.context = context;
         this.dataList = dataList;
         this.recyclerView = recyclerView;
+
     }
 
     @Override
@@ -33,19 +38,28 @@ public class PickerAdapter extends RecyclerView.Adapter<PickerAdapter.TextVH> {
         return new PickerAdapter.TextVH(view);
     }
 
+
+
     @Override
     public void onBindViewHolder(TextVH holder, final int position) {
         TextVH textVH = holder;
         textVH.pickerTxt.setText(dataList.get(position));
+        recyclerView.smoothScrollToPosition(1);
+
         textVH.pickerTxt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (recyclerView != null) {
                     recyclerView.smoothScrollToPosition(position);
                 }
+
             }
         });
+
     }
+
+
+
 
     @Override
     public int getItemCount() {

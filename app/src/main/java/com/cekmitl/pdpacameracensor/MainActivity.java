@@ -32,6 +32,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -223,10 +224,19 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         PickerLayoutManager pickerLayoutManager = new PickerLayoutManager(this, PickerLayoutManager.HORIZONTAL, false);
         pickerLayoutManager.setChangeAlpha(true);
-        pickerLayoutManager.setScaleDownBy(0.99f);
-        pickerLayoutManager.setScaleDownDistance(0.8f);
 
-        adapter = new PickerAdapter(this, getData(100), rv);
+        //pickerLayoutManager.setScaleDownBy(1.0f);
+        //pickerLayoutManager.setScaleDownDistance(1.0f);
+
+        //pickerLayoutManager.setScaleDownBy(0.99f);
+        //pickerLayoutManager.setScaleDownDistance(0.8f);
+
+        ArrayList<String> menu_mode = new ArrayList<String>();
+        menu_mode.add("VIDEO");
+        menu_mode.add("PHOTO");
+        menu_mode.add("LIVE");
+
+        adapter = new PickerAdapter(this, menu_mode, rv);
         SnapHelper snapHelper = new LinearSnapHelper();
         snapHelper.attachToRecyclerView(rv);
         rv.setLayoutManager(pickerLayoutManager);
@@ -235,7 +245,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         pickerLayoutManager.setOnScrollStopListener(new PickerLayoutManager.onScrollStopListener() {
             @Override
             public void selectedView(View view) {
-                Toast.makeText(MainActivity.this, ("Selected value : "+((TextView) view).getText().toString()), Toast.LENGTH_SHORT).show();
+
+                //TextView txt = findViewById(R.id.picker_item);
+                //txt.setTextColor(Color.parseColor("#FF0000"));
+                makeText(MainActivity.this, ("Selected value : "+((TextView) view).getText().toString()), LENGTH_SHORT).show();
+                ((TextView) view).setTextColor(Color.parseColor("#FBB040"));
             }
         });
 
