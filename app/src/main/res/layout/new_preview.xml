@@ -6,7 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity"
     android:background="#000000"
-    android:paddingTop="30dp">
+    android:paddingTop="0dp">
 
     <LinearLayout
         android:background="#000000"
@@ -240,6 +240,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
+                    android:paddingBottom="10dp"
                     android:orientation="horizontal">
 
                     <androidx.recyclerview.widget.RecyclerView

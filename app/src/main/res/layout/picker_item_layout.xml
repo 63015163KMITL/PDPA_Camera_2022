@@ -5,4 +5,5 @@
     android:layout_height="wrap_content"
     android:textSize="24dp"
     android:textColor="#FFF"
+    android:layout_marginRight="10dp"
     android:layout_margin="5dp"/>

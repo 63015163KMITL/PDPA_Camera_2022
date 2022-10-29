@@ -13,6 +13,7 @@ import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -24,6 +25,10 @@ import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -46,6 +51,7 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -128,7 +134,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         assert actionBar != null;
         actionBar.hide();
         setContentView(R.layout.activity_preview);
-
 
 
         display = getWindowManager().getDefaultDisplay();
@@ -222,16 +227,16 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         Intent intent = getIntent();
         String value = intent.getStringExtra("key");
         String value_resolution = intent.getStringExtra("resolution");
+        //String value_orientation = intent.getStringExtra("orientation");
+        //String value_main_camera = intent.getStringExtra("main_camera");
+
+        //makeText(this, "orientation = " + value_orientation, LENGTH_SHORT).show();
         File file = new File(value);
         Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
 
         //set real size of photo
         heightPhoto = myBitmap.getHeight();
         widthPhoto = myBitmap.getWidth();
-
-        //set photo rotate
-        Matrix matrix = new Matrix();
-        matrix.postRotate(90);
 
         int img_height = 0;
         int img_width = 0;
@@ -257,11 +262,11 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             x = (myBitmap.getWidth() - myBitmap.getHeight()) / 2;
         }
 
-        //Toast.makeText(PreviewActivity.this, "img_height = " + img_height + "\nimg_width = " + img_width + "\ny = " + y + "\nx = " + x, Toast.LENGTH_SHORT).show();
-
-
         //ภาพถ่ายที่ผ่านการหมุนตามเข้มนาฬิกาแล้ว = Rotate
-        Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
+        //set photo rotate
+        //Matrix matrix = new Matrix();
+        //matrix.postRotate(Integer.parseInt(value_orientation));
+        //Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
 
         ImageButton btnSave = (ImageButton) findViewById(R.id.button_save_image);
         btnSave.setOnClickListener(new View.OnClickListener() {
@@ -282,7 +287,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     @Override
                     public void onClick(View v) {
                         dialog.dismiss();
-                        Toast.makeText(PreviewActivity.this, "okay clicked", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(PreviewActivity.this, "okay clicked", Toast.LENGTH_SHORT).show();
+                        //file.delete();
+                        finish();
                     }
                 });
 
@@ -290,28 +297,27 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     @Override
                     public void onClick(View v) {
                         dialog.dismiss();
-                        Toast.makeText(PreviewActivity.this, "Cancel clicked", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(PreviewActivity.this, "Cancel clicked", Toast.LENGTH_SHORT).show();
                     }
                 });
 
                 dialog.show();
-              //  getImageUri((PreviewActivity.this), myBitmap);
+                ///getImageUri((PreviewActivity.this), rotated);
 
                 //String savedImageURL = MediaStore.Images.Media.insertImage((PreviewActivity.this).getContentResolver(), myBitmap, "filename", null);
                 //บันทึกรูปลง Grallery
                 //Uri savedImageURI = Uri.parse(savedImageURL);
                 //Toast.makeText(PreviewActivity.this, "savedImageURL = " + contentValues, Toast.LENGTH_SHORT).show();
 
-             //   file.delete();
-             //   finish();
+
             }
         });
         ImageButton btnCancel = findViewById(R.id.button_cancel);
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-              //  file.delete();
-              //  finish();
+                //file.delete();
+                finish();
             }
         });
 
@@ -327,29 +333,18 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        //largeIcon = rotated;
-        //largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
-        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
-        //nowPhotoPreview = rotated;
+        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
+        nowPhotoPreview = myBitmap;
 
         imgPreView = findViewById(R.id.ImagePreview);
         imgPreView.setImageBitmap(nowPhotoPreview);
-        ////imgPreView.setBackgroundResource(R.drawable.test);
-
-        //Bitmap largeIcon = myBitmap;
 
         adjustImageDisplay(nowPhotoPreview);
 
-        //tempBitmap = nowPhotoPreview;
-        //handleResult();
-
-        //int head_layout_height = getHeightOfView(HeadLayout);
-        //int bottom_layout_height = getHeightOfView(bottom_layout);
-
-        old_height_header_layout = getHeightOfView(HeadLayout);
+        old_height_header_layout = BitmapEditor.getHeightOfView(HeadLayout);
         old_width_header_layout = 1080;
 
-        old_height_bottom_layout = getHeightOfView(bottom_layout);
+        old_height_bottom_layout = BitmapEditor.getHeightOfView(bottom_layout);
         old_width_bottom_layout = 1080;
 
 
@@ -369,8 +364,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         xMAX_HEIGHT_PREVIEW = fram_focus_layout.getLayoutParams().height;
         xMAX_WIDTH_PREVIEW = fram_focus_layout.getLayoutParams().width;
 
-        //editMode(true);
-        //editMode(false);
         seekbar_blur_radius.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
@@ -411,44 +404,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), n);
                     //Log.e("IMG","   Radius = " + n);
                 }
-
-                //Log.e("IMG","   SEEK = " + progress);
-                //Log.e("IMG","   0.1d = " + 0.1d);
-
                 //fram_focus_layout.addView(imgBlur, params1);
 
             }
         });
     }
 
-    public Bitmap getCroppedBitmap(Bitmap bitmap) {
-        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(),
-                bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
 
-        final int color = 0xff424242;
-        final Paint paint = new Paint();
-        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-
-        paint.setAntiAlias(true);
-        canvas.drawARGB(0, 0, 0, 0);
-        paint.setColor(color);
-        // canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
-        canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2,
-                bitmap.getWidth() / 2, paint);
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-        canvas.drawBitmap(bitmap, rect, rect, paint);
-        //Bitmap _bmp = Bitmap.createScaledBitmap(output, 60, 60, false);
-        //return _bmp;
-        return output;
-    }
-
-    public Uri getImageUri(Context inContext, Bitmap inImage) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
-        return Uri.parse(path);
-    }
 
     //สถานะการเลือกเมนู หรือการกดปุ่ม
     boolean state_face_detect_button = true;
@@ -642,8 +604,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         x = (int) Math.round((float) (X * width2));
         y = (int) Math.round((float) (Y * height2));
 
-        Bitmap bb = getResizedBitmap(nowPhotoPreview, width2, height2);
-        Bitmap b = crop(bb, x, y, w, h);
+        Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
+        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
 
         bmp_images.add(b);
         /*
@@ -702,8 +664,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         x = (int) Math.round((float) (X * width2));
         y = (int) Math.round((float) (Y * height2));
 
-        Bitmap bb = getResizedBitmap(nowPhotoPreview, width2, height2);
-        Bitmap b = crop(bb, x, y, w, h);
+        Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
+        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
 
         //bmp_images.add(getCroppedBitmap(b));
 
@@ -717,7 +679,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         if (blurRadius == 0.1){
             imgBlur.setImageBitmap(b);
         }else {
-            imgBlur.setImageBitmap(getMosaicsBitmap(b, blurRadius));
+            imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, blurRadius));
         }
 
         //makeText(this, "SEEK = " + seekbar_blur_radius.getProgress(), LENGTH_SHORT).show();
@@ -752,21 +714,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
-    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
-        int width = bm.getWidth();
-        int height = bm.getHeight();
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        // CREATE A MATRIX FOR THE MANIPULATION
-        Matrix matrix = new Matrix();
-        // RESIZE THE BIT MAP
-        matrix.postScale(scaleWidth, scaleHeight);
-
-        // "RECREATE" THE NEW BITMAP
-        Bitmap resizedBitmap = Bitmap.createBitmap(
-                bm, 0, 0, width, height, matrix, false);
-        return resizedBitmap;
-    }
 
     //จัดการกับ Label คำตอบ
     private void handleResult() {
@@ -779,7 +726,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         if (nowPhotoPreview == null) {
             makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
-            List<Classifier.Recognition> results = detector.recognizeImage(getResizedBitmap(nowPhotoPreview, 320, 320));
+            List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(nowPhotoPreview, 320, 320));
             int i = 0;
 
             for (final Classifier.Recognition result : results) {
@@ -803,20 +750,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
-    public static Bitmap crop(Bitmap bitmap, float x, float y, float newWidth, float newHeight) {
-        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, (int)x, (int)y, (int) newWidth, (int) newHeight, null, true);
-        return resizedBitmap;
-    }
-
-    private int getHeightOfView(View contentview) {
-        contentview.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        return contentview.getMeasuredHeight();
-    }
-
     public void resetSizeOfPhotoPreview(){
-        //nowPhoto_Width = nowPhotoPreview.getWidth();
-        //nowPhoto_Height = nowPhotoPreview.getHeight();
-
         Log.e("IMG","   Reset Size Of PhotoPreview /////////////////////////////////////////////////");
 
         //Log.e("IMG","      - global_screen_width = " + display.getWidth() + "px");
@@ -826,29 +760,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         Log.e("IMG","      - nowPhoto_Height = " + nowPhoto_Height + "px");
         Log.e("IMG","      - nowPhoto_Width = " + nowPhoto_Width + "px");
-
-
-        /*
-        Log.e("IMG","   Now Photo Height = " + nowPhoto_Height + "px");
-        Log.e("IMG","   Now Photo Width = " + nowPhoto_Width + "px");
-
-        Log.e("IMG","   MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW + "px");
-        Log.e("IMG","   MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW + "px");
-
-        Log.e("IMG","   NOW FRAME FOCUS HEIGHT = " + fram_focus_layout.getHeight() + "px");
-        Log.e("IMG","   max_fram_focus_layout_height = " + max_fram_focus_layout_height);
-
-        //Global Value /////////////////////////////////////////////////////////////////////////////////
-    public int global_preview_height = 0;           //ขนาดของพื้นที่แสดงภาพตัวอย่าง ณ ปัจจุบัน
-    public int global_preview_width = 0;
-    public int global_screen_width = 0;             //ขนาดความกว้างสูงสุดของหน้าจอ
-
-    public Bitmap nowPhotoPreview;                  //Now Photo Preview
-    public int nowPhoto_Height, nowPhoto_Width;     //Now size of photo
-    public int heightPhoto, widthPhoto;             //Real size of photo
-    public int max_fram_focus_layout_height;        //ความกว้างสูงสุดที่สามารถแสดงตัวอย่างได้
-
-         */
     }
 
     public void adjustImageDisplay(Bitmap bitmap){
@@ -868,7 +779,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 fram_focus_layout.getLayoutParams().height = fH;
                 fram_focus_layout.getLayoutParams().width = fW;
 
-                imgPreView.setImageBitmap(getResizedBitmap(nowPhotoPreview, fW, fH));
+                imgPreView.setImageBitmap(BitmapEditor.getResizedBitmap(nowPhotoPreview, fW, fH));
             }else if (nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight()){                                //Portrait
                 float f = ((float) display_width / (float)nowPhotoPreview.getWidth());
 
@@ -881,7 +792,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 fram_focus_layout.getLayoutParams().height = fH;
                 fram_focus_layout.getLayoutParams().width = fW;
 
-                imgPreView.setImageBitmap(getResizedBitmap(nowPhotoPreview, fW, fH));
+                imgPreView.setImageBitmap(BitmapEditor.getResizedBitmap(nowPhotoPreview, fW, fH));
 
             }
         }
@@ -908,8 +819,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             ///////////////////////////////////////////////////////////////////////////////////////
 
 
-            int head_layout_height = getHeightOfView(HeadLayout);
-            int bottom_layout_height = getHeightOfView(bottom_layout);
+            int head_layout_height = BitmapEditor.getHeightOfView(HeadLayout);
+            int bottom_layout_height = BitmapEditor.getHeightOfView(bottom_layout);
             int main_layout_height = main_layout.getHeight();
 
             Display display = getWindowManager().getDefaultDisplay();
@@ -958,7 +869,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
                 slideView2(FrameImagePreview, FrameImagePreview.getHeight(), newHeight, FrameImagePreview.getWidth(), newWidth);
 
-                nowPhotoPreview = getResizedBitmap(nowPhotoPreview, newWidth,newHeight);
+                nowPhotoPreview = BitmapEditor.getResizedBitmap(nowPhotoPreview, newWidth,newHeight);
 
                 xMAX_HEIGHT_PREVIEW = newHeight;
                 xMAX_WIDTH_PREVIEW = newWidth;
@@ -969,7 +880,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 Log.e("IMG", "      imgPreView.getHeight < free_height________________________________________________________________");
 
                 slideView2(FrameImagePreview, FrameImagePreview.getHeight(), imgPreView.getHeight(), FrameImagePreview.getWidth(), display.getWidth());
-                nowPhotoPreview = getResizedBitmap(nowPhotoPreview, display.getWidth(),imgPreView.getHeight());
+                nowPhotoPreview = BitmapEditor.getResizedBitmap(nowPhotoPreview, display.getWidth(),imgPreView.getHeight());
 
                 xMAX_HEIGHT_PREVIEW = imgPreView.getHeight();
                 xMAX_WIDTH_PREVIEW = display.getWidth();
@@ -1055,7 +966,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
             state_Edite_Mode = true;
 
-            nowPhotoPreview = getResizedBitmap(nowPhotoPreview, xMAX_WIDTH_PREVIEW, xMAX_HEIGHT_PREVIEW);
+            nowPhotoPreview = BitmapEditor.getResizedBitmap(nowPhotoPreview, xMAX_WIDTH_PREVIEW, xMAX_HEIGHT_PREVIEW);
             //nowPhotoPreview = getResizedBitmap(nowPhotoPreview,display.getWidth(),FrameImagePreview.getLayoutParams().height);
             Log.e("IMG", "   NOW PHOTO PREVIEW /////////////////////////////////////////////////////////////////////////////");
             Log.e("IMG", "   - Height = " + nowPhotoPreview.getHeight());
@@ -1067,229 +978,4 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     }
 
-    public static Bitmap getMosaicsBitmap(Bitmap bmp, double precent) {
-        long start = System.currentTimeMillis();
-        int bmpW = bmp.getWidth();
-        int bmpH = bmp.getHeight();
-        Bitmap resultBmp = Bitmap.createBitmap(bmpW, bmpH, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(resultBmp);
-        Paint paint = new Paint();
-        double unit;
-        if (precent == 0) {
-            unit = bmpW;
-        } else {
-            unit = 1 / precent;
-        }
-        double resultBmpW = bmpW / unit;
-        double resultBmpH = bmpH / unit;
-        for (int i = 0; i < resultBmpH; i++) {
-            for (int j = 0; j < resultBmpW; j++) {
-                int pickPointX = (int) (unit * (j + 0.5));
-                int pickPointY = (int) (unit * (i + 0.5));
-                int color;
-                if (pickPointX >= bmpW || pickPointY >= bmpH) {
-                    color = bmp.getPixel(bmpW / 2, bmpH / 2);
-                } else {
-                    color = bmp.getPixel(pickPointX, pickPointY);
-                }
-                paint.setColor(color);
-                canvas.drawRect((int) (unit * j), (int) (unit * i), (int) (unit * (j + 1)), (int) (unit * (i + 1)), paint);
-            }
-        }
-        canvas.setBitmap(null);
-        long end = System.currentTimeMillis();
-        //Log.v("IMG", "DrawTime:" + (end - start));
-        return resultBmp;
-    }
-
-    /**
-     * 和上面的函数同样的功能，效率远高于上面
-     *
-     * @param bmp
-     * @param precent
-     * @return
-     */
-    public static Bitmap getMosaicsBitmaps(Bitmap bmp, double precent) {
-        long start = System.currentTimeMillis();
-        int bmpW = bmp.getWidth();
-        int bmpH = bmp.getHeight();
-        int[] pixels = new int[bmpH * bmpW];
-        bmp.getPixels(pixels, 0, bmpW, 0, 0, bmpW, bmpH);
-        int raw = (int) (bmpW * precent);
-        int unit;
-        if (raw == 0) {
-            unit = bmpW;
-        } else {
-            unit = bmpW / raw; //原来的unit*unit像素点合成一个，使用原左上角的值
-        }
-        if (unit >= bmpW || unit >= bmpH) {
-            return getMosaicsBitmap(bmp, precent);
-        }
-        for (int i = 0; i < bmpH; ) {
-            for (int j = 0; j < bmpW; ) {
-                int leftTopPoint = i * bmpW + j;
-                for (int k = 0; k < unit; k++) {
-                    for (int m = 0; m < unit; m++) {
-                        int point = (i + k) * bmpW + (j + m);
-                        if (point < pixels.length) {
-                            pixels[point] = pixels[leftTopPoint];
-                        }
-                    }
-                }
-                j += unit;
-            }
-            i += unit;
-        }
-        long end = System.currentTimeMillis();
-        Log.v("IMG", "DrawTime:" + (end - start));
-        return Bitmap.createBitmap(pixels, bmpW, bmpH, Bitmap.Config.ARGB_8888);
-    }
 }
-
-/*
-
-            menu_bar.setVisibility(View.GONE);
-            HeadLayout2.setVisibility(View.GONE);
-            Touch_ImagePreview.setVisibility(View.GONE);
-
-            bottom_layout.setVisibility(View.VISIBLE);
-            HeadLayout.setVisibility(View.VISIBLE);
-            button_bar.setVisibility(View.VISIBLE);
-            //fram_focus_layout.setVisibility(View.VISIBLE);
-
-            fram_focus_layout.setVisibility(View.VISIBLE);
-            fram_focus_layout.startAnimation(animFadeIn);
-
-            ///////////////////////////////////////////////////////////////////////////////////////
-            int head_layout_height = getHeightOfView(HeadLayout);
-            int bottom_layout_height = getHeightOfView(bottom_layout);
-            int main_layout_height = main_layout.getHeight();
-
-            Display display = getWindowManager().getDefaultDisplay();
-
-            int x = main_layout_height - head_layout_height - bottom_layout_height;
-            int newWidthFocusFrame = (x * display.getWidth() / imgPreView.getHeight());
-
-            Log.e("IMG","   ImagePreview.getHeight() = " + imgPreView.getHeight());
-
-            global_preview_height = x;
-            global_preview_width = newWidthFocusFrame;
-
-            slideView2(FrameImagePreview, FrameImagePreview.getHeight(), x, FrameImagePreview.getWidth(), newWidthFocusFrame);
-            //slideView2(fram_focus_layout, fram_focus_layout.getHeight(), x, fram_focus_layout.getWidth(), newWidthFocusFrame);
-            Log.e("IMG", "   fram_focus_layout.getHeight() = " + fram_focus_layout.getHeight());
-
-            if(FrameImagePreview.getHeight() > MAX_HEIGHT_PREVIEW){
-                MAX_HEIGHT_PREVIEW = FrameImagePreview.getHeight();
-                Log.e("IMG", "   MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW);
-            }
-
-            if(FrameImagePreview.getWidth() > MAX_WIDTH_PREVIEW){
-                MAX_WIDTH_PREVIEW = FrameImagePreview.getWidth();
-                Log.e("IMG", "   MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW);
-            }
-
-            //nowPhoto_Width = newWidthFocusFrame;
-            //nowPhoto_Height = ImagePreview.getHeight();
-
-            nowPhoto_Width = global_preview_width;
-            nowPhoto_Height = global_preview_height;
-
-            Log.e("IMG", "   CHECK Orientation ______________________________________________");
-            Log.e("IMG", "      - nowPhotoPreview.getWidth() = " + nowPhotoPreview.getWidth());
-            Log.e("IMG", "      - nowPhotoPreview.getHeight() = " + nowPhotoPreview.getHeight());
-
-
-            if (nowPhotoPreview.getWidth() > nowPhotoPreview.getHeight()){                              //Landscape
-                Log.e("IMG", "   Photo Orientation = Landscape");
-                xMAX_HEIGHT_PREVIEW = max_fram_focus_layout_height;
-                xMAX_WIDTH_PREVIEW = display.getWidth();
-            }else if(nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight()){
-                Log.e("IMG", "   Photo Orientation = Portaite");
-                xMAX_HEIGHT_PREVIEW = global_preview_height;
-                xMAX_WIDTH_PREVIEW = global_preview_width;
-            }
-
-            //xMAX_HEIGHT_PREVIEW = global_preview_height;
-            //xMAX_WIDTH_PREVIEW = global_preview_width;
-
-            ///////////////////////////////////////////////////////////////////////////////////////
-            slideView2(bottom_layout, 0, old_height_bottom_layout, old_width_bottom_layout, old_width_bottom_layout);
-            slideView2(HeadLayout, 0, old_height_header_layout, old_width_bottom_layout, old_width_header_layout);
-
-            resetSizeOfPhotoPreview();
-            handleResult();
-
-            state_Edite_Mode = false;
-            menu_bar.setVisibility(View.GONE);
-            state_ImagePreview = true;
-
-            nowPhotoPreview = getResizedBitmap(nowPhotoPreview, old_width_header_layout,x);
-            Log.e("IMG", "   NOW PHOTO PREVIEW /////////////////////////////////////////////////////////////////////////////");
-            Log.e("IMG", "   - Height = " + x);
-            Log.e("IMG", "   - Width = " + old_width_header_layout);
-
- */
-
-
-/*
-if (nowPhotoPreview.getWidth() > nowPhotoPreview.getHeight()){                              //Landscape
-                Log.e("IMG", "      - Photo Orientation = Landscape");
-                xMAX_HEIGHT_PREVIEW = max_fram_focus_layout_height;
-                xMAX_WIDTH_PREVIEW = display.getWidth();
-
-                int newHeightFocusFrame = main_layout_height - head_layout_height - bottom_layout_height;
-                int newWidthFocusFrame = (newHeightFocusFrame * display.getWidth() / imgPreView.getHeight());
-
-                Log.e("IMG", "      - xMAX_HEIGHT_PREVIEW = " + xMAX_HEIGHT_PREVIEW);
-                Log.e("IMG", "      - xMAX_WIDTH_PREVIEW = " + xMAX_WIDTH_PREVIEW);
-
-                Log.e("IMG","   - newHeightFocusFrame = " + newHeightFocusFrame);
-                Log.e("IMG","   - newWidthFocusFrame = " + newWidthFocusFrame);
-
-                //slideView2(FrameImagePreview, FrameImagePreview.getHeight(), newHeightFocusFrame, FrameImagePreview.getWidth(), newWidthFocusFrame);
-            }else if(nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight()){                         //Portaite
-                Log.e("IMG", "      - Photo Orientation = Portaite");
-
-                //newHeightFocusFrame = main_layout_height - head_layout_height - bottom_layout_height;
-                //newWidthFocusFrame = (newHeightFocusFrame * display.getWidth() / imgPreView.getHeight());
-
-                int newHeightFocusFrame = (nowPhotoPreview.getHeight() / nowPhotoPreview.getWidth()) * display.getWidth();
-                int newWidthFocusFrame = display.getWidth();
-                int free_height = main_layout_height - head_layout_height - bottom_layout_height;
-
-                xMAX_HEIGHT_PREVIEW = newHeightFocusFrame;
-                xMAX_WIDTH_PREVIEW = newWidthFocusFrame;
-
-                Log.e("IMG", "      - newHeightFocusFrame = " + newHeightFocusFrame);
-                Log.e("IMG", "      - newWidthFocusFrame = " + newWidthFocusFrame);
-
-                Log.e("IMG", "      - FREE SPACE Height = " + free_height);
-                Log.e("IMG", "      - FREE SPACE Width = " + xMAX_HEIGHT_PREVIEW);
-
-                int match_width = display.getWidth();
-                int match_height = (nowPhoto_Height / nowPhoto_Width ) * display.getWidth();
-
-                if (match_height > free_height) {
-                    match_width = display.getWidth();
-                    match_height = free_height;
-
-                    Log.e("IMG", "      - match_width = " + match_width);
-                    Log.e("IMG", "      - match_height = " + match_height);
-
-                    slideView2(FrameImagePreview, FrameImagePreview.getHeight(), match_width, FrameImagePreview.getWidth(), match_height);
-                }else {
-                    Log.e("IMG", "      - match_width = " + match_width);
-                    Log.e("IMG", "      - match_height = " + match_height);
-                    slideView2(FrameImagePreview, FrameImagePreview.getHeight(), match_height, FrameImagePreview.getWidth(), match_width);
-                }
-
-                Log.e("IMG", "      - xMAX_HEIGHT_PREVIEW = " + xMAX_HEIGHT_PREVIEW);
-                Log.e("IMG", "      - xMAX_WIDTH_PREVIEW = " + xMAX_WIDTH_PREVIEW);
-
-                Log.e("IMG","   - newHeightFocusFrame = " + newHeightFocusFrame);
-                Log.e("IMG","   - newWidthFocusFrame = " + newWidthFocusFrame);
-
-                //slideView2(FrameImagePreview, FrameImagePreview.getHeight(), newHeightFocusFrame, FrameImagePreview.getWidth(), newWidthFocusFrame);
-            }
- */

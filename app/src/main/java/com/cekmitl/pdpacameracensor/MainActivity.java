@@ -26,6 +26,7 @@ import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -36,8 +37,11 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -57,7 +61,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -84,7 +90,7 @@ import java.util.List;
 import com.cekmitl.pdpacameracensor.PickerLayoutManager;
 
 
-public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener, Runnable{
+public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener, Runnable, SensorEventListener {
 
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
@@ -140,22 +146,25 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         /////////////////////////////////////////////////////////////////
 
+        //SENSOR
+        //SENSOR
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
 
-
-        ChangResolutionImage(4, 3);
+        // Set Default values ///////////////////////////////////////////
+        ChangResolutionImage(4, 3);                             //Default Photo Resolution
 
         isWorking = true;
-        frameFocusLayout = findViewById(R.id.fram_focus_layout);
-        txtDebug = findViewById(R.id.text_debug);
 
-        top_center = findViewById(R.id.top_center);
+        frameFocusLayout = findViewById(R.id.fram_focus_layout);    //Layout for insert frame focus
+        top_center = findViewById(R.id.top_center);                 //PDPA Dynamic Island
 
-        //ลบ Action Bar ออก
+        //Remove Action Bar
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.hide();
 
-        //ส่วนสร้าง Object ต่าง ๆ --------------------------------------------------------------------------------------
+        //Object Other --------------------------------------------------------------------------------------
         previewView = findViewById(R.id.previewView);                       // Preview Camera X
 
         //PHOTO
@@ -219,14 +228,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         // HorizontalPicker ////////////////////////////////////////////////////////////////////////
         RecyclerView rv = null;
         PickerAdapter adapter;
-
         rv = (RecyclerView) findViewById(R.id.rv);
-
         PickerLayoutManager pickerLayoutManager = new PickerLayoutManager(this, PickerLayoutManager.HORIZONTAL, false);
         pickerLayoutManager.setChangeAlpha(true);
-
-        //pickerLayoutManager.setScaleDownBy(1.0f);
-        //pickerLayoutManager.setScaleDownDistance(1.0f);
 
         //pickerLayoutManager.setScaleDownBy(0.99f);
         //pickerLayoutManager.setScaleDownDistance(0.8f);
@@ -248,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
                 //TextView txt = findViewById(R.id.picker_item);
                 //txt.setTextColor(Color.parseColor("#FF0000"));
-                makeText(MainActivity.this, ("Selected value : "+((TextView) view).getText().toString()), LENGTH_SHORT).show();
+               // makeText(MainActivity.this, ("Selected value : "+((TextView) view).getText().toString()), LENGTH_SHORT).show();
                 ((TextView) view).setTextColor(Color.parseColor("#FBB040"));
             }
         });
@@ -284,11 +288,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         super.onResume();
         run();
 }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
 
     @Override
     public void run() {
@@ -459,12 +458,16 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         return ContextCompat.getMainExecutor(this);
     }
 
+    boolean state_main_camera = true;
+
     //ตรวจสอบการใช้งาน ว่าขณะนี้ใช้กล้องหน้า หรือกล้องหลังอยู่
     private void flipCamera() {
         if (lensFacing == CameraSelector.LENS_FACING_BACK) {
             lensFacing = CameraSelector.LENS_FACING_FRONT;
+            state_main_camera = false;
         } else if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
             lensFacing = CameraSelector.LENS_FACING_BACK;
+            state_main_camera = true;
         }
         startCameraX(cameraProvider);
     }
@@ -491,7 +494,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setTargetResolution(new Size(1080, 1440))
                 .build();
-        //imageAnalysis.setAnalyzer(getExecutor(), this);
+        imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Video capture use case
         videoCapture = new VideoCapture.Builder()
@@ -514,9 +517,10 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         matrix.postRotate(90);
         tempBitmap = Bitmap.createBitmap(bm, 0, 0, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE,
                 matrix, false);
+        //tempBitmap = bm;
 
         if(lensFacing == CameraSelector.LENS_FACING_FRONT){
-            tempBitmap = flip(tempBitmap);
+            tempBitmap = BitmapEditor.flip(tempBitmap);
         }
 
 
@@ -563,11 +567,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         }
     }
 
-
+    public File file_temp2;
+    Bitmap myBitmap;
     // การถ่ายรูป
     private void capturePhoto() {
         //สร้างตำแหน่งเก็บไฟล์ภาพชั่วคราว
         File file_temp;
+
         try {
             file_temp = File.createTempFile("geek", ".jpg", null);
 
@@ -575,23 +581,63 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     new ImageCapture.OnImageSavedCallback() {
                         @Override
                         public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                            //makeText(MainActivity.this, "Photo has been saved successfully.", LENGTH_SHORT).show();
 
                             //นำภาพในไฟล์ชั่วคราว ดึงมาใส่ใน Object BitMap
-                            Bitmap myBitmap = BitmapFactory.decodeFile(file_temp.getAbsolutePath());
+                            myBitmap = BitmapFactory.decodeFile(file_temp.getAbsolutePath());
+
+                            //Edit
+                            if ( (ay < 5.0) && (ay > -5.0) && (ax > 8.0)){
+                                //Landscape
+                                myBitmap = BitmapEditor.rotateBitmap(myBitmap,0);
+                            }else {
+                                //Portrait
+                                myBitmap = BitmapEditor.rotateBitmap(myBitmap, 90);
+                            }
+
+                            if(!state_main_camera){
+                                //Font camera flip vertical
+                                myBitmap = BitmapEditor.flip(myBitmap);
+
+                                if(setting.getBoolean("switch_mirror_font_camera", true)){
+                                    myBitmap = BitmapEditor.flipHor(myBitmap);
+                                }
+                            }
 
                             //Preview ใน iCon ของ Gallery
                             ImageButton imgBtn = findViewById(R.id.button_gallery);
                             imgBtn.setImageBitmap(myBitmap);
-                            //เปิดหน้า Preview Activity
 
                             if(setting.getBoolean("switch_preview_after_shutter", true)){
+
                                 isWorking = false;
                                 pauseThread();
+
+                                try {
+                                    file_temp2 = File.createTempFile("geek", ".jpg", null);
+                                    FileOutputStream filecon = new FileOutputStream(file_temp2);
+                                    myBitmap.compress(Bitmap.CompressFormat.JPEG, 90, filecon);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
                                 Intent myIntent = new Intent(MainActivity.this, PreviewActivity.class);
-                                myIntent.putExtra("key", file_temp.getAbsolutePath()); //Optional parameters
+
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                myBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+
+                                myIntent.putExtra("key", file_temp2.getAbsolutePath()); //Optional parameters
                                 myIntent.putExtra("resolution", state_serol);
                                 MainActivity.this.startActivity(myIntent);
+
+
+
+                            }else {
+                                File file = new File(file_temp.getAbsolutePath());
+                                Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath());
+
+                                //บันทึกรูปลง Grallery
+                                String savedImageURL = MediaStore.Images.Media.insertImage((MainActivity.this).getContentResolver(), bm, "filename", null);
+                                Uri savedImageURI = Uri.parse(savedImageURL);
                             }
 
                         }
@@ -631,10 +677,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         x = (int) Math.round((float) (X * width2));
         y = (int) Math.round((float) (Y * height2));
 
-        //Toast.makeText(this, "w = " + w + "/nh = " + h, LENGTH_SHORT).show();
-        //       txtDebug.setText("w = " + w + "\nh = " + h);
-
-
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
 
         @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
@@ -645,12 +687,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             focus_frame = inflater.inflate(R.layout.focus_frame_s, null);
         }
  */
-        //if(type == 1){
-        //    focus_frame = inflater.inflate(R.layout.focus_frame, null);
-        //}else if(type == 0){
-        //    focus_frame = inflater.inflate(R.layout.emoji_layout, null);
-        //}
-
+        focus_frame = inflater.inflate(R.layout.emoji_layout, null);
 
 
         //
@@ -707,13 +744,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     }
     Bitmap tempBitmap = null;
 
-    public Bitmap flip(Bitmap d) {
-        Matrix m = new Matrix();
-        m.preScale(1, -1);
-        Bitmap dst = Bitmap.createBitmap(d, 0, 0, d.getWidth(), d.getHeight(), m, false);
-        dst.setDensity(DisplayMetrics.DENSITY_DEFAULT);
-        return dst;
-    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -734,4 +764,22 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         return data;
     }
 
+    private SensorManager sensorManager;
+    double ax,ay,az;   // these are the acceleration in x,y and z axis
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+            ax = sensorEvent.values[0];
+            ay = sensorEvent.values[1];
+            az = sensorEvent.values[2];
+
+            Log.e("SN","X = " + ax + "  Y + " + ay + "  Z = " + az);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
 }
