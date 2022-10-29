@@ -15,6 +15,62 @@
         android:layout_height="match_parent">
 
         <RelativeLayout
+            android:id="@+id/head_layout_video"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#99000000"
+            android:orientation="horizontal"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:paddingRight="10dp">
+
+            <LinearLayout
+                android:layout_alignParentLeft="true"
+                android:background="@drawable/bg_line_round_stroke"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:paddingRight="10dp"
+                android:paddingLeft="10dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_marginRight="5dp"
+                    android:background="#F00"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"/>
+
+                <TextView
+                    android:text="REC"
+                    android:textSize="14dp"
+                    android:textColor="#FFF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_alignParentRight="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <Chronometer
+                    android:id="@+id/idCMmeter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:textAlignment="center"
+                    android:textSize="24dp"
+                    android:textColor="#FFF"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <RelativeLayout
             android:id="@+id/head_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -187,8 +243,6 @@
                         android:adjustViewBounds="true"
                         android:scaleType="fitXY"
                         android:src="@drawable/ic_frame_grid" />
-
-
 
                     <LinearLayout
                         android:visibility="visible"

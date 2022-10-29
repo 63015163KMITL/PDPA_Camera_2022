@@ -42,6 +42,8 @@ import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -54,6 +56,8 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -65,8 +69,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import android.graphics.RectF;
@@ -127,6 +133,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     //Setting valur
     SharedPreferences setting;
 
+    //Timer
+    public Chronometer chronometer;
+    long stopTime = 0;
+
+    //Header layout
+    public RelativeLayout head_layout, head_layout_video;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -146,7 +159,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
         /////////////////////////////////////////////////////////////////
 
-        //SENSOR
         //SENSOR
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
@@ -174,6 +186,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         btnChangResol = findViewById(R.id.change_resolution);
         btnChangResol.setBackgroundResource(R.drawable.ic_resol_4_3);
         statRecord = false;                                                 //bRecord = findViewById(R.id.bRecord);
+
+        //Header layout
+        head_layout = findViewById(R.id.head_layout);
+        head_layout_video = findViewById(R.id.head_layout_video);
+        head_layout_video.setVisibility(View.GONE);
 
         ImageButton setting_button = (ImageButton) findViewById(R.id.setting_button);
         setting_button.setOnClickListener(this);
@@ -225,6 +242,9 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         });
         detectThread.start();
 
+        //Timer
+        chronometer = findViewById(R.id.idCMmeter);
+
         // HorizontalPicker ////////////////////////////////////////////////////////////////////////
         RecyclerView rv = null;
         PickerAdapter adapter;
@@ -254,6 +274,26 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 //txt.setTextColor(Color.parseColor("#FF0000"));
                // makeText(MainActivity.this, ("Selected value : "+((TextView) view).getText().toString()), LENGTH_SHORT).show();
                 ((TextView) view).setTextColor(Color.parseColor("#FBB040"));
+
+                if("VIDEO".equals(((TextView) view).getText().toString())){
+                    startCameraXVideo(cameraProvider);
+
+                    head_layout.setVisibility(View.GONE);
+                    head_layout_video.setVisibility(View.VISIBLE);
+
+                    bCapture.setImageResource(R.drawable.ic_recording);
+                    //makeText(MainActivity.this, "VIDEO MODE", LENGTH_SHORT).show();
+                }
+
+                if("PHOTO".equals(((TextView) view).getText().toString())){
+                    startCameraX(cameraProvider);
+
+                    head_layout_video.setVisibility(View.GONE);
+                    head_layout.setVisibility(View.VISIBLE);
+
+                    bCapture.setImageResource(R.drawable.ic_camera);
+                    //makeText(MainActivity.this, "VIDEO MODE", LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -311,6 +351,13 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     capturePhoto();
                 } else {
                     bCapture.setImageResource(R.drawable.ic_camera);
+
+                    //Timer
+                    chronometer.setBase(SystemClock.elapsedRealtime());
+                    stopTime = 0;
+                    chronometer.stop();
+
+
                     videoCapture.stopRecording();
                     statRecord = false;
                 }
@@ -359,14 +406,29 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         }
     }
 
+    private long startTime = 0L;
+
+    private Handler customHandler = new Handler();
+
+    long timeInMilliseconds = 0L;
+    long timeSwapBuff = 0L;
+    long updatedTime = 0L;
+
+
     @Override
     public boolean onLongClick(View view) {
         if (view.getId() == R.id.bCapture) {
             bCapture.setImageResource(R.drawable.ic_recording);
+
+            //Timer
+            chronometer.setBase(SystemClock.elapsedRealtime() + stopTime);
+            chronometer.start();
+
             recordVideo();
         }
         return statRecord = true;
     }
+
 
     public static void slideView(View view, int currentHeight, int newHeight) {
         ValueAnimator slideAnimator = ValueAnimator.ofInt(currentHeight, newHeight).setDuration(500);
@@ -488,7 +550,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
-
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
@@ -502,6 +563,32 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .build();
 
         cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis, imageCapture);
+    }
+
+    // เริ่มต้นการทำงานของ Camera X
+    @SuppressLint("RestrictedApi")
+    private void startCameraXVideo(ProcessCameraProvider cameraProvider) {
+        cameraProvider.unbindAll();
+        CameraSelector cameraSelector = new CameraSelector.Builder()
+                .requireLensFacing(lensFacing)
+                .build();
+        Preview preview = new Preview.Builder()
+                .build();
+
+        preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+        // Image capture use case
+        imageCapture = new ImageCapture.Builder()
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                .setTargetResolution(new Size(1080, 1440))
+                .build();
+
+        // Video capture use case
+        videoCapture = new VideoCapture.Builder()
+                .setVideoFrameRate(30)
+                .build();
+
+        cameraProvider.bindToLifecycle(this, cameraSelector, preview, videoCapture, imageCapture);
     }
 
     @SuppressLint("SetTextI18n")
