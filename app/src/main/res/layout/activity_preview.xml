@@ -312,6 +312,7 @@
                                 android:scaleType="fitCenter"
                                 android:src="@drawable/ic_flip_cam" />
                                 -->
+
                         </LinearLayout>
 
                     </HorizontalScrollView>
@@ -551,44 +552,15 @@
                         android:layout_marginLeft="0dp"
                         android:background="@drawable/bg_round_gray"
                         android:orientation="vertical"
-                        android:padding="15dp">
+                        android:padding="5dp">
 
-                        <TextView
+                        <GridView
+                            android:id="@+id/GridView_stricker"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="5dp"
-                            android:singleLine="true"
-                            android:text="Stricker Option"
-                            android:textColor="#FFF"
-                            android:textSize="20dp" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <SeekBar
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginLeft="-10dp"
-                                android:layout_weight="1"
-                                android:max="100"
-                                android:progress="50"
-                                android:progressDrawable="@drawable/seek_bar"
-                                android:splitTrack="false"
-                                android:thumb="@drawable/seekbar_drawable_thumb" />
-
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="5dp"
-                                android:layout_weight="15"
-                                android:text="0"
-                                android:textColor="#FFF"
-                                android:textSize="24dp" />
-
-                        </LinearLayout>
+                            android:layout_height="match_parent"
+                            android:numColumns="5"
+                            android:columnWidth="0dp"
+                            android:listSelector="#AAA"/>
 
                     </LinearLayout>
 
@@ -638,7 +610,7 @@
                     android:visibility="gone">
 
                     <LinearLayout
-                        android:layout_width="15dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
 
                     <LinearLayout
@@ -647,16 +619,45 @@
                         android:layout_marginLeft="0dp"
                         android:background="@drawable/bg_round_gray"
                         android:orientation="vertical"
-                        android:padding="15dp">
+                        android:padding="10dp">
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginLeft="5dp"
-                            android:singleLine="true"
-                            android:text="Paint Option"
-                            android:textColor="#FFF"
-                            android:textSize="20dp" />
+                        <LinearLayout
+                            android:layout_marginLeft="10dp"
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <ImageView
+                                android:background="#FFFFFF"
+                                android:layout_marginRight="10dp"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"/>
+
+                            <ImageView
+                                android:background="#000000"
+                                android:layout_marginRight="10dp"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"/>
+
+                            <ImageView
+                                android:background="#FF0000"
+                                android:layout_marginRight="10dp"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"/>
+
+                            <ImageView
+                                android:background="#00FF00"
+                                android:layout_marginRight="10dp"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"/>
+
+                            <ImageView
+                                android:background="#0000FF"
+                                android:layout_marginRight="10dp"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"/>
+
+                        </LinearLayout>
 
                         <LinearLayout
                             android:layout_width="match_parent"

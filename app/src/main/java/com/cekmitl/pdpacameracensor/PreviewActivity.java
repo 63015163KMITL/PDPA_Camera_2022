@@ -7,6 +7,7 @@ import static com.cekmitl.pdpacameracensor.MainActivity.slideView2;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 
 
 import android.annotation.SuppressLint;
@@ -40,7 +41,9 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -122,6 +125,11 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     public TextView textview_blur_radius_value;
     public SeekBar seekbar_blur_radius;
+
+
+    //STRICKER
+    int stricker[] = new int[15];
+    GridView simpleGrid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -222,6 +230,55 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         textview_blur_radius_value = findViewById(R.id.textview_blur_radius_value);
         seekbar_blur_radius = (SeekBar) findViewById(R.id.seekbar_blur_radius);
+
+        //STRICKER /////////////////////////////////////////////////////////////////////////////////
+
+        //for (int i = 0; i < stricker.length; i++){
+        //    stricker[i] = Integer.parseInt("R.drawable.stricker" + (i+1));
+        //}
+
+        stricker[0] = R.drawable.ic_not;
+        stricker[1] = R.drawable.stricker2;
+        stricker[2] = R.drawable.stricker3;
+        stricker[3] = R.drawable.stricker4;
+        stricker[4] = R.drawable.stricker5;
+        stricker[5] = R.drawable.stricker6;
+        stricker[6] = R.drawable.stricker7;
+        stricker[7] = R.drawable.stricker8;
+        stricker[8] = R.drawable.stricker9;
+        stricker[9] = R.drawable.stricker10;
+        stricker[10] = R.drawable.stricker11;
+        stricker[11] = R.drawable.stricker12;
+        stricker[12] = R.drawable.stricker13;
+        stricker[13] = R.drawable.stricker14;
+        stricker[14] = R.drawable.stricker15;
+
+
+        simpleGrid = (GridView) findViewById(R.id.GridView_stricker); // init GridView
+        // Create an object of CustomAdapter and set Adapter to GirdView
+        StrickerGridViewAdapter customAdapter = new StrickerGridViewAdapter(getApplicationContext(), stricker);
+        simpleGrid.setAdapter(customAdapter);
+        // implement setOnItemClickListener event on GridView
+        simpleGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // set an Intent to Another Activity
+                //Intent intent = new Intent(MainActivity.this, SecondActivity.class);
+                //intent.putExtra("image", logos[position]); // put image data in Intent
+                //startActivity(intent); // start Intent
+                //makeText(PreviewActivity.this, "STRICKER = " + stricker[position], LENGTH_SHORT).show();
+
+                clearFocus();
+                for (int i = 0; i < facePosition.size(); i++){
+                    String[] a = facePosition.get(i).split("/");
+                    setFocusView2(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), stricker[position]);
+                    Log.e("IMG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
+                }
+            }
+        });
+
+        //END STRICKER /////////////////////////////////////////////////////////////////////////////
 
         // Get intent form MainActivity
         Intent intent = getIntent();
@@ -333,8 +390,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.aaa);
-        nowPhotoPreview = myBitmap;
+        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.xxx);
+        //nowPhotoPreview = myBitmap;
 
         imgPreView = findViewById(R.id.ImagePreview);
         imgPreView.setImageBitmap(nowPhotoPreview);
@@ -647,6 +704,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         txt.setText(h + "x" + w);
 
         fram_focus_layout.addView(focus_frame, params1);
+        //frameFocusLayout.addView(txt, params1);
 
         Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
         focus_frame.startAnimation(animFadeIn2);
@@ -687,6 +745,49 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         fram_focus_layout.addView(imgBlur, params1);
     }
+
+    public void setFocusView2(double X, double Y, double width, double height, double xPos, double yPos, int stricker) {
+
+        height2 = xMAX_HEIGHT_PREVIEW;
+        width2 = xMAX_WIDTH_PREVIEW;
+
+        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
+        h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
+        w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
+        x = (int) Math.round((float) (X * width2));
+        y = (int) Math.round((float) (Y * height2));
+
+        Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
+        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
+
+        LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
+        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
+
+        //focus_frame = inflater.inflate(stricker, null);
+        focus_frame.setBackground(ContextCompat.getDrawable(PreviewActivity.this, stricker));
+        //if(type == 1){
+        //    focus_frame = inflater.inflate(stricker, null);
+        //}else if(type == 0){
+        //    focus_frame = inflater.inflate(R.layout.emoji_layout, null);
+        //}
+
+        //focus_frame.setId(Integer.parseInt(str));
+        //int strId = focus_frame.getId();
+        //focus_frame.setOnClickListener(view -> makeText(PreviewActivity.this, "CLICK = " + strId, LENGTH_SHORT).show());
+        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params1.height = h;
+        params1.width = w;
+        params1.setMargins(x, y, 0, 0);
+
+        fram_focus_layout.addView(focus_frame, params1);
+        //frameFocusLayout.addView(txt, params1);
+
+        Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
+        focus_frame.startAnimation(animFadeIn2);
+        //frameFocusLayout.addView(txt, params1);
+    }
+
+
 
     @Override
     public void run() {
