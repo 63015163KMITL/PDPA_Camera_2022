@@ -2,7 +2,6 @@
   <library name="Gradle: org.tensorflow:tensorflow-lite-support:0.1.0@aar">
     <CLASSES>
       <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/04ed6de6f9555b860c38da000a0c3871/transformed/tensorflow-lite-support-0.1.0/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/04ed6de6f9555b860c38da000a0c3871/transformed/tensorflow-lite-support-0.1.0/res" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-3/04ed6de6f9555b860c38da000a0c3871/transformed/tensorflow-lite-support-0.1.0/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />

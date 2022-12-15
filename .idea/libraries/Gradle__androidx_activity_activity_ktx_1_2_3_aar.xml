@@ -2,7 +2,6 @@
   <library name="Gradle: androidx.activity:activity-ktx:1.2.3@aar">
     <CLASSES>
       <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/7641ee2f084247bbc72aadac65cb12df/transformed/activity-ktx-1.2.3/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/7641ee2f084247bbc72aadac65cb12df/transformed/activity-ktx-1.2.3/res" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-3/7641ee2f084247bbc72aadac65cb12df/transformed/activity-ktx-1.2.3/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />

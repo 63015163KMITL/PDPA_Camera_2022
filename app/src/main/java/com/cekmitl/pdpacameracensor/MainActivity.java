@@ -553,12 +553,14 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
+        imageAnalysis.setAnalyzer(getExecutor(), this);
+
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setTargetResolution(new Size(1080, 1440))
                 .build();
-        imageAnalysis.setAnalyzer(getExecutor(), this);
+
 
         // Video capture use case
         videoCapture = new VideoCapture.Builder()

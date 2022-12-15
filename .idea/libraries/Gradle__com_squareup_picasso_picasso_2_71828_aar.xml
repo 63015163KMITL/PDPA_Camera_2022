@@ -2,7 +2,6 @@
   <library name="Gradle: com.squareup.picasso:picasso:2.71828@aar">
     <CLASSES>
       <root url="jar://$USER_HOME$/.gradle/caches/transforms-3/ce0dc392b22a63f522ed396620cb6f0d/transformed/picasso-2.71828/jars/classes.jar!/" />
-      <root url="file://$USER_HOME$/.gradle/caches/transforms-3/ce0dc392b22a63f522ed396620cb6f0d/transformed/picasso-2.71828/res" />
       <root url="file://$USER_HOME$/.gradle/caches/transforms-3/ce0dc392b22a63f522ed396620cb6f0d/transformed/picasso-2.71828/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC>

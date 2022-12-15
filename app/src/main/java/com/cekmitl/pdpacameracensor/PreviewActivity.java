@@ -11,8 +11,10 @@ import androidx.core.content.ContextCompat;
 
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -57,14 +59,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class PreviewActivity extends AppCompatActivity implements View.OnClickListener, Runnable {
 
     public LinearLayout layout_face_detect, layout_blur_radius, layout_stricker_option, layout_paint_option, button_blur_layout, button_stricker_layout, button_paint_layout;
-    public ImageButton button_hide_face_detect, button_face_detect, button_blur, button_stricker, button_paint;
+    public ImageButton button_hide_face_detect, button_face_detect, button_blur, button_stricker, button_paint, button_save_image;
     public RelativeLayout option_layout, fram_focus_layout, FrameImagePreview, FrameImagePreview_TOP, button_bar, HeadLayout, HeadLayout2, main_layout;
     public LinearLayout listView, bottom_layout, menu_bar;
 
@@ -106,7 +111,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public int global_preview_width = 0;
     public int global_screen_width = 0;             //ขนาดความกว้างสูงสุดของหน้าจอ
 
-    public Bitmap nowPhotoPreview;                  //Now Photo Preview
+    public static Bitmap nowPhotoPreview;                  //Now Photo Preview
     public int nowPhoto_Height, nowPhoto_Width;     //Now size of photo
     public int heightPhoto, widthPhoto;             //Real size of photo
     public int max_fram_focus_layout_height;        //ความกว้างสูงสุดที่สามารถแสดงตัวอย่างได้
@@ -130,6 +135,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     //STRICKER
     int stricker[] = new int[15];
     GridView simpleGrid;
+
+    //PAINT  /////////////////////////////////
+    private DrawingView drawView;
+    private ImageButton currPaint, drawBtn, eraseBtn, newBtn, saveBtn;
+    private float smallBrush, mediumBrush, largeBrush;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,6 +171,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         button_blur = (ImageButton) findViewById(R.id.button_blur);
         button_stricker = (ImageButton) findViewById(R.id.button_stricker);
         button_paint = (ImageButton) findViewById(R.id.button_paint);
+
+
 
         button_hide_face_detect = (ImageButton) findViewById(R.id.button_hide_face_detect);
         button_face_detect = (ImageButton) findViewById(R.id.button_face_detect);
@@ -237,21 +250,21 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //    stricker[i] = Integer.parseInt("R.drawable.stricker" + (i+1));
         //}
 
-//        stricker[0] = R.drawable.ic_not;
-//        stricker[1] = R.drawable.stricker2;
-//        stricker[2] = R.drawable.stricker3;
-//        stricker[3] = R.drawable.stricker4;
-//        stricker[4] = R.drawable.stricker5;
-//        stricker[5] = R.drawable.stricker6;
-//        stricker[6] = R.drawable.stricker7;
-//        stricker[7] = R.drawable.stricker8;
-//        stricker[8] = R.drawable.stricker9;
-//        stricker[9] = R.drawable.stricker10;
-//        stricker[10] = R.drawable.stricker11;
-//        stricker[11] = R.drawable.stricker12;
-//        stricker[12] = R.drawable.stricker13;
-//        stricker[13] = R.drawable.stricker14;
-//        stricker[14] = R.drawable.stricker15;
+        stricker[0] = R.drawable.ic_not;
+        stricker[1] = R.drawable.stricker2;
+        stricker[2] = R.drawable.stricker3;
+        stricker[3] = R.drawable.stricker4;
+        stricker[4] = R.drawable.stricker5;
+        stricker[5] = R.drawable.stricker6;
+        stricker[6] = R.drawable.stricker7;
+        stricker[7] = R.drawable.stricker8;
+        stricker[8] = R.drawable.stricker9;
+        stricker[9] = R.drawable.stricker10;
+        stricker[10] = R.drawable.stricker11;
+        stricker[11] = R.drawable.stricker12;
+        stricker[12] = R.drawable.stricker13;
+        stricker[13] = R.drawable.stricker14;
+        stricker[14] = R.drawable.stricker15;
 
 
         simpleGrid = (GridView) findViewById(R.id.GridView_stricker); // init GridView
@@ -279,6 +292,35 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         });
 
         //END STRICKER /////////////////////////////////////////////////////////////////////////////
+
+
+        //PAINT  ///////////////////////////////////////////////
+
+        drawView = (DrawingView)findViewById(R.id.drawing);
+        drawView.setBrushSize(mediumBrush);
+
+        LinearLayout paintLayout = (LinearLayout)findViewById(R.id.paint_colors);
+        currPaint = (ImageButton)paintLayout.getChildAt(0);
+        currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
+
+        smallBrush = getResources().getInteger(R.integer.small_size);
+        mediumBrush = getResources().getInteger(R.integer.medium_size);
+        largeBrush = getResources().getInteger(R.integer.large_size);
+
+        drawBtn = (ImageButton)findViewById(R.id.draw_btn);
+        drawBtn.setOnClickListener(this);
+
+        eraseBtn = (ImageButton)findViewById(R.id.erase_btn);
+        eraseBtn.setOnClickListener(this);
+
+        newBtn = (ImageButton)findViewById(R.id.new_btn);
+        newBtn.setOnClickListener(this);
+
+        saveBtn = (ImageButton)findViewById(R.id.save_btn);
+        saveBtn.setOnClickListener(this);
+
+
+        // END PAINT  /////////////////////////////////////////
 
         // Get intent form MainActivity
         Intent intent = getIntent();
@@ -321,9 +363,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         //ภาพถ่ายที่ผ่านการหมุนตามเข้มนาฬิกาแล้ว = Rotate
         //set photo rotate
-        //Matrix matrix = new Matrix();
+        Matrix matrix = new Matrix();
         //matrix.postRotate(Integer.parseInt(value_orientation));
-        //Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
+        matrix.postRotate(Integer.parseInt("90"));
+        Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
 
         ImageButton btnSave = (ImageButton) findViewById(R.id.button_save_image);
         btnSave.setOnClickListener(new View.OnClickListener() {
@@ -343,6 +386,14 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 okay_text.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        Bitmap bm = BitmapEditor.loadBitmapFromView(FrameImagePreview);
+
+                        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
+                        Date date = new Date();
+
+                        BitmapEditor.saveImage(bm, formatter.format(date) + "");
+
+                        makeText(PreviewActivity.this, "SAVEING", LENGTH_SHORT).show();
                         dialog.dismiss();
                         //Toast.makeText(PreviewActivity.this, "okay clicked", Toast.LENGTH_SHORT).show();
                         //file.delete();
@@ -391,7 +442,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
         //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.xxx);
-        nowPhotoPreview = myBitmap;
+        //nowPhotoPreview = myBitmap;
+        nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
         imgPreView.setImageBitmap(nowPhotoPreview);
@@ -582,6 +634,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             case R.id.button_paint:
                 if (state_paint_button) {
 
+                    findViewById(R.id.drawing).setFocusable(true);
+
+                    findViewById(R.id.new_btn).setVisibility(View.VISIBLE);
+                    findViewById(R.id.draw_btn).setVisibility(View.VISIBLE);
+                    findViewById(R.id.erase_btn).setVisibility(View.VISIBLE);
+                    findViewById(R.id.save_btn).setVisibility(View.VISIBLE);
+
                     int button_width = button_paint.getMeasuredWidth();
                     int option_layout_width = option_layout.getMeasuredWidth();
                     int newWidth = (option_layout_width - button_width) - 110;
@@ -600,6 +659,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     state_paint_button = false;
 
                 } else {
+                    findViewById(R.id.drawing).setFocusable(false);
+
+                    findViewById(R.id.new_btn).setVisibility(View.INVISIBLE);
+                    findViewById(R.id.draw_btn).setVisibility(View.INVISIBLE);
+                    findViewById(R.id.erase_btn).setVisibility(View.INVISIBLE);
+                    findViewById(R.id.save_btn).setVisibility(View.INVISIBLE);
+
                     slideView2(layout_paint_option, layout_paint_option.getLayoutParams().height, layout_paint_option.getLayoutParams().height, layout_paint_option.getLayoutParams().width, 0);
 
                     button_blur_layout.startAnimation(animFadeIn);
@@ -648,7 +714,144 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 editMode(false);
                 break;
         }
+
+        if(view.getId() == R.id.draw_btn) {
+            //draw button clicked
+            final Dialog brushDialog = new Dialog(this);
+            brushDialog.setTitle("Brush size:");
+            brushDialog.setContentView(R.layout.brush_chooser);
+
+            ImageButton smallBtn = (ImageButton)brushDialog.findViewById(R.id.small_brush);
+            smallBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    drawView.setBrushSize(smallBrush);
+                    drawView.setLastBrushSize(smallBrush);
+                    drawView.setErase(false);
+                    brushDialog.dismiss();
+                }
+            });
+
+            ImageButton mediumBtn = (ImageButton)brushDialog.findViewById(R.id.medium_brush);
+            mediumBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    drawView.setBrushSize(mediumBrush);
+                    drawView.setLastBrushSize(mediumBrush);
+                    drawView.setErase(false);
+                    brushDialog.dismiss();
+                }
+            });
+
+            ImageButton largeBtn = (ImageButton)brushDialog.findViewById(R.id.large_brush);
+            largeBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    drawView.setBrushSize(largeBrush);
+                    drawView.setLastBrushSize(largeBrush);
+                    drawView.setErase(false);
+                    brushDialog.dismiss();
+                }
+            });
+
+            brushDialog.show();
+        }else if(view.getId() == R.id.erase_btn)
+        {
+            //switch to erase - choose size
+            final Dialog brushDialog = new Dialog(this);
+            brushDialog.setTitle("Eraser size:");
+            brushDialog.setContentView(R.layout.brush_chooser);
+
+            ImageButton smallBtn = (ImageButton)brushDialog.findViewById(R.id.small_brush);
+            smallBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    drawView.setErase(true);
+                    drawView.setBrushSize(smallBrush);
+                    brushDialog.dismiss();
+                }
+            });
+
+            ImageButton mediumBtn = (ImageButton)brushDialog.findViewById(R.id.medium_brush);
+            mediumBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    drawView.setErase(true);
+                    drawView.setBrushSize(mediumBrush);
+                    brushDialog.dismiss();
+                }
+            });
+
+            ImageButton largeBtn = (ImageButton)brushDialog.findViewById(R.id.large_brush);
+            largeBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    drawView.setErase(true);
+                    drawView.setBrushSize(largeBrush);
+                    brushDialog.dismiss();
+                }
+            });
+
+            brushDialog.show();
+        }else if(view.getId() == R.id.new_btn)
+        {
+            //new button
+            AlertDialog.Builder newDialog = new AlertDialog.Builder(this);
+            newDialog.setTitle("new Drawing");
+            newDialog.setMessage("Start new drawing (you will lose the current drawing)?");
+            newDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    drawView.startNew();
+                    dialog.dismiss();
+                }
+            });
+            newDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            newDialog.show();
+
+        }else if(view.getId() == R.id.save_btn)
+        {
+            AlertDialog.Builder saveDialog = new AlertDialog.Builder(this);
+            saveDialog.setTitle("Save Drawing");
+            saveDialog.setMessage("Save drawing to device Gallery?");
+            saveDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    //save drawing
+                    //save drawing
+                    drawView.setDrawingCacheEnabled(true);
+                    String imageSaved = MediaStore.Images.Media.insertImage(
+                            getContentResolver(), drawView.getDrawingCache(),
+                            UUID.randomUUID().toString()+".png", "drawing");
+                    if(imageSaved != null)
+                    {
+                        Toast savedToast = Toast.makeText(getApplicationContext(),
+                                "Drawing saved to Gallery!", Toast.LENGTH_SHORT);
+                        savedToast.show();
+                    }else
+                    {
+                        Toast unsavedToast = Toast.makeText(getApplicationContext(),
+                                "Oops! Image could not saved.", Toast.LENGTH_SHORT);
+                        unsavedToast.show();
+                    }
+                    drawView.destroyDrawingCache();
+                }
+            });
+            saveDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            saveDialog.show();
+        }
     }
+
 
     public void setFocusView(double X, double Y, double width, double height, String str, float xPos, float yPos, int type) {
 
@@ -767,7 +970,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
 
         LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
-        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
+        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.layut_empty, null);
 
         //focus_frame = inflater.inflate(stricker, null);
         focus_frame.setBackground(ContextCompat.getDrawable(PreviewActivity.this, stricker));
@@ -934,6 +1137,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
             int free_height = main_layout_height - head_layout_height - bottom_layout_height;
             slideView2(FrameImagePreview_TOP, FrameImagePreview_TOP.getHeight(), free_height, FrameImagePreview_TOP.getWidth(), FrameImagePreview_TOP.getWidth());
+
             //int newWidthFocusFrame = (free_height * display.getWidth() / ImagePreview.getHeight());
 
             Log.e("IMG","   CALCULATE________________________________________");
@@ -975,7 +1179,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 int newWidth = free_height * 1080 / imgPreView.getHeight();
 
                 slideView2(FrameImagePreview, FrameImagePreview.getHeight(), newHeight, FrameImagePreview.getWidth(), newWidth);
-
+                slideView2(drawView, FrameImagePreview.getHeight(), newHeight, FrameImagePreview.getWidth(), newWidth);
                 nowPhotoPreview = BitmapEditor.getResizedBitmap(nowPhotoPreview, newWidth,newHeight);
 
                 xMAX_HEIGHT_PREVIEW = newHeight;
@@ -987,6 +1191,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 Log.e("IMG", "      imgPreView.getHeight < free_height________________________________________________________________");
 
                 slideView2(FrameImagePreview, FrameImagePreview.getHeight(), imgPreView.getHeight(), FrameImagePreview.getWidth(), display.getWidth());
+                slideView2(drawView, FrameImagePreview.getHeight(), imgPreView.getHeight(), FrameImagePreview.getWidth(), display.getWidth());
+                //drawView
                 nowPhotoPreview = BitmapEditor.getResizedBitmap(nowPhotoPreview, display.getWidth(),imgPreView.getHeight());
 
                 xMAX_HEIGHT_PREVIEW = imgPreView.getHeight();
@@ -1035,6 +1241,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             slideView2(bottom_layout, bottom_layout.getLayoutParams().height, 0, bottom_layout.getLayoutParams().width, bottom_layout.getLayoutParams().width);
             slideView2(HeadLayout, HeadLayout.getLayoutParams().height, 0, HeadLayout.getLayoutParams().width, HeadLayout.getLayoutParams().width);
 
+
+
+
             ////////////////////////////////////////////////////////////////////////////////////////
             //int x2 = FrameImagePreview2.getLayoutParams().height;
             Display display2 = getWindowManager().getDefaultDisplay();
@@ -1060,6 +1269,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             slideView2(FrameImagePreview_TOP, FrameImagePreview_TOP.getHeight(), MAX_HEIGHT_PREVIEW, FrameImagePreview_TOP.getWidth(), MAX_WIDTH_PREVIEW);
 
             slideView2(FrameImagePreview, FrameImagePreview.getLayoutParams().height, MAX_HEIGHT_PREVIEW, FrameImagePreview.getWidth(), MAX_WIDTH_PREVIEW);
+
+
+            slideView2(drawView, FrameImagePreview.getLayoutParams().height, MAX_HEIGHT_PREVIEW, FrameImagePreview.getWidth(), MAX_WIDTH_PREVIEW);
+            //drawView
             //slideView2(fram_focus_layout, FrameImagePreview.getLayoutParams().height, max_fram_focus_layout_height, FrameImagePreview.getLayoutParams().width, display2.getWidth());
 
             button_bar.setVisibility(View.GONE);
@@ -1084,5 +1297,29 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
     }
+
+
+    // PAINT ////////////////////
+    public void paintClicked(View view) {
+        drawView.setErase(false);
+        drawView.setBrushSize(drawView.getLastBrushSize());
+        //use chosen color
+        if(view!=currPaint) {
+            //update color
+            ImageButton imgView = (ImageButton)view;
+            String color = view.getTag().toString();
+            drawView.setColor(color);
+
+            //reflect in the UI
+            imgView.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
+            currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint));
+            currPaint = (ImageButton)view;
+        }
+
+
+    }
+
+
+
 
 }
