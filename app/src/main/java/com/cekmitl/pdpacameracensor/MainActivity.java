@@ -222,10 +222,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         detectThread = new Thread(new Runnable() {
             public void run() {
                 while (true) {
-                    Log.e("A","HandleResult");
-                    handleResult();
+
                     try {
                         detectThread.join(20);
+                        Log.e("A","HandleResult"+String.valueOf(mPaused));
+                        handleResult();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -345,10 +346,12 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     @SuppressLint({"RestrictedApi", "NonConstantResourceId"})
     @Override
     public void onClick(View view) {
+
         switch (view.getId()) {
             case R.id.bCapture:
                 if (!statRecord) {
                     capturePhoto();
+
                 } else {
                     bCapture.setImageResource(R.drawable.ic_camera);
 
@@ -555,7 +558,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .setTargetResolution(new Size(1080, 1440))
                 .build();
-        //imageAnalysis.setAnalyzer(getExecutor(), this);
+        imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Video capture use case
         videoCapture = new VideoCapture.Builder()
@@ -774,7 +777,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             focus_frame = inflater.inflate(R.layout.focus_frame_s, null);
         }
  */
-        focus_frame = inflater.inflate(R.layout.emoji_layout, null);
+        focus_frame = inflater.inflate(R.layout.focus_frame, null);
 
 
         //

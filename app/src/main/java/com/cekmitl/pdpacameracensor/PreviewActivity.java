@@ -237,21 +237,21 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //    stricker[i] = Integer.parseInt("R.drawable.stricker" + (i+1));
         //}
 
-        stricker[0] = R.drawable.ic_not;
-        stricker[1] = R.drawable.stricker2;
-        stricker[2] = R.drawable.stricker3;
-        stricker[3] = R.drawable.stricker4;
-        stricker[4] = R.drawable.stricker5;
-        stricker[5] = R.drawable.stricker6;
-        stricker[6] = R.drawable.stricker7;
-        stricker[7] = R.drawable.stricker8;
-        stricker[8] = R.drawable.stricker9;
-        stricker[9] = R.drawable.stricker10;
-        stricker[10] = R.drawable.stricker11;
-        stricker[11] = R.drawable.stricker12;
-        stricker[12] = R.drawable.stricker13;
-        stricker[13] = R.drawable.stricker14;
-        stricker[14] = R.drawable.stricker15;
+//        stricker[0] = R.drawable.ic_not;
+//        stricker[1] = R.drawable.stricker2;
+//        stricker[2] = R.drawable.stricker3;
+//        stricker[3] = R.drawable.stricker4;
+//        stricker[4] = R.drawable.stricker5;
+//        stricker[5] = R.drawable.stricker6;
+//        stricker[6] = R.drawable.stricker7;
+//        stricker[7] = R.drawable.stricker8;
+//        stricker[8] = R.drawable.stricker9;
+//        stricker[9] = R.drawable.stricker10;
+//        stricker[10] = R.drawable.stricker11;
+//        stricker[11] = R.drawable.stricker12;
+//        stricker[12] = R.drawable.stricker13;
+//        stricker[13] = R.drawable.stricker14;
+//        stricker[14] = R.drawable.stricker15;
 
 
         simpleGrid = (GridView) findViewById(R.id.GridView_stricker); // init GridView
@@ -390,8 +390,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.xxx);
-        //nowPhotoPreview = myBitmap;
+        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.xxx);
+        nowPhotoPreview = myBitmap;
 
         imgPreView = findViewById(R.id.ImagePreview);
         imgPreView.setImageBitmap(nowPhotoPreview);
@@ -709,6 +709,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
         focus_frame.startAnimation(animFadeIn2);
         //frameFocusLayout.addView(txt, params1);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MainActivity.pauseThread();
     }
 
     public void setFocusView(double X, double Y, double width, double height, double xPos, double yPos, double blurRadius) {
