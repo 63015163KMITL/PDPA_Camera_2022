@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
@@ -157,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             frame_grid.setVisibility(View.INVISIBLE);
         }
 
+
         /////////////////////////////////////////////////////////////////
 
         //SENSOR
@@ -259,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         ArrayList<String> menu_mode = new ArrayList<String>();
         menu_mode.add("VIDEO");
         menu_mode.add("PHOTO");
-        menu_mode.add("LIVE");
+        //menu_mode.add("LIVE");
 
         adapter = new PickerAdapter(this, menu_mode, rv);
         SnapHelper snapHelper = new LinearSnapHelper();
@@ -403,7 +405,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 }
                 break;
             case R.id.setting_button:
-                Intent settingActivityIntent = new Intent(MainActivity.this, SettingActivity.class);
+                Intent settingActivityIntent = new Intent(MainActivity.this, MainActivityNew.class);
                 MainActivity.this.startActivity(settingActivityIntent);
                 break;
         }
@@ -553,7 +555,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
-        imageAnalysis.setAnalyzer(getExecutor(), this);
+        //imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Image capture use case
         imageCapture = new ImageCapture.Builder()

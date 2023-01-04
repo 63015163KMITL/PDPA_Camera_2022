@@ -2,7 +2,8 @@
     <dimen name="fab_margin">16dp</dimen>
 
     //FONT SIZE
-    <dimen name="font_regular">22dp</dimen>
+    <dimen name="font_regular">16dp</dimen>
+    <dimen name="font_mid">18dp</dimen>
     <dimen name="font_sub_header">20dp</dimen>
 
     //Coner Radius

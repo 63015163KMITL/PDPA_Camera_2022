@@ -5,9 +5,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
@@ -27,6 +31,14 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         actionBar.hide();
 
         setContentView(R.layout.activity_setting2);
+
+        /*
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Window w = getWindow();
+            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        }
+
+         */
 
         switch_grid_line = findViewById(R.id.switch_grid_line);
         switch_location_tag = findViewById(R.id.switch_location_tag);
@@ -48,6 +60,14 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         switch_mirror_font_camera.setOnClickListener(this);
         switch_preview_after_shutter.setOnClickListener(this);
         switch_volume_kaye_shutter.setOnClickListener(this);
+
+        TextView txt = (TextView) findViewById(R.id.settingx);
+        txt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setContentView(R.layout.activity_main);
+            }
+        });
 
     }
 

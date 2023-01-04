@@ -194,7 +194,7 @@ public class BitmapEditor {
     public static void saveImage(Bitmap finalBitmap, String image_name) {
 
         String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root);
+        File myDir = new File("/storage/emulated/0/DCIM/PDPA");
         myDir.mkdirs();
         String fname = "Image-" + image_name+ ".jpg";
         File file = new File(myDir, fname);
@@ -208,9 +208,11 @@ public class BitmapEditor {
             Log.e("IMGSAVE", "OK");
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e("IMGSAVE", "ERROR");
+            Log.e("IMGSAVE", String.valueOf(e));
         }
     }
+
+
 
 
 }

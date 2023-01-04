@@ -365,8 +365,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //set photo rotate
         Matrix matrix = new Matrix();
         //matrix.postRotate(Integer.parseInt(value_orientation));
-        matrix.postRotate(Integer.parseInt("90"));
-        Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
+        //matrix.postRotate(Integer.parseInt("0"));
+        //Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
 
         ImageButton btnSave = (ImageButton) findViewById(R.id.button_save_image);
         btnSave.setOnClickListener(new View.OnClickListener() {
@@ -442,8 +442,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
         //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.xxx);
-        //nowPhotoPreview = myBitmap;
-        nowPhotoPreview = rotated;
+        nowPhotoPreview = myBitmap;
+        //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
         imgPreView.setImageBitmap(nowPhotoPreview);
@@ -635,6 +635,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 if (state_paint_button) {
 
                     findViewById(R.id.drawing).setFocusable(true);
+                    findViewById(R.id.paint_tools).setVisibility(View.VISIBLE);
 
                     findViewById(R.id.new_btn).setVisibility(View.VISIBLE);
                     findViewById(R.id.draw_btn).setVisibility(View.VISIBLE);
@@ -660,6 +661,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
                 } else {
                     findViewById(R.id.drawing).setFocusable(false);
+                    findViewById(R.id.paint_tools).setVisibility(View.INVISIBLE);
 
                     findViewById(R.id.new_btn).setVisibility(View.INVISIBLE);
                     findViewById(R.id.draw_btn).setVisibility(View.INVISIBLE);

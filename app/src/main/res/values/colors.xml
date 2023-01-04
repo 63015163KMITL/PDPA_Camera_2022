@@ -26,4 +26,6 @@
 
     <color name="mainBackground">#2D313D</color>
 
+    <color name="font_color_gray">#d1d3d4</color>
+
 </resources>

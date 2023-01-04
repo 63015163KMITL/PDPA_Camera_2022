@@ -94,6 +94,7 @@
                         android:src="@drawable/ic_befor_after" />
 
                     <LinearLayout
+                        android:id="@+id/paint_tools"
                         android:visibility="invisible"
                         android:layout_alignParentLeft="true"
                         android:orientation="vertical"
