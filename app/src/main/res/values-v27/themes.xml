@@ -33,4 +33,6 @@
         <!-- Customize your theme here. -->
         <item name="android:navigationBarColor">#000000</item>
     </style>
+
+
 </resources>

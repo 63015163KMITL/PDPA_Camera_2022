@@ -136,9 +136,9 @@
                 android:layout_height="wrap_content">
 
                 <ImageView
-                    android:src="@drawable/ic_text_black"
                     android:layout_width="50dp"
-                    android:layout_height="50dp"/>
+                    android:layout_height="50dp"
+                    android:src="@drawable/ic_text_black" />
 
                 <TextView
                     android:text="TEXT"
@@ -436,6 +436,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/gallery_button"
                 android:layout_weight="1"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"
@@ -468,6 +469,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/face_recog_button"
                 android:layout_weight="1"
                 android:gravity="center_horizontal"
                 android:orientation="vertical"

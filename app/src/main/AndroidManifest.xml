@@ -18,6 +18,21 @@
         android:theme="@style/Theme.PDPACameraCensor"
         tools:targetApi="31">
         <activity
+            android:name=".MainActivity2"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".MainActivityNew"
+            android:exported="false"
+            android:label="@string/title_activity_main2">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".MainActivity"
             android:exported="false"
             android:theme="@style/Theme.PDPACameraCenso.Dark">
@@ -41,16 +56,16 @@
             android:label="Preview Pictur"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".MainActivityNew"
+            android:name=".SplashScreen"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.PDPACameraCensor">
+            android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
     </application>
 
