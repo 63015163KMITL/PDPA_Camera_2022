@@ -4,6 +4,8 @@ import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
 import static com.cekmitl.pdpacameracensor.MainActivity.slideView2;
 
+import static java.lang.Integer.parseInt;
+
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -27,7 +29,9 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -126,7 +130,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     public int global_img_width, global_img_height;
     public ArrayList<Bitmap> bmp_images = new ArrayList<Bitmap>();
-    public ArrayList<String> facePosition = new ArrayList<String>();
+    public ArrayList<String> facePosition = new ArrayList<String>();   //LEFT / TOP / RIGHT / BOTTOM / X / Y / ID
 
     public TextView textview_blur_radius_value;
     public SeekBar seekbar_blur_radius;
@@ -284,8 +288,15 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 clearFocus();
                 for (int i = 0; i < facePosition.size(); i++){
                     String[] a = facePosition.get(i).split("/");
-                    setFocusView2(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), stricker[position]);
-                    Log.e("IMG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                    //setFocusView2(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), stricker[position]);
+                    Log.e("TAG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
+                    LinearLayout layoutInner = fram_focus_layout.findViewWithTag(i + "");
+                    Log.e("TAG","stricker[position] = " + stricker[position]);
+                    Log.e("TAG","layoutInner TAG = " + layoutInner.getTag());
+
+                    //layoutInner.setBackground(ContextCompat.getDrawable(PreviewActivity.this, R.drawable.stricker15));
+
 
                 }
             }
@@ -441,8 +452,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.xxx);
-        nowPhotoPreview = myBitmap;
+        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+        //nowPhotoPreview = myBitmap;
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
@@ -506,11 +517,48 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     //Log.e("IMG","   a = " + Arrays.toString(a));
                     Log.e("IMG","   Radius 0.1 = x" + (n + "x"));
                     if((n + "").equals("0.1")){
-                        setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), 0.9);
+
+                        setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), i + "", Float.parseFloat(a[4]), Float.parseFloat(a[5]), 1, 0.9);
                         Log.e("IMG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 
                     }
-                    setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), n);
+                    //setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), n,i + "");
+                    //setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), i + "", Float.parseFloat(a[4]), Float.parseFloat(a[5]), 1, n);
+
+
+
+                    height2 = xMAX_HEIGHT_PREVIEW;
+                    width2 = xMAX_WIDTH_PREVIEW;
+
+                    //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
+                    int h = (int) Math.round((float) ((2 * (Double.parseDouble(a[3]) - Float.parseFloat(a[5]))) * height2));
+                    int w = (int) Math.round((float) ((2 * (Double.parseDouble(a[2]) - Float.parseFloat(a[4]))) * width2));
+                    int x = (int) Math.round((float) (Double.parseDouble(a[0]) * width2));
+                    int y = (int) Math.round((float) (Double.parseDouble(a[1]) * height2));
+
+                    Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
+                    Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
+
+                    ImageView imgBlur = new ImageView(PreviewActivity.this);
+                    imgBlur.setTag(n);
+
+                    LinearLayout layoutInner = fram_focus_layout.findViewWithTag(i + "");
+
+
+                    //Drawable d = new BitmapDrawable(getResources(), bitmap);
+
+                    if (n == 0.1){
+                        //imgBlur.setImageBitmap(b);
+                        Drawable d = new BitmapDrawable(getResources(), b);
+                        layoutInner.setBackground(d);
+                    }else {
+                        //imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, n));
+
+                        Drawable d = new BitmapDrawable(getResources(), BitmapEditor.getMosaicsBitmap(b, n));
+                        layoutInner.setBackground(d);
+                    }
+
+
                     //Log.e("IMG","   Radius = " + n);
                 }
                 //fram_focus_layout.addView(imgBlur, params1);
@@ -854,8 +902,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
+    String faceID[][] = new String[20][1];
 
-    public void setFocusView(double X, double Y, double width, double height, String str, float xPos, float yPos, int type) {
+
+    public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius) {
 
         height2 = xMAX_HEIGHT_PREVIEW;
         width2 = xMAX_WIDTH_PREVIEW;
@@ -868,6 +918,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
         Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
+
 
         bmp_images.add(b);
         /*
@@ -884,6 +935,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
         @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
 
+        /*
+
         if ((h > 70 || w > 70) && ((h < 130 || w < 130))) {
             focus_frame = inflater.inflate(R.layout.focus_frame_m, null);
         } else if ((h > 0 || w > 0) && ((h < 70 || w < 70))) {
@@ -896,24 +949,116 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             focus_frame = inflater.inflate(R.layout.emoji_layout, null);
         }
 
-        focus_frame.setId(Integer.parseInt(str));
-        int strId = focus_frame.getId();
-        focus_frame.setOnClickListener(view -> makeText(PreviewActivity.this, "CLICK = " + strId, LENGTH_SHORT).show());
+         */
+
+        //focus_frame.setId(parseInt(id));
+        //int strId = focus_frame.getId();
+        //Log.e("Arrary2D","ID = " + strId);
+        //faceID[focus_frame.getId()][0] = "T";
+
+        //----Blur Face-------------------------------------------------------------------------------------------
+        //ImageView imgBlur = new ImageView(this);
+/*
+
+        imgBlur.setTag(id);
+
+        if (blurRadius == 0.1){
+            imgBlur.setImageBitmap(b);
+        }else {
+            imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, blurRadius));
+        }
+
+ */
+
+        ImageView imgBlur = new ImageView(PreviewActivity.this);
+        imgBlur.setTag(blurRadius);
+
+        if (blurRadius == 0.1){
+            imgBlur.setImageBitmap(b);
+        }else {
+            imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, blurRadius));
+        }
+        //------------------------------------------------------------------------------------------------------
+
+        //focus_frame.setOnClickListener(view -> frameFocusOnClickListener(id));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        params.height = h;
+        params.width = w;
+        params.setMargins(x, y, 0, 0);
+
+        //-------------------------------------------------------------------
         LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params1.height = h;
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
 
+        LinearLayout layoutTOP = new LinearLayout(PreviewActivity.this);
+        layoutTOP.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        //layoutTOP.setOrientation(LinearLayout.HORIZONTAL);
+        layoutTOP.setId(parseInt(id));
+        faceID[layoutTOP.getId()][0] = "T";
+        layoutTOP.setOnClickListener(view -> frameFocusOnClickListener(id));
+
+        LinearLayout layoutInner = new LinearLayout(PreviewActivity.this);
+        layoutTOP.setTag(id);
+        Log.e("TAG", "layoutTOP TAG = " + layoutTOP.getTag());
+
+        layoutInner.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        //layoutInner.setOrientation(LinearLayout.HORIZONTAL);
+        //-------------------------------------------------------------------
+
         TextView txt = new TextView(this);
         txt.setTextSize(6);
         txt.setText(h + "x" + w);
 
-        fram_focus_layout.addView(focus_frame, params1);
+        //fram_focus_layout.addView(focus_frame, params);
+
+
         //frameFocusLayout.addView(txt, params1);
 
-        Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
-        focus_frame.startAnimation(animFadeIn2);
+        //Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
+        //focus_frame.startAnimation(animFadeIn2);
         //frameFocusLayout.addView(txt, params1);
+        //layoutInner.addView(imgBlur);
+        layoutInner.addView(focus_frame);
+
+        layoutTOP.addView(layoutInner);
+        fram_focus_layout.addView(layoutTOP, params1);
+    }
+
+    public void frameFocusOnClickListener(String id){
+        //makeText(this, "CLICK = " + id, LENGTH_SHORT).show();
+
+        //v = findViewById((Integer.parseInt(str+"")));
+
+        //LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
+        //v = inflater.inflate(R.layout.focus_frame_white, null);
+
+        Log.e("Arrary2D", "faceID.length + " + faceID.length);
+
+        int strID = Integer.parseInt(id);
+        LinearLayout layoutInner = fram_focus_layout.findViewWithTag(id);
+        Log.e("TAG", "frameFocusOnClickListener layoutInner TAG = " + layoutInner.getTag());
+
+            if ("F".equals(faceID[Integer.parseInt(id)][0])){
+                faceID[strID][0] = "T";
+                layoutInner.setAlpha(1f);
+                //layoutInner.setVisibility(View.VISIBLE);
+            }else {
+                faceID[Integer.parseInt(id)][0] = "F";
+                layoutInner.setAlpha(.0f);
+                //layoutInner.setVisibility(View.INVISIBLE);
+            }
+
+        for (int i = 0; i < faceID.length; i++){
+            //Log.e("Arrary2D", "str == faceID[" + i + "]");
+            Log.e("Arrary2D", "Arrary2D[" + i +"][0] = " + faceID[i][0]);
+        }
+    }
+
+    public void frameFocusOnClickListener2(View v){
+            v.setAlpha(.5f);
     }
 
     @Override
@@ -922,7 +1067,35 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         MainActivity.pauseThread();
     }
 
-    public void setFocusView(double X, double Y, double width, double height, double xPos, double yPos, double blurRadius) {
+    public void setFocusViewBlur(double X, double Y, double width, double height, double xPos, double yPos, double blurRadius, String id) {
+
+        height2 = xMAX_HEIGHT_PREVIEW;
+        width2 = xMAX_WIDTH_PREVIEW;
+
+        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
+        h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
+        w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
+        x = (int) Math.round((float) (X * width2));
+        y = (int) Math.round((float) (Y * height2));
+
+        Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
+        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
+        ImageView imgBlur = new ImageView(this);
+
+        if (blurRadius == 0.1){
+            imgBlur.setImageBitmap(b);
+        }else {
+            imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, blurRadius));
+        }
+
+        View noMiembros = new View(PreviewActivity.this);
+        LinearLayout layoutInner = (LinearLayout) noMiembros.findViewWithTag(id);
+
+        layoutInner.addView(imgBlur);
+
+    }
+
+    public void setFocusViewBlurXXX(double X, double Y, double width, double height, double xPos, double yPos, double blurRadius) {
 
         height2 = xMAX_HEIGHT_PREVIEW;
         width2 = xMAX_WIDTH_PREVIEW;
@@ -936,13 +1109,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
         Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
 
-        //bmp_images.add(getCroppedBitmap(b));
-
-        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params1.height = h;
-        params1.width = w;
-        params1.setMargins(x, y, 0, 0);
-
         ImageView imgBlur = new ImageView(this);
 
         if (blurRadius == 0.1){
@@ -954,7 +1120,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //makeText(this, "SEEK = " + seekbar_blur_radius.getProgress(), LENGTH_SHORT).show();
         //imgBlur.setImageBitmap(getMosaicsBitmap(getCroppedBitmap(b), 1));
 
-        fram_focus_layout.addView(imgBlur, params1);
+        //fram_focus_layout.addView(imgBlur, params);
     }
 
     public void setFocusView2(double X, double Y, double width, double height, double xPos, double yPos, int stricker) {
@@ -1046,8 +1212,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 //                           X - Y - Width - Height
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                     if (true) {
-                        setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1);
-                        facePosition.add(location.left + "/" + location.top + "/" + location.right + "/" + location.bottom + "/" + result.getX() + "/" + result.getY());
+                        setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d);
+                        facePosition.add(location.left + "/" + location.top + "/" + location.right + "/" + location.bottom + "/" + result.getX() + "/" + result.getY() + "/" + i);
                     }
                 }
                 i++;

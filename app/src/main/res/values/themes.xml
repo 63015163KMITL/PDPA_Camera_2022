@@ -28,7 +28,7 @@
         <item name="colorSecondaryVariant">@color/teal_700</item>
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor">@color/main_color</item>
+        <item name="android:statusBarColor">@color/black</item>
 
     </style>
 

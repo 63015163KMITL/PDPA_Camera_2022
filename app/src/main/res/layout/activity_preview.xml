@@ -57,6 +57,7 @@
                         android:background="#00000000" />
 
                     <com.cekmitl.pdpacameracensor.DrawingView
+                        android:visibility="gone"
                         android:id="@+id/drawing"
                         android:layout_width="fill_parent"
                         android:layout_height="500dp"

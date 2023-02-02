@@ -54,6 +54,7 @@
             android:name=".PreviewActivity"
             android:exported="false"
             android:label="Preview Pictur"
+            android:theme="@style/Theme.PDPACameraCenso.Dark"
             android:screenOrientation="portrait" />
         <activity
             android:name=".SplashScreen"
