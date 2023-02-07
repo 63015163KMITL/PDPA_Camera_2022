@@ -58,6 +58,9 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.support.common.FileUtil;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -96,6 +99,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public static final int TF_OD_API_INPUT_SIZE = 320;
     private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
+
+    //Face Recog
+    private FaceRecogitionProcessor faceRecognitionProcesser;
+    private Interpreter faceNetInterpreter;
+
+    EuclideanDistance distance;
 
     public Bitmap tempBitmap = null;
     public List<Classifier.Recognition> results = null;
@@ -158,6 +167,18 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         actionBar.hide();
         setContentView(R.layout.activity_preview);
 
+        //Face Recog
+        try {
+            faceNetInterpreter = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        faceRecognitionProcesser = new FaceRecogitionProcessor(faceNetInterpreter);
+
+        distance = new EuclideanDistance();
+
+
+        // END --- Face Recog ---------------------------------------------
 
         display = getWindowManager().getDefaultDisplay();
 
@@ -452,8 +473,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.test);
-        //nowPhotoPreview = myBitmap;
+        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.py);
+        nowPhotoPreview = myBitmap;
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
@@ -934,6 +955,19 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
         @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
+
+
+        Bitmap face = BitmapFactory.decodeResource(PreviewActivity.this.getResources(),R.drawable.py2);
+        float[] array1 = faceRecognitionProcesser.recognize(b);
+        float[]  array2 = faceRecognitionProcesser.recognize(face);
+
+        double r = distance.run(array1, array2);
+        if (r < 0.8){
+            focus_frame = inflater.inflate(R.layout.focus_frame, null);
+        }else{
+            focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
+        }
+        Log.e("FACERECOG", "resulte : " + r);
 
         /*
 

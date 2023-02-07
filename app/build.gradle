@@ -66,4 +66,17 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0'
     implementation 'org.tensorflow:tensorflow-lite-gpu:2.3.0'
 
+
+    //Face recog
+//    def dl4jVersion = '1.0.0-M2'
+//    implementation(group: 'org.deeplearning4j', name: 'deeplearning4j-core', version: '1.0.0-beta7') {
+//
+//    }
+//
+//    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7'
+//    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-arm"
+//    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-arm64"
+//    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-x86"
+//    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-x86_64"
+
 }
