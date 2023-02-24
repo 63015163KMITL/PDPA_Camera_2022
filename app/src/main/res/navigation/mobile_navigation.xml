@@ -22,4 +22,11 @@
         android:name="com.cekmitl.pdpacameracensor.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/navigation_facerecognition"
+        android:name="com.cekmitl.pdpacameracensor.FaceRecognitionFragment"
+        android:label="Face Recognition"
+        tools:layout="@layout/fragment_face_recognition" />
+
 </navigation>

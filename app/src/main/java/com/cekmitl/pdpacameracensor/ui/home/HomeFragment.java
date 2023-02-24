@@ -28,7 +28,7 @@ public class HomeFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_home, container, false);
         TextView name = root.findViewById(R.id.pdpa);
-        name.setText("Hello");
+        name.setText("PDPA");
 
         Log.e("fr", "Hello");
 

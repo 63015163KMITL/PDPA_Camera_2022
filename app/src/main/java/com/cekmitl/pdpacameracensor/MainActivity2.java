@@ -58,7 +58,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
 
-        appBarConfiguration = new AppBarConfiguration.Builder(R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications).build();
+        appBarConfiguration = new AppBarConfiguration.Builder(R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_facerecognition).build();
         navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main2);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
@@ -113,7 +113,7 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                 break;
             case R.id.face_recog_button :
                 //replaceFragment(new DashboardFragment());
-                navController.navigate(R.id.navigation_home);
+                navController.navigate(R.id.navigation_facerecognition);
                 changColorNavebar(R.id.face_recog_button);
                 break;
             case R.id.gallery_button :

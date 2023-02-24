@@ -473,8 +473,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.py);
-        nowPhotoPreview = myBitmap;
+        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.py);
+        //nowPhotoPreview = myBitmap;
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
@@ -962,7 +962,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         float[]  array2 = faceRecognitionProcesser.recognize(face);
 
         double r = distance.run(array1, array2);
-        if (r < 0.8){
+        if (r < 0.9){
             focus_frame = inflater.inflate(R.layout.focus_frame, null);
         }else{
             focus_frame = inflater.inflate(R.layout.focus_frame_white, null);

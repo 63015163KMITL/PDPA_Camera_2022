@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".FaceRecognitionCamera">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <ImageView
+        android:src="@drawable/camera_crop_circle"
+        android:scaleType="centerCrop"
+        android:alpha="0.75"
+        android:layout_width="1080px"
+        android:layout_height="match_parent"/>
+
+    <TextView
+        android:text="Please move your face in a circle."
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:textSize="22dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="110dp"
+        android:layout_width="230dp"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/percent_complete"
+        android:text="100%"
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:textSize="30dp"
+        android:layout_marginTop="550dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <ImageView
+        android:layout_alignParentRight="true"
+        android:layout_margin="30dp"
+        android:src="@drawable/ic_close"
+        android:layout_width="30dp"
+        android:layout_height="30dp"/>
+
+    <LinearLayout
+        android:layout_margin="30dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="45dp">
+
+        <ImageButton
+            android:src="@drawable/ic_delete"
+            android:background="#00000000"
+            android:scaleType="fitStart"
+            android:layout_width="45dp"
+            android:layout_height="45dp"/>
+
+        <Button
+            android:text="next"
+            android:textColor="@color/white"
+            android:textSize="22dp"
+            android:background="@drawable/bg_round_gray"
+            android:layout_marginLeft="20dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

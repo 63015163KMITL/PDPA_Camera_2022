@@ -18,6 +18,14 @@
         android:theme="@style/Theme.PDPACameraCensor"
         tools:targetApi="31">
         <activity
+            android:name=".FaceRecognitionCamera"
+            android:theme="@style/Theme.PDPACameraCenso.Dark"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
             android:name=".MainActivity2"
             android:exported="false">
             <meta-data
@@ -54,8 +62,8 @@
             android:name=".PreviewActivity"
             android:exported="false"
             android:label="Preview Pictur"
-            android:theme="@style/Theme.PDPACameraCenso.Dark"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.PDPACameraCenso.Dark" />
         <activity
             android:name=".SplashScreen"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
@@ -64,9 +72,9 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
     </application>
 

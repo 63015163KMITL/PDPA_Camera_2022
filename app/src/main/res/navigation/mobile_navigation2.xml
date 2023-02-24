@@ -21,8 +21,7 @@
         android:label="@string/title_dashboard"
         tools:layout="@layout/fragment_dashboard" >
         <action
-            android:id="@+id/action_navigation_dashboard_to_navigation_notifications"
-            app:destination="@id/navigation_notifications" />
+            android:id="@+id/action_navigation_dashboard_to_blankFragment"/>
     </fragment>
 
     <fragment
@@ -34,4 +33,13 @@
             android:id="@+id/action_navigation_notifications_to_navigation_home"
             app:destination="@id/navigation_home" />
     </fragment>
+
+    <fragment
+        android:id="@+id/navigation_facerecognition"
+        android:name="com.cekmitl.pdpacameracensor.FaceRecognitionFragment"
+        android:label="Face Recognition"
+        tools:layout="@layout/fragment_face_recognition" >
+        <action android:id="@+id/action_navigation_notifications_to_navigation_facerecognition"/>
+    </fragment>
+
 </navigation>
