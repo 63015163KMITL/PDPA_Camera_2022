@@ -33,7 +33,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private ProcessCameraProvider cameraProvider;
-    private int lensFacing = CameraSelector.LENS_FACING_BACK;
+    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
     public PreviewView previewView;
     private ImageCapture imageCapture;
 

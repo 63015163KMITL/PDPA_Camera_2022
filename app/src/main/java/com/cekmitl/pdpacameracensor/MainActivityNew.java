@@ -6,15 +6,23 @@ import androidx.appcompat.app.AppCompatDelegate;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.support.common.FileUtil;
+
+import java.io.IOException;
 
 public class MainActivityNew extends AppCompatActivity implements View.OnClickListener {
 
     private LinearLayout camera_button, setting_button, face_recog_button, gallery_button;
-
+    public FaceRecogitionProcessor faceRecogitionProcessor;
+    private Interpreter faceNetInterpreter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,6 +32,13 @@ public class MainActivityNew extends AppCompatActivity implements View.OnClickLi
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.hide();
+
+        try {
+            faceNetInterpreter = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        faceRecogitionProcessor = new FaceRecogitionProcessor(faceNetInterpreter);
 
 
         camera_button = findViewById(R.id.camera_button);
@@ -53,6 +68,7 @@ public class MainActivityNew extends AppCompatActivity implements View.OnClickLi
                 MainActivityNew.this.startActivity(intent_face_recog);
                 break;
             case R.id.gallery_button :
+
                 this.startActivity(new Intent(MainActivityNew.this, GalleryActivity.class));
                 this.overridePendingTransition(0, 0);
                 break;

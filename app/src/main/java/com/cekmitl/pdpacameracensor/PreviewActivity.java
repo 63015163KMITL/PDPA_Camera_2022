@@ -1,5 +1,6 @@
 package com.cekmitl.pdpacameracensor;
 
+import static android.view.ViewGroup.*;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
 import static com.cekmitl.pdpacameracensor.MainActivity.slideView2;
@@ -15,40 +16,27 @@ import androidx.core.content.ContextCompat;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -61,14 +49,10 @@ import android.widget.Toast;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -409,7 +393,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 Dialog dialog = new Dialog(PreviewActivity.this);
 
                 dialog.setContentView(R.layout.dialog_layout);
-                dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                dialog.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
                 dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
                 okay_text = dialog.findViewById(R.id.button_dialog_ok);
@@ -539,7 +523,11 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     Log.e("IMG","   Radius 0.1 = x" + (n + "x"));
                     if((n + "").equals("0.1")){
 
-                        setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), i + "", Float.parseFloat(a[4]), Float.parseFloat(a[5]), 1, 0.9);
+                        try {
+                            setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), i + "", Float.parseFloat(a[4]), Float.parseFloat(a[5]), 1, 0.9);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         Log.e("IMG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 
                     }
@@ -926,7 +914,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     String faceID[][] = new String[20][1];
 
 
-    public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius) {
+    public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius) throws IOException {
 
         height2 = xMAX_HEIGHT_PREVIEW;
         width2 = xMAX_WIDTH_PREVIEW;
@@ -952,22 +940,46 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
          */
+        Bitmap face = BitmapFactory.decodeResource(PreviewActivity.this.getResources(),R.drawable.py2);
 
         LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
-        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
+        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
 
+//        if (r < 0.85){
+//            focus_frame = inflater.inflate(R.layout.focus_frame, null);
+//        }else{
+//            focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
+//        }
+//        Log.e("FACERECOG", "resulte : " + r);
 
-        Bitmap face = BitmapFactory.decodeResource(PreviewActivity.this.getResources(),R.drawable.py2);
+        PersonDatabase db = new PersonDatabase();
+
         float[] array1 = faceRecognitionProcesser.recognize(b);
-        float[]  array2 = faceRecognitionProcesser.recognize(face);
+        float[]  array2;
+//        try {
+//            faceRecognitionProcesser.save2file(array2);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        float[][] person = db.getVectorList("Tu");
+//        array2 = faceRecognitionProcesser.getArray();
+        db.save_image(face,"Tu");
 
-        double r = distance.run(array1, array2);
-        if (r < 0.9){
+        TextView txt = new TextView(this);
+        txt.setTextSize(18);
+        txt.setTextColor(Color.WHITE);
+        txt.setText("Unknow");
+        txt.setPadding(30, 10, 10, 10);
+        txt.setGravity(Gravity.CENTER_VERTICAL|Gravity.BOTTOM);
+
+
+        Score score = db.recognize(array1,0.85);
+        if (!(score == null)){
+            Log.d("RECOG_RESULT", score.toString());
             focus_frame = inflater.inflate(R.layout.focus_frame, null);
-        }else{
-            focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
+            txt.setText("" + score.name);
         }
-        Log.e("FACERECOG", "resulte : " + r);
+
 
         /*
 
@@ -1015,20 +1027,20 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //------------------------------------------------------------------------------------------------------
 
         //focus_frame.setOnClickListener(view -> frameFocusOnClickListener(id));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 
         params.height = h;
         params.width = w;
         params.setMargins(x, y, 0, 0);
 
         //-------------------------------------------------------------------
-        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         params1.height = h;
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
 
         LinearLayout layoutTOP = new LinearLayout(PreviewActivity.this);
-        layoutTOP.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        layoutTOP.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         //layoutTOP.setOrientation(LinearLayout.HORIZONTAL);
         layoutTOP.setId(parseInt(id));
         faceID[layoutTOP.getId()][0] = "T";
@@ -1038,13 +1050,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         layoutTOP.setTag(id);
         Log.e("TAG", "layoutTOP TAG = " + layoutTOP.getTag());
 
-        layoutInner.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        layoutInner.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         //layoutInner.setOrientation(LinearLayout.HORIZONTAL);
         //-------------------------------------------------------------------
 
-        TextView txt = new TextView(this);
-        txt.setTextSize(6);
-        txt.setText(h + "x" + w);
+
+
 
         //fram_focus_layout.addView(focus_frame, params);
 
@@ -1055,10 +1066,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //focus_frame.startAnimation(animFadeIn2);
         //frameFocusLayout.addView(txt, params1);
         //layoutInner.addView(imgBlur);
-        layoutInner.addView(focus_frame);
 
+        layoutInner.addView(focus_frame);
         layoutTOP.addView(layoutInner);
+
         fram_focus_layout.addView(layoutTOP, params1);
+        fram_focus_layout.addView(txt, params1);
+
     }
 
     public void frameFocusOnClickListener(String id){
@@ -1185,7 +1199,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //focus_frame.setId(Integer.parseInt(str));
         //int strId = focus_frame.getId();
         //focus_frame.setOnClickListener(view -> makeText(PreviewActivity.this, "CLICK = " + strId, LENGTH_SHORT).show());
-        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         params1.height = h;
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
@@ -1205,7 +1219,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //แสดงใบหน้าที่สามารถตรวจจับได้
         listView = (LinearLayout) findViewById(R.id.listView);
         for (int i = 0; i < bmp_images.size(); i++){
-            LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
             params1.height = 100;
             params1.width = 100;
             params1.setMargins(0, 0, 10, 0);
@@ -1246,7 +1260,11 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 //                           X - Y - Width - Height
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                     if (true) {
-                        setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d);
+                        try {
+                            setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         facePosition.add(location.left + "/" + location.top + "/" + location.right + "/" + location.bottom + "/" + result.getX() + "/" + result.getY() + "/" + i);
                     }
                 }

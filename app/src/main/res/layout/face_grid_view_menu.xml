@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:focusable="false"
+    android:clickable="false"
+    android:focusableInTouchMode="false"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_marginRight="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:focusable="false"
+        android:clickable="false"
+        android:focusableInTouchMode="false"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_centerVertical="true"
+            android:layout_margin="5dp"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            app:cardCornerRadius="30dp">
+
+            <ImageView
+                android:id="@+id/face_thumnail"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white"
+                android:scaleType="centerCrop"
+                android:clickable="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:src="@mipmap/ic_launcher" />
+
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/face_name_label"
+            android:textSize="@dimen/font_regular"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="name" />
+
+    </LinearLayout>
+
+</LinearLayout>

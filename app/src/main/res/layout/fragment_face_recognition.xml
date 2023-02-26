@@ -38,91 +38,20 @@
             android:layout_height="wrap_content"/>
 
         <LinearLayout
-            android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_round_white"
+            android:orientation="horizontal"
             android:padding="15dp">
 
-            <HorizontalScrollView
-                android:scrollbars="none"
+            <GridView
+                android:id="@+id/grid_view"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <LinearLayout
-                        android:layout_marginRight="5dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <androidx.cardview.widget.CardView
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            android:layout_centerVertical="true"
-                            android:layout_margin="5dp"
-                            android:elevation="10dp"
-                            app:cardCornerRadius="30dp">
-
-                            <ImageButton
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@color/white"
-                                android:scaleType="centerCrop"
-                                android:src="@drawable/ccc" />
-
-                        </androidx.cardview.widget.CardView>
-
-                        <TextView
-                            android:textSize="@dimen/font_regular"
-
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Mikky" />
-
-                    </LinearLayout>
-
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <androidx.cardview.widget.CardView
-                            android:id="@+id/new_face"
-                            android:layout_width="60dp"
-                            android:layout_height="60dp"
-                            android:layout_centerVertical="true"
-                            android:layout_margin="5dp"
-                            app:cardCornerRadius="30dp">
-
-                            <TextView
-                                android:id="@+id/add_new_face_button"
-                                android:textColor="@color/font_color_gray"
-                                android:gravity="center"
-                                android:textSize="40dp"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:text="+" />
-
-                        </androidx.cardview.widget.CardView>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="NEW"
-                            android:textSize="@dimen/font_regular" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </HorizontalScrollView>
+                android:layout_height="wrap_content"
+                android:columnWidth="110dp"
+                android:gravity="center"
+                android:clickable="true"
+                android:numColumns="4" />
 
         </LinearLayout>
 
