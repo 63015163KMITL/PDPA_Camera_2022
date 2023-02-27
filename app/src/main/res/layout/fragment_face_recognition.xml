@@ -7,57 +7,57 @@
     android:background="#F6F6F6"
     tools:context=".FaceRecognitionFragment">
 
-<LinearLayout
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <TextView
-        android:id="@+id/settingx"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:paddingTop="50dp"
-        android:text="Face Recognition"
-        android:textSize="40dp"
-        android:textStyle="bold" />
-
     <LinearLayout
         android:orientation="vertical"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
         <TextView
-            android:textSize="@dimen/font_mid"
-            android:layout_marginBottom="10dp"
-            android:text=""
-            android:layout_marginTop="20dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <LinearLayout
+            android:id="@+id/settingx"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_round_white"
-            android:orientation="horizontal"
-            android:padding="15dp">
+            android:gravity="center"
+            android:paddingTop="50dp"
+            android:text="Face Recognition"
+            android:textSize="40dp"
+            android:textStyle="bold" />
 
-            <GridView
-                android:id="@+id/grid_view"
+        <LinearLayout
+            android:orientation="vertical"
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:textSize="@dimen/font_mid"
+                android:layout_marginBottom="10dp"
+                android:text=""
+                android:layout_marginTop="20dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnWidth="110dp"
-                android:gravity="center"
-                android:clickable="true"
-                android:numColumns="4" />
+                android:background="@drawable/bg_round_white"
+                android:orientation="horizontal"
+                android:padding="15dp">
+
+                <GridView
+                    android:id="@+id/grid_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnWidth="110dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:numColumns="4" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
     </LinearLayout>
-
-</LinearLayout>
 
 
 </FrameLayout>

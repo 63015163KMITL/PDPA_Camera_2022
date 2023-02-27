@@ -28,6 +28,9 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.BackgroundColorSpan;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -457,8 +460,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.py);
-        //nowPhotoPreview = myBitmap;
+        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.em);
+        nowPhotoPreview = myBitmap;
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
@@ -525,6 +528,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
                         try {
                             setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), i + "", Float.parseFloat(a[4]), Float.parseFloat(a[5]), 1, 0.9);
+                            Log.e("setFocusView","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -968,16 +972,21 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         TextView txt = new TextView(this);
         txt.setTextSize(18);
         txt.setTextColor(Color.WHITE);
-        txt.setText("Unknow");
+        //txt.setText("Unknow");
         txt.setPadding(30, 10, 10, 10);
         txt.setGravity(Gravity.CENTER_VERTICAL|Gravity.BOTTOM);
+
 
 
         Score score = db.recognize(array1,0.85);
         if (!(score == null)){
             Log.d("RECOG_RESULT", score.toString());
+            txt.setTextColor(Color.parseColor("#fbb040"));
+            //SpannableString str = new SpannableString(score.name);
+            //str.setSpan(new BackgroundColorSpan(Color.parseColor("#fbb040")), 0, score.name.length(), 0);
+            txt.setText(score.name);
             focus_frame = inflater.inflate(R.layout.focus_frame, null);
-            txt.setText("" + score.name);
+            //txt.setText("" + score.name);
         }
 
 
@@ -1031,7 +1040,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         params.height = h;
         params.width = w;
-        params.setMargins(x, y, 0, 0);
+        params.setMargins(x + h, y, 0, 0);
 
         //-------------------------------------------------------------------
         LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
@@ -1055,8 +1064,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //-------------------------------------------------------------------
 
 
-
-
         //fram_focus_layout.addView(focus_frame, params);
 
 
@@ -1070,8 +1077,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         layoutInner.addView(focus_frame);
         layoutTOP.addView(layoutInner);
 
+
         fram_focus_layout.addView(layoutTOP, params1);
         fram_focus_layout.addView(txt, params1);
+
 
     }
 
@@ -1261,6 +1270,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                     if (true) {
                         try {
+                            Log.e("IMG","      - location = " + location);
                             setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -1275,6 +1285,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             Log.e("IMG","      - Number of faces detected = " + (bmp_images.size()));
             Log.e("IMG","      - xMAX_HEIGHT_PREVIEW = " + xMAX_HEIGHT_PREVIEW);
             Log.e("IMG","      - xMAX_WIDTH_PREVIEW = " + xMAX_WIDTH_PREVIEW);
+
+
 
             run();
         }

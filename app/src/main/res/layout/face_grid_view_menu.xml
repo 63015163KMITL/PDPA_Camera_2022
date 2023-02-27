@@ -36,7 +36,7 @@
                 android:clickable="false"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
-                android:src="@mipmap/ic_launcher" />
+                android:src="@drawable/ic_add" />
 
         </androidx.cardview.widget.CardView>
 

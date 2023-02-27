@@ -140,6 +140,37 @@ public class BitmapEditor {
         return resizedBitmap;
     }
 
+    public static Bitmap crop2(Bitmap bitmap, float x, float y, float newWidth, float newHeight) {
+        Log.d("IMAGESIZE", " Bitmap Crop ////////////////////////////////////");
+        Log.d("IMAGESIZE", "   x = " + x);
+        Log.d("IMAGESIZE", "   y = " + y);
+        Log.d("IMAGESIZE", "   h = " + newHeight);
+        Log.d("IMAGESIZE", "   w = " + newWidth);
+
+        Log.d("IMAGESIZE", "   bitmap h = " + bitmap.getHeight());
+        Log.d("IMAGESIZE", "   bitmap w = " + bitmap.getWidth());
+
+        int s = 320;
+        int xx = (int) (x * s);
+        int yy = (int) (y * s);
+        int hh = (int) (newHeight * s);
+        int ww = (int) (newWidth * s);
+
+        Bitmap bb = Bitmap.createScaledBitmap(bitmap, ww, hh, false);
+
+        Log.d("IMAGESIZE", " xxxx Bitmap Crop ////////////////////////////////////");
+        Log.d("IMAGESIZE", "   new bitmap h = " + bitmap.getHeight());
+        Log.d("IMAGESIZE", "   new bitmap w = " + bitmap.getWidth());
+        Log.d("IMAGESIZE", "   x = " + xx);
+        Log.d("IMAGESIZE", "   y = " + yy);
+        Log.d("IMAGESIZE", "   h = " + hh);
+        Log.d("IMAGESIZE", "   w = " + ww);
+        //Bitmap resizedBitmap = Bitmap.createBitmap(bb, (int)(x * (bb.getWidth())), (int)(y * (bb.getHeight())), 121, 200, null, true);
+        Bitmap resizedBitmap = Bitmap.createBitmap(bb, 52, 54, 121, 140, null, true);
+        Bitmap bx = Bitmap.createScaledBitmap(resizedBitmap, 200, 200, false);
+        return bx;
+    }
+
     static int getHeightOfView(View contentview) {
         contentview.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         return contentview.getMeasuredHeight();
@@ -216,4 +247,3 @@ public class BitmapEditor {
 
 
 }
-
