@@ -460,8 +460,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.pe);
-        //nowPhotoPreview = myBitmap;
+        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.pe);
+        nowPhotoPreview = myBitmap;
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);

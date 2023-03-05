@@ -749,7 +749,6 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
     @SuppressLint("SetTextI18n")
     public void setFocusView(double X, double Y, double width, double height, int str, float xPos, float yPos) {
 
-
         //removeView();
         int x, y, h, w;
         Display display = getWindowManager().getDefaultDisplay();

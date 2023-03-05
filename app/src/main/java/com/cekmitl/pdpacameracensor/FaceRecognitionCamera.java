@@ -14,17 +14,22 @@ import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -37,11 +42,14 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
     public PreviewView previewView;
     private ImageCapture imageCapture;
 
+    ArrayList<Bitmap> b = new ArrayList<Bitmap>(5);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // remove title
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -64,6 +72,14 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                 e.printStackTrace();
             }
         }, getExecutor());
+
+        Button next_button = findViewById(R.id.next_button);
+        next_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SelectFace();
+            }
+        });
     }
 
     Executor getExecutor() {
@@ -86,7 +102,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
-        //imageAnalysis.setAnalyzer(getExecutor(), this);
+        imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
@@ -97,15 +113,39 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis, imageCapture);
     }
 
-    public ArrayList<Bitmap> face_crop_bitmap;
+    public ArrayList<Bitmap> face_crop_bitmap = new ArrayList<>();
+
+    Bitmap bb;
 
     @Override
     public void analyze(@NonNull ImageProxy image) {
-
-        @SuppressLint("UnsafeOptInUsageError") Bitmap bm = Utils.toBitmap(Objects.requireNonNull(image.getImage()));
-
+            face_crop_bitmap.clear();
+            @SuppressLint("UnsafeOptInUsageError")
+            Bitmap bm = Utils.toBitmap(Objects.requireNonNull(image.getImage()));
+            bm = BitmapEditor.getResizedBitmap(bm, 320, 320);
+            //b.remove(0);
+            //b.add(bm);
+            bb = bm;
+            Log.e("scanface","wait 1000; = ");
+            Log.e("scanface","FACE = " + bb.toString());
 
         image.close();
+
+    }
+
+    public void SelectFace(){
+
+
+//        Bitmap icon = BitmapFactory.decodeResource(this.getResources(), R.drawable.test);
+
+//        icon = BitmapEditor.getResizedBitmap(icon, 50, 50);
+        //b.add(icon);
+        face_crop_bitmap.add(BitmapEditor.rotateBitmap(bb,-90));
+        Intent intent = new Intent(getApplicationContext(), AddNewFaceActivity.class);
+        intent.putExtra("key", "1");
+        //intent.putExtra("bitmap", b.get(0));
+        intent.putExtra("bitmap", face_crop_bitmap);
+        startActivity(intent);
 
     }
 }

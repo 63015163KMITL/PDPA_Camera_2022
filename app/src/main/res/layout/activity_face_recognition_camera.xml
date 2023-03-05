@@ -60,6 +60,7 @@
             android:layout_height="45dp"/>
 
         <Button
+            android:id="@+id/next_button"
             android:text="next"
             android:textColor="@color/white"
             android:textSize="22dp"

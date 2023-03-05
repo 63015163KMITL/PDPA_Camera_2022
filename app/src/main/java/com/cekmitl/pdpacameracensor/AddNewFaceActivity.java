@@ -103,7 +103,22 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
             e.printStackTrace();
         }
 
-        openGalley();
+        Intent intent = getIntent();
+        String str = intent.getStringExtra("key");
+        Log.e("INTENT_KEY", "INTENT_KEY: "+str);
+
+
+        if (str != null){
+            //cropFaceProcess();
+            //String str = intent.getStringExtra("key");
+            ArrayList<Bitmap> iBitmap = (ArrayList<Bitmap>) getIntent().getSerializableExtra("bitmap");
+            Log.e("intent", "iBitmap = " + iBitmap.toString());
+            cropFaceProcess(iBitmap.get(0));
+
+        }else {
+            openGalley();
+        }
+
 
         try {
             db = new PersonDatabase();
@@ -113,13 +128,13 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         }
         faceRecognitionProcesser = new FaceRecogitionProcessor(faceNetInterpreter);
 
-        saveBT.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
+//        saveBT.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
 //
-            }
-        });
+////
+//            }
+//        });
 /*
         TextView add_new_face = root.findViewById(R.id.add_new_face_button);
         add_new_face.setOnClickListener(new View.OnClickListener() {
@@ -162,26 +177,28 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
             float[][] personList = new float[num][192];
 
             faceSelect = adapterViewAndroid.getFaceSelected();
+
             Log.e("GridSelecter","");
             Log.e("GridSelecter","faceSelect = adapterViewAndroid.getFaceSelected() ");
             Log.e("GridSelecter","faceSelect = " + faceSelect.toString());
 
-            Log.e("GridSelecter","num = " + num);
+            Log.e("SAVINGIMAGE","TO SAVE = " + num);
 
-            for (int i = 0; i < num; i++) {
+            for (int i = 0; i < (num); i++) {
                 float[] arr = faceRecognitionProcesser.recognize(faceSelect.get(i));
                 Log.e("GridSelecter","faceSelect.get(i) = " + faceSelect.get(i).toString());
-                Log.e("GridSelecter","i = " + i);
+
 
                 try {
                     db.save2file(arr,ps);
+                    Log.e("SAVINGIMAGE","SAVE NUM = " + i);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
             }
 
-            db.save_image(faceSelect.get(1),ps);
+            db.save_image(faceSelect.get(0),ps);
             makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
 
             finish();
@@ -248,7 +265,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                                 Log.e("GRIDVIEW","faceSelect[" + j + "] = " + m.toString());
                                 ++j;
                             }
-                        }
+                    }
                 }
 
             }else if(data.getData()!=null){
@@ -264,6 +281,32 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
             finish();
         }
 
+    }
+
+    public void cropFaceProcess(Bitmap bitmap){
+        Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
+        List<Classifier.Recognition> results = detector.recognizeImage(bitmap1);
+
+        for (final Classifier.Recognition result : results) {
+
+            final RectF location = result.getLocation();
+            //                           X - Y - Width - Height
+            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
+
+                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1);
+                ImageView img = new ImageView(getApplication());
+                img.setImageBitmap(m);
+                ll.addView(img);
+                insertFaceSelect.add(m);
+                Log.e("GRIDVIEW","faceSelect[" + j + "] = " + m.toString());
+                ++j;
+            }
+        }
+
+        adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this,gridViewString, insertFaceSelect);
+        androidGridView = findViewById(R.id.grid_view);
+        androidGridView.setAdapter(adapterViewAndroid);
     }
 
     public Bitmap cropFace(double X, double Y, double width, double height, Bitmap b) throws IOException {

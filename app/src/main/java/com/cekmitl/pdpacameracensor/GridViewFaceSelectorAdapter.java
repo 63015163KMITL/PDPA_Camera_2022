@@ -35,16 +35,6 @@ public class GridViewFaceSelectorAdapter extends BaseAdapter {
     private ArrayList<Bitmap> gridViewImageId = new ArrayList<Bitmap>();
     private ArrayList<Bitmap>  faceSelected = new ArrayList<Bitmap>();
 
-    private static final String[] CLUBS =
-            {"open camera", "choose from gallery"};
-
-    int PICK_IMAGE_MULTIPLE = 1;
-    String imageEncoded;
-    TextView total;
-    ArrayList<Uri> mArrayUri;
-    int position = 0;
-    List<String> imagesEncodedList;
-
     public GridViewFaceSelectorAdapter(Context context, String[] gridViewString, ArrayList<Bitmap> gridViewImageId) {
         mContext = context;
         this.gridViewImageId = gridViewImageId;
@@ -53,12 +43,6 @@ public class GridViewFaceSelectorAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        //int count = 0;
-        //for (int i = 0; i < gridViewImageId.length; i++){
-        //    if(gridViewImageId[i] != null){
-        //        count++;
-        //    }
-        //}
         return gridViewImageId.size();
     }
 
@@ -119,24 +103,6 @@ public class GridViewFaceSelectorAdapter extends BaseAdapter {
                 }
 
                 Log.e("GridSelecter"," faceSelected ALL = " + faceSelected.toString());
-
-                //Select face objevt insert to ArrayList(faceSelected)
-                /*
-                if(gridViewImageId.contains(gridViewImageId.get(v.getId())) ){
-                    faceSelected.remove(gridViewImageId.get(v.getId()));
-                    //faceSelected.add(gridViewImageId.get(v.getId()));
-                    Log.e("GridSelecter"," contains true");
-                    Log.e("GridSelecter","Remove");
-                    Log.e("GridSelecter","    faceSelected = " + faceSelected.toString());
-
-                }else if(gridViewImageId.contains(gridViewImageId.get(v.getId())) ){
-                    faceSelected.add(gridViewImageId.get(v.getId()));
-                    v.setBackgroundResource(R.drawable.bg_gridview_image);
-                    Log.e("GridSelecter","ADD");
-                    Log.e("GridSelecter","    faceSelected = " + faceSelected.toString());
-                }
-
-                 */
 
                 Log.e("","");
             }
