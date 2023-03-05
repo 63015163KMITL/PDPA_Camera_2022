@@ -2,37 +2,23 @@ package com.cekmitl.pdpacameracensor;
 
 import static android.widget.Toast.makeText;
 
-import androidx.core.content.res.ResourcesCompat;
-import androidx.lifecycle.ViewModelProvider;
-
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.GridView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.cekmitl.pdpacameracensor.databinding.FragmentHomeBinding;
-
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class FaceRecognitionFragment extends Fragment {
 
@@ -49,6 +35,8 @@ public class FaceRecognitionFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        getActivity().getWindow().setStatusBarColor(getActivity().getColor(R.color.main_gray));
 
         final View rootView = inflater.inflate(R.layout.fragment_face_recognition, container, false);
         View root = rootView.getRootView();
@@ -60,6 +48,7 @@ public class FaceRecognitionFragment extends Fragment {
         }
         persons = db.persons; //หน้าที่เก็บไว้
         String s = "";
+
         //Name----------------------------------------------------
         String[] gridViewString = new String[persons.length + 1];
         int i = 0;
@@ -80,17 +69,9 @@ public class FaceRecognitionFragment extends Fragment {
 
         //makeText(root.getContext(), s, Toast.LENGTH_SHORT).show();
 
-        GridViewAdapter adapterViewAndroid = new GridViewAdapter(getActivity(), gridViewString, gridViewImageId);
+        GridViewAdapter adapterViewAndroid = new GridViewAdapter(getActivity(), gridViewString, gridViewImageId, 1);
         androidGridView = rootView.findViewById(R.id.grid_view);
         androidGridView.setAdapter(adapterViewAndroid);
-
-        androidGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                makeText(root.getContext(), "Hello " + i, Toast.LENGTH_SHORT).show();
-                Log.e("GridView","GridView Click");
-            }
-        });
 
 /*
         TextView add_new_face = root.findViewById(R.id.add_new_face_button);
@@ -136,7 +117,5 @@ public class FaceRecognitionFragment extends Fragment {
         drawable.draw(canvas);
         return bitmap;
     }
-
-
 
 }

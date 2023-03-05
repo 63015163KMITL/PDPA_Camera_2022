@@ -867,7 +867,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             ay = sensorEvent.values[1];
             az = sensorEvent.values[2];
 
-            Log.e("SN","X = " + ax + "  Y + " + ay + "  Z = " + az);
+            //Log.e("SN","X = " + ax + "  Y + " + ay + "  Z = " + az);
         }
     }
 

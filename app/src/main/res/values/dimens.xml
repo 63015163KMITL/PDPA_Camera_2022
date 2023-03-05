@@ -24,4 +24,7 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
 
+    //Grid View Image
+    <dimen name="gridview_image_round">20dp</dimen>
+
 </resources>

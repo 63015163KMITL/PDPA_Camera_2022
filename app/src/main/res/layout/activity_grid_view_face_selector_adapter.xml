@@ -1,18 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="80dp"
+    android:layout_height="80dp"
+    android:padding="6dp"
     android:focusable="false"
     android:clickable="false"
-    android:focusableInTouchMode="false">
+    android:focusableInTouchMode="false"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <ImageView
-        android:id="@+id/image_gridview"
-        android:layout_width="100dp"
-        android:layout_height="100dp"/>
-    <TextView
-        android:text="Hello"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusableInTouchMode="false"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerVertical="true"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            app:cardCornerRadius="@dimen/gridview_image_round">
+
+            <ImageView
+                android:id="@+id/face_thumnail"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:scaleType="centerCrop"
+                android:clickable="false"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+
+                android:src="@drawable/ic_add" />
+
+
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/face_name_label"
+            android:textSize="@dimen/font_regular"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="name" />
+
+    </LinearLayout>
 
 </LinearLayout>

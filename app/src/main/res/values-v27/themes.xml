@@ -16,6 +16,8 @@
         <!-- Customize your theme here. -->
         <item name="android:navigationBarColor">#FFFFFF</item>
         <item name="android:windowLightNavigationBar">true</item>
+
+        <item name="colorAccent">@color/main_color</item>
     </style>
 
     <style name="Theme.PDPACameraCenso.Dark" parent="Theme.MaterialComponents.Light.DarkActionBar">
@@ -32,6 +34,8 @@
 
         <!-- Customize your theme here. -->
         <item name="android:navigationBarColor">#000000</item>
+
+        <item name="colorAccent">@color/main_color</item>
     </style>
 
 

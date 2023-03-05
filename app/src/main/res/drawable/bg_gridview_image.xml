@@ -1,0 +1,10 @@
+<shape
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <corners android:radius="@dimen/gridview_image_round" />
+    <solid android:color="#00000000" />
+    <stroke
+        android:color="@color/main_color"
+        android:width="0dp"/>
+</shape>

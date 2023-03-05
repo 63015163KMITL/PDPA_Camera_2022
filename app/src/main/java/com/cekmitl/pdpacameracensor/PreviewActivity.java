@@ -460,8 +460,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.em);
-        nowPhotoPreview = myBitmap;
+        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.pe);
+        //nowPhotoPreview = myBitmap;
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
@@ -970,8 +970,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         db.save_image(face,"Tu");
 
         TextView txt = new TextView(this);
-        txt.setTextSize(18);
+        txt.setTextSize(12);
         txt.setTextColor(Color.WHITE);
+        txt.setSingleLine(true);
         //txt.setText("Unknow");
         txt.setPadding(30, 10, 10, 10);
         txt.setGravity(Gravity.CENTER_VERTICAL|Gravity.BOTTOM);

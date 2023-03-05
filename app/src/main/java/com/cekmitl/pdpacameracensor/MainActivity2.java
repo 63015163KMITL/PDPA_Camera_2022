@@ -50,6 +50,10 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         assert actionBar != null;
         actionBar.hide();
 
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.main_color));
+        View decorView = getWindow().getDecorView(); //set status background black
+        decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+
 
         binding = ActivityMain2Binding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());

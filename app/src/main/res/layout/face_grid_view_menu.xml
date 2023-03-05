@@ -42,6 +42,8 @@
 
         <TextView
             android:id="@+id/face_name_label"
+            android:gravity="center"
+            android:singleLine="true"
             android:textSize="@dimen/font_regular"
             android:clickable="false"
             android:focusable="false"

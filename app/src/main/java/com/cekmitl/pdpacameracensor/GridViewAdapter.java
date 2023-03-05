@@ -1,28 +1,18 @@
 package com.cekmitl.pdpacameracensor;
 
-import static androidx.core.app.ActivityCompat.startActivityForResult;
-
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +22,7 @@ public class GridViewAdapter extends BaseAdapter {
     private Context mContext;
     private final String[] gridViewString;
     private final Bitmap[] gridViewImageId;
+    private int fullView = 0;
 
     private static final String[] CLUBS =
             {"open camera", "choose from gallery"};
@@ -43,10 +34,11 @@ public class GridViewAdapter extends BaseAdapter {
     int position = 0;
     List<String> imagesEncodedList;
 
-    public GridViewAdapter(Context context, String[] gridViewString, Bitmap[] gridViewImageId) {
+    public GridViewAdapter(Context context, String[] gridViewString, Bitmap[] gridViewImageId, int fullView) {
         mContext = context;
         this.gridViewImageId = gridViewImageId;
         this.gridViewString = gridViewString;
+        this.fullView = fullView;
     }
 
     @Override
@@ -74,17 +66,24 @@ public class GridViewAdapter extends BaseAdapter {
 
 
             gridViewAndroid = new View(mContext);
-            gridViewAndroid = inflater.inflate(R.layout.face_grid_view_menu, null);
+            if(fullView == 1){
+                gridViewAndroid = inflater.inflate(R.layout.face_grid_view_menu_full, null);
+            }else {
+                gridViewAndroid = inflater.inflate(R.layout.face_grid_view_menu, null);
+            }
+
 
 
             TextView textViewAndroid = (TextView) gridViewAndroid.findViewById(R.id.face_name_label);
             ImageView imageViewAndroid = (ImageView) gridViewAndroid.findViewById(R.id.face_thumnail);
-            textViewAndroid.setText(gridViewString[i]);
+
             if(gridViewImageId[i] != null) {
                 gridViewAndroid.setId(i);
                 imageViewAndroid.setImageBitmap(gridViewImageId[i]);
+                textViewAndroid.setText(gridViewString[i]);
             }else {
                 gridViewAndroid.setTag("add_face");
+                textViewAndroid.setText("");
             }
         } else {
             gridViewAndroid = (View) convertView;

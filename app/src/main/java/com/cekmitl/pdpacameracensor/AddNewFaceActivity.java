@@ -5,8 +5,10 @@ import static android.widget.Toast.makeText;
 import static java.lang.Integer.parseInt;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.RectF;
@@ -21,6 +23,7 @@ import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.tensorflow.lite.Interpreter;
@@ -49,7 +52,8 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
     //Grid View
     public String[] str = new String[20];
-    public Bitmap[] faceSelect = new Bitmap[20];
+    public ArrayList<Bitmap> faceSelect = new ArrayList<Bitmap>();
+    public ArrayList<Bitmap> insertFaceSelect = new ArrayList<Bitmap>();
 
     GridView androidGridView;
     public Bitmap[] bitmapArray = new Bitmap[20];
@@ -64,10 +68,26 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
     private FaceRecogitionProcessor faceRecognitionProcesser;
     private Interpreter faceNetInterpreter;
 
+    //-----------------
+    String[] gridViewString = {
+            "Alram", "Android", "Mobile", "Website", "Profile", "WordPress",
+            "Alram", "Android", "Mobile", "Website", "Profile", "WordPress",
+            "Alram", "Android", "Mobile", "Website", "Profile", "WordPress",
+    } ;
+
+    //Grid View
+    GridViewFaceSelectorAdapter adapterViewAndroid;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_new_face);
+
+        //ลบ Action Bar ออก
+        ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
+        actionBar.hide();
+
         ll = findViewById(R.id.ll);
         saveBT = findViewById(R.id.button_save);
         nameTxt = findViewById(R.id.edit_user_name);
@@ -84,6 +104,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         }
 
         openGalley();
+
         try {
             db = new PersonDatabase();
             faceNetInterpreter = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
@@ -96,30 +117,9 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
             @Override
             public void onClick(View view) {
 
-//                makeText(getApplicationContext(), String.valueOf(nameTxt.getText()) , Toast.LENGTH_SHORT).show();
-                int num = countBitmap();
-                String ps = String.valueOf(nameTxt.getText());
-                db.add_newPerson_folder(ps);
-                float[][] personList = new float[num][192];
-
-                for (int i = 0; i < num; i++) {
-                    float[] arr = faceRecognitionProcesser.recognize(faceSelect[i]);
-
-                    try {
-                        db.save2file(arr,ps);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-
-                db.save_image(faceSelect[0],ps);
-                makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
+//
             }
         });
-
-
-
 /*
         TextView add_new_face = root.findViewById(R.id.add_new_face_button);
         add_new_face.setOnClickListener(new View.OnClickListener() {
@@ -130,17 +130,71 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
             }
         });
         return rootView; */
+
+        TextView save_button = findViewById(R.id.button_ok);
+        save_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showAlertDialogButtonClicked();
+            }
+        });
+
+    }
+
+    public void showAlertDialogButtonClicked() {
+        // Create an alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Input name");
+
+        // set the custom layout
+        final View customLayout = getLayoutInflater().inflate(R.layout.dialog_save_anme, null);
+        builder.setView(customLayout);
+
+        // add a button
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            // send data from the AlertDialog to the Activity
+            EditText editText = customLayout.findViewById(R.id.editText);
+
+            makeText(getApplicationContext(), String.valueOf(editText.getText()) , Toast.LENGTH_SHORT).show();
+            int num = adapterViewAndroid.getCount();
+            String ps = String.valueOf(editText.getText());
+            db.add_newPerson_folder(ps);
+            float[][] personList = new float[num][192];
+
+            faceSelect = adapterViewAndroid.getFaceSelected();
+            Log.e("GridSelecter","");
+            Log.e("GridSelecter","faceSelect = adapterViewAndroid.getFaceSelected() ");
+            Log.e("GridSelecter","faceSelect = " + faceSelect.toString());
+
+            Log.e("GridSelecter","num = " + num);
+
+            for (int i = 0; i < num; i++) {
+                float[] arr = faceRecognitionProcesser.recognize(faceSelect.get(i));
+                Log.e("GridSelecter","faceSelect.get(i) = " + faceSelect.get(i).toString());
+                Log.e("GridSelecter","i = " + i);
+
+                try {
+                    db.save2file(arr,ps);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            db.save_image(faceSelect.get(1),ps);
+            makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
+
+            finish();
+        });
+
+        // create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
 
     int countBitmap(){
-        int count = 0;
-        for (int i = 0;i<faceSelect.length;i++){
-            if (faceSelect[i] != null){
-                count++;
-            }
-        }
-        return count;
+        return faceSelect.size();
     }
 
     private void openGalley() {
@@ -156,19 +210,17 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
     }
     int j = 0;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==123 && resultCode==RESULT_OK){
+
+        if(requestCode == 123 && resultCode == RESULT_OK){
             if(data.getClipData()!=null){
+                int x = data.getClipData().getItemCount();
+                for(int i = 0; i < x; i++){
 
-                int x=data.getClipData().getItemCount();
-                for(int i=0;i<x;i++){
-                    //list.add(data.getClipData().getItemAt(i).getUri());
                     Uri imgUri = Uri.parse(String.valueOf(data.getClipData().getItemAt(i).getUri()));
-
-                    //img.setImageURI(imgUri);
-
 
                     Bitmap bitmap = null;
                     try {
@@ -176,43 +228,40 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+
                     Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
                     List<Classifier.Recognition> results = detector.recognizeImage(bitmap1);
-
 
                     for (final Classifier.Recognition result : results) {
 
                         final RectF location = result.getLocation();
                         //                           X - Y - Width - Height
-                        if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                            Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
+                            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                                Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
 
-
-                            Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1);
-                            ImageView img = new ImageView(getApplication());
-                            img.setImageBitmap(m);
-                            ll.addView(img);
-                            faceSelect[j] = m;
-
-                            ++j;
+                                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1);
+                                ImageView img = new ImageView(getApplication());
+                                img.setImageBitmap(m);
+                                ll.addView(img);
+                                //faceSelect.add(j, m);
+                                insertFaceSelect.add(m);
+                                Log.e("GRIDVIEW","faceSelect[" + j + "] = " + m.toString());
+                                ++j;
+                            }
                         }
-                        }
-
-
                 }
-                //adaptor.notifyDataSetChanged();
-                //textView.setText("Image("+list.size()+")");
-
-                Log.e("bitmap","" + faceSelect[0]);
-                Log.e("bitmap","" + faceSelect[10]);
-
-
-
 
             }else if(data.getData()!=null){
                 String imgurl = data.getData().getPath();
                 //list.add(Uri.parse(imgurl));
             }
+
+            adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this,gridViewString, insertFaceSelect);
+            androidGridView = findViewById(R.id.grid_view);
+            androidGridView.setAdapter(adapterViewAndroid);
+
+        }else {
+            finish();
         }
 
     }
