@@ -11,9 +11,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -29,6 +31,7 @@ import android.widget.Toast;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +71,8 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
     private FaceRecogitionProcessor faceRecognitionProcesser;
     private Interpreter faceNetInterpreter;
 
+    private int temp_num = 0;
+
     //-----------------
     String[] gridViewString = {
             "Alram", "Android", "Mobile", "Website", "Profile", "WordPress",
@@ -105,15 +110,26 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
         Intent intent = getIntent();
         String str = intent.getStringExtra("key");
-        Log.e("INTENT_KEY", "INTENT_KEY: "+str);
 
 
         if (str != null){
-            //cropFaceProcess();
-            //String str = intent.getStringExtra("key");
-            ArrayList<Bitmap> iBitmap = (ArrayList<Bitmap>) getIntent().getSerializableExtra("bitmap");
-            Log.e("intent", "iBitmap = " + iBitmap.toString());
-            cropFaceProcess(iBitmap.get(0));
+            int num_pic = Integer.parseInt(intent.getStringExtra("temp_num"));
+            //temp_num = Integer.parseInt(intent.getStringExtra("temp_num"));
+            ArrayList<Bitmap> recive_bitmap = new ArrayList<Bitmap>();
+            File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+            String path = DOC_PATH + "/temp/";
+            for(int i = 0; i < num_pic; i++){
+
+                File imgFile = new  File(path + i + ".png");
+                if(imgFile.exists()){
+                    //recive_bitmap.add(BitmapFactory.decodeFile(imgFile.getAbsolutePath()));
+                    cropFaceProcess(BitmapFactory.decodeFile(imgFile.getAbsolutePath()));
+                }
+
+            }
+//            ArrayList<Bitmap> iBitmap = (ArrayList<Bitmap>) getIntent().getSerializableExtra("bitmap");
+//            Log.e("intent", "iBitmap = " + iBitmap.toString());
+//            cropFaceProcess(iBitmap.get(0));
 
         }else {
             openGalley();
@@ -172,6 +188,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
             makeText(getApplicationContext(), String.valueOf(editText.getText()) , Toast.LENGTH_SHORT).show();
             int num = adapterViewAndroid.getCount();
+            Log.d("NUMIMAGESELECT", "showAlertDialogButtonClicked: " + num);
             String ps = String.valueOf(editText.getText());
             db.add_newPerson_folder(ps);
             float[][] personList = new float[num][192];
@@ -180,12 +197,15 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
             Log.e("GridSelecter","");
             Log.e("GridSelecter","faceSelect = adapterViewAndroid.getFaceSelected() ");
-            Log.e("GridSelecter","faceSelect = " + faceSelect.toString());
+            Log.e("SAVINGIMAGE","faceSelect = " + faceSelect.size());
 
             Log.e("SAVINGIMAGE","TO SAVE = " + num);
-
-            for (int i = 0; i < (num); i++) {
+            Bitmap image_toSave = null;
+            for (int i = 0; i < num; i++) {
                 float[] arr = faceRecognitionProcesser.recognize(faceSelect.get(i));
+                if (i == 0){
+                    image_toSave = faceSelect.get(i);
+                }
                 Log.e("GridSelecter","faceSelect.get(i) = " + faceSelect.get(i).toString());
 
 
@@ -198,8 +218,11 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
             }
 
-            db.save_image(faceSelect.get(0),ps);
+
+            db.save_image(image_toSave,ps);
             makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
+
+            getFragmentManager().beginTransaction().replace(R.id.navigation_home,FaceRecognitionFragment.newInstance()).commit();
 
             finish();
         });
@@ -208,6 +231,12 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
+    private Thread detectThread;
+    private static final Object mPauseLock = new Object();
+    private static boolean mPaused = false;
+
+
 
 
     int countBitmap(){

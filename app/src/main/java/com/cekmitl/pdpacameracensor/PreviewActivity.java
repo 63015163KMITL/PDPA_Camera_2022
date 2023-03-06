@@ -66,7 +66,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public ImageButton button_hide_face_detect, button_face_detect, button_blur, button_stricker, button_paint, button_save_image;
     public RelativeLayout option_layout, fram_focus_layout, FrameImagePreview, FrameImagePreview_TOP, button_bar, HeadLayout, HeadLayout2, main_layout;
     public LinearLayout listView, bottom_layout, menu_bar;
-
+    float CONFIDENT = 0.67f;
     //RelativLayout Button Menu Bar
     public RelativeLayout button_edit, button_info, button_delete;
 
@@ -979,7 +979,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
 
-        Score score = db.recognize(array1,0.85);
+        Score score = db.recognize(array1,CONFIDENT);
         if (!(score == null)){
             Log.d("RECOG_RESULT", score.toString());
             txt.setTextColor(Color.parseColor("#fbb040"));

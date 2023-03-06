@@ -136,6 +136,7 @@ public class BitmapEditor {
     }
 
     public static Bitmap crop(Bitmap bitmap, float x, float y, float newWidth, float newHeight) {
+
         Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, (int)x, (int)y, (int) newWidth, (int) newHeight, null, true);
         return resizedBitmap;
     }
