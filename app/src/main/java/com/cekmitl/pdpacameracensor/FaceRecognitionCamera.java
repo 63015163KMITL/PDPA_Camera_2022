@@ -21,6 +21,9 @@ import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.util.Size;
 import android.view.View;
@@ -28,6 +31,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,7 +60,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private ProcessCameraProvider cameraProvider;
-    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
+    private int lensFacing = CameraSelector.LENS_FACING_BACK;
     public PreviewView previewView;
     private ImageCapture imageCapture;
 
@@ -114,6 +118,13 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         });
         isCamOn = true;
         threadWorking();
+
+//        this.runOnUiThread(new Runnable() {
+//            public void run() {
+//                //Toast.makeText(FaceRecognitionCamera.this, "number image: " + round, Toast.LENGTH_LONG);
+//
+//            }
+//        });
     }
 
     Executor getExecutor() {
@@ -150,7 +161,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                 while (isCamOn) {
                     try {
                         detectThread.join(200);
-                        Log.e("TIMER_CAM","Number of picutre"+face_crop_bitmap.size());
+                        Log.e("TIMER_CAM","Number of picutre" + face_crop_bitmap.size());
 //                        handleResult();
 
 //                        if (round % 2 == 0){
@@ -164,15 +175,27 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                         if (isFoundFace(imageInput)){
                             face_crop_bitmap.add(imageInput);
                             round += 1;
-                            Log.d("PROCESSCAPTURE", "number image: "+round);
+                            Log.d("PROCESSCAPTURE", "number image: " + round);
+
+                            TextView txt_new = findViewById(R.id.percent_complete);
+                            //txt_new.setText(NUM_IMAGE + " / " + round);
+
+                            txt_new.setText((round * 100 / NUM_IMAGE) + "%");
+
+//                          progress_bar
+
+
+//                            ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress_bar); // initiate the progress bar
+//                            progressBar.setProgress(round);
+//                            progressBar.setMax(NUM_IMAGE);
+
+                            ProgressBar progressBar_ring = (ProgressBar) findViewById(R.id.progressBar); // initiate the progress bar
+                            progressBar_ring.setProgress(round);
+                            progressBar_ring.setMax(NUM_IMAGE);
+
+                            //Toast toast = Toast.makeText(FaceRecognitionCamera.this, "number image: " + round, Toast.LENGTH_SHORT);
+                            //Toast.makeText(FaceRecognitionCamera.this, "number image: " + round, Toast.LENGTH_SHORT).show();
                         }
-
-                            //txt_new.setText("" + round);
-                            //Toast.makeText(FaceRecognitionCamera.this, "round : " + round, Toast.LENGTH_SHORT).show();
-//
-//                            detectThread.interrupt();
-
-//                        }
 
                         if (round >= NUM_IMAGE){
                             isCamOn= false;
@@ -246,7 +269,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
-        imageAnalysis.setAnalyzer(getExecutor(), this);
+        //imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Image capture use case
         imageCapture = new ImageCapture.Builder()

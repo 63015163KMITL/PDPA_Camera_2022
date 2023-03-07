@@ -222,7 +222,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
             db.save_image(image_toSave,ps);
             makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
 
-            getFragmentManager().beginTransaction().replace(R.id.navigation_home,FaceRecognitionFragment.newInstance()).commit();
+            //getFragmentManager().beginTransaction().replace(R.id.navigation_home,FaceRecognitionFragment.newInstance()).commit();
 
             finish();
         });

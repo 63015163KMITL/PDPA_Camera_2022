@@ -2,6 +2,8 @@ package com.cekmitl.pdpacameracensor;
 
 import static android.widget.Toast.makeText;
 
+import static com.cekmitl.pdpacameracensor.ui.home.HomeFragment.getPersonData;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -14,6 +16,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+
+import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
 
 import java.io.IOException;
 
@@ -39,35 +43,7 @@ public class FaceRecognitionFragment extends Fragment {
         final View rootView = inflater.inflate(R.layout.fragment_face_recognition, container, false);
 //        View root = rootView.getRootView();
 
-        try {
-            db = new PersonDatabase();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        persons = db.persons; //หน้าที่เก็บไว้
-        String s = "";
-
-        //Name----------------------------------------------------
-        String[] gridViewString = new String[persons.length + 1];
-        int i = 0;
-        for (Person p : persons) {
-            gridViewString[i] = p.getName();
-            i++;
-        }
-        gridViewString[persons.length] = "NEW";
-
-        //Thumnail Image------------------------------------------
-        Bitmap[] gridViewImageId = new Bitmap[persons.length + 1];
-        int j = 0;
-        for (Person p : persons) {
-            gridViewImageId[j] = BitmapFactory.decodeFile(p.getImage());
-            j++;
-        }
-        gridViewImageId[persons.length] = null;
-
-        //makeText(root.getContext(), s, Toast.LENGTH_SHORT).show();
-
-        GridViewAdapter adapterViewAndroid = new GridViewAdapter(getActivity(), gridViewString, gridViewImageId, 1);
+        GridViewAdapter adapterViewAndroid = new GridViewAdapter(getActivity(), (String[]) getPersonData().get(0), (Bitmap[]) getPersonData().get(1), 1);
         androidGridView = rootView.findViewById(R.id.grid_view);
         androidGridView.setAdapter(adapterViewAndroid);
 

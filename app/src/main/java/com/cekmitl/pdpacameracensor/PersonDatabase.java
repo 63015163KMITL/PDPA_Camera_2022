@@ -130,19 +130,23 @@ public class PersonDatabase {
         File f = new File(DOC_PATH + "/Features/" +person);
 
         File[] files = f.listFiles();
-        float[][] vectors = new float[files.length][192];
-        int i = 0;
-        for (File file: files) {
-            String filename = file.getName();
+        try{
+            float[][] vectors = new float[files.length][192];
+            int i = 0;
+            for (File file: files) {
+                String filename = file.getName();
 
-            if (filename.substring(filename.length() - 3).equals("txt") ){
-                float[] v = getArray(file);
-                vectors[i]=v;
-                i++;
+                if (filename.substring(filename.length() - 3).equals("txt") ){
+                    float[] v = getArray(file);
+                    vectors[i]=v;
+                    i++;
+                }
             }
+            return vectors;
+        }catch (NullPointerException e){
 
         }
-        return vectors;
+        return new float[0][];
     }
 
     public Score recognize(float[] array,double confident){

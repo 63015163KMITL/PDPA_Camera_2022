@@ -40,6 +40,8 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -48,6 +50,8 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
@@ -460,8 +464,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
 
-        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.pe);
-        nowPhotoPreview = myBitmap;
+        nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.pe);
+        //nowPhotoPreview = myBitmap;
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
@@ -1055,6 +1059,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         layoutTOP.setId(parseInt(id));
         faceID[layoutTOP.getId()][0] = "T";
         layoutTOP.setOnClickListener(view -> frameFocusOnClickListener(id));
+        layoutTOP.setOnLongClickListener(new OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                frameFocusOnLongClickListener(id, b);
+                return false;
+            }
+        });
 
         LinearLayout layoutInner = new LinearLayout(PreviewActivity.this);
         layoutTOP.setTag(id);
@@ -1083,6 +1094,115 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         fram_focus_layout.addView(txt, params1);
 
 
+    }
+     public PersonDatabase db = null;
+
+    public void frameFocusOnLongClickListener(String id, Bitmap bitmap){
+        //showAlertDialogButtonClicked(bitmap);
+
+        //makeText(this, "frameFocusOnLongClickListener ID : " + id, LENGTH_SHORT).show();
+
+        try {
+            db = new PersonDatabase();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String[] strName = (String[]) HomeFragment.getPersonData().get(0);
+
+        // setup the alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(PreviewActivity.this);
+        builder.setTitle("Choose an person");
+
+        // add a list
+
+        builder.setItems(strName, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                makeText(PreviewActivity.this, "strName = " + strName[which], LENGTH_SHORT).show();
+                // makeText(PreviewActivity.this, "bitmap = " + bitmap.toString(), LENGTH_SHORT).show();
+                switch (which) {
+                    case 0: // horse
+                    case 1: // cow
+                    case 2: // camel
+                    case 3: // sheep
+                    case 4: // goat
+                }
+
+                int num = strName.length;
+                Log.d("NUMIMAGESELECT", "showAlertDialogButtonClicked: " + num);
+                String ps = String.valueOf(strName[which]);
+                db.add_newPerson_folder(ps);
+
+                Log.e("GridSelecter","");
+                Log.e("GridSelecter","faceSelect = adapterViewAndroid.getFaceSelected() ");
+
+                Log.e("SAVINGIMAGE","TO SAVE = " + num);
+                float[] arr = faceRecognitionProcesser.recognize(bitmap);
+
+                try {
+                    db.save2file(arr,ps);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
+                handleResult();
+            }
+        });
+
+        // set the neutral button to do some actions
+        builder.setNeutralButton("NEW", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                showAlertDialogButtonClicked(bitmap);
+            }
+        });
+
+        // set the positive button to do some actions
+        builder.setPositiveButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Toast.makeText(PreviewActivity.this, "OKAY", Toast.LENGTH_SHORT).show();
+                dialog.cancel();
+            }
+        });
+
+// create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    public void showAlertDialogButtonClicked(Bitmap bitmap) {
+        // Create an alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Input name");
+
+        final View customLayout = getLayoutInflater().inflate(R.layout.dialog_save_anme, null);
+        builder.setView(customLayout);
+
+        // send data from the AlertDialog to the Activity
+        EditText editText = customLayout.findViewById(R.id.editText);
+        makeText(getApplicationContext(), String.valueOf(editText.getText()) , Toast.LENGTH_SHORT).show();
+
+        String ps = editText.getText().toString();
+        ps = "TEST";
+        try {
+            db = new PersonDatabase();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        db.add_newPerson_folder(ps);
+        float[] arr = faceRecognitionProcesser.recognize(bitmap);
+
+        try {
+            db.save2file(arr,ps);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        handleResult();
     }
 
     public void frameFocusOnClickListener(String id){

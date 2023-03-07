@@ -119,7 +119,9 @@ public class GridViewAdapter extends BaseAdapter {
                                 //open camera
                                 mContext.startActivity(new Intent(mContext, FaceRecognitionCamera.class));
                             }else if(which == 1){
-                                Intent intent = new Intent(mContext, AddNewFaceActivity.class);/*
+                                mContext.startActivity(new Intent(mContext, AddNewFaceActivity.class));
+                                /*
+                                Intent intent = new Intent(mContext, AddNewFaceActivity.class);
                                 //mContext.startActivityForResult(intent, 1001);
                                 mContext.startActivityForResult(new Intent(mContext, AddNewFaceActivity.class), 1001);
                                 mContext.startActivityForResult(Intent.createChooser(intent,"Selcet Picture"),123);*/

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+
     tools:context=".FaceRecognitionCamera">
 
     <androidx.camera.view.PreviewView
@@ -11,12 +12,53 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
-    <ImageView
-        android:src="@drawable/camera_crop_circle"
-        android:scaleType="centerCrop"
-        android:alpha="0.75"
-        android:layout_width="1080px"
-        android:layout_height="match_parent"/>
+    <RelativeLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/top_bg"
+            android:background="#000"
+            android:scaleType="centerCrop"
+            android:alpha="0.75"
+            android:layout_width="match_parent"
+            android:layout_height="166dp"
+            android:layout_centerHorizontal="true"/>
+
+        <ImageView
+            android:id="@+id/center_bg"
+            android:layout_below="@id/top_bg"
+            android:src="@drawable/circle_criping"
+            android:scaleType="centerCrop"
+            android:alpha="0.75"
+            android:layout_width="match_parent"
+            android:layout_height="370dp"
+            android:layout_centerHorizontal="true"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_below="@id/top_bg"
+            android:layout_centerHorizontal="true"
+            android:layout_width="370dp"
+            android:layout_height="370dp"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/circular_progress_bar"
+            android:background="@drawable/circle_shape"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progress="0" />
+
+        <ImageView
+            android:layout_below="@id/center_bg"
+            android:background="#000"
+            android:scaleType="centerCrop"
+            android:alpha="0.75"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"/>
+
+    </RelativeLayout>
 
     <TextView
         android:text="Please move your face in a circle."
@@ -24,19 +66,41 @@
         android:gravity="center"
         android:textSize="22dp"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="110dp"
+        android:layout_marginTop="80dp"
         android:layout_width="230dp"
         android:layout_height="wrap_content"/>
 
-    <TextView
-        android:id="@+id/percent_complete"
-        android:text="100%"
-        android:textColor="@color/white"
-        android:gravity="center"
-        android:textSize="30dp"
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
         android:layout_marginTop="550dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/percent_complete"
+            android:text="100%"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:textSize="30dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+<!--        <ProgressBar-->
+<!--            android:id="@+id/progress_bar"-->
+<!--            android:theme="@style/Theme.PDPACameraCensor.NoActionBar"-->
+<!--            style="?android:attr/progressBarStyleHorizontal"-->
+<!--            android:min="0"-->
+<!--            android:max="100"-->
+<!--            android:progress="50"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"/>-->
+
+
+
+    </LinearLayout>
 
     <ImageView
         android:layout_alignParentRight="true"
