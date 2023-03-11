@@ -61,6 +61,9 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
     GridView androidGridView;
     public Bitmap[] bitmapArray = new Bitmap[20];
 
+    //Intent
+    public String psName = null;
+
 
     //component
     private Button saveBT;
@@ -110,9 +113,13 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
         Intent intent = getIntent();
         String str = intent.getStringExtra("key");
+        psName = intent.getStringExtra("psName");
+        Log.e("INTENT", "Intent psName = " + psName);
+        //makeText(this, "Intent psName = " + psName, Toast.LENGTH_SHORT).show();
 
 
         if (str != null){
+            makeText(this, "Intent STR != NULL", Toast.LENGTH_SHORT).show();
             int num_pic = Integer.parseInt(intent.getStringExtra("temp_num"));
             //temp_num = Integer.parseInt(intent.getStringExtra("temp_num"));
             ArrayList<Bitmap> recive_bitmap = new ArrayList<Bitmap>();
@@ -166,7 +173,32 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         save_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showAlertDialogButtonClicked();
+
+                if(psName != null){
+
+                    String ps = psName;
+//                    db.add_newPerson_folder(ps);
+                    faceSelect = adapterViewAndroid.getFaceSelected();
+
+                    int num = faceSelect.size();
+                    Log.e("SAVINGIMAGE","faceSelect NUM = " + faceSelect.size());
+                    Log.e("SAVINGIMAGE","faceSelect = " + faceSelect.toString());
+
+                    for (int i = 0; i < num; i++) {
+                        float[] arr = faceRecognitionProcesser.recognize(faceSelect.get(i));
+
+                        try {
+                            db.save2file(arr,ps);
+                            Log.e("SAVINGIMAGE","SAVE NUM = " + i);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    finish();
+                }else {
+                    showAlertDialogButtonClicked();
+                }
             }
         });
 
@@ -188,12 +220,15 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
             makeText(getApplicationContext(), String.valueOf(editText.getText()) , Toast.LENGTH_SHORT).show();
             int num = adapterViewAndroid.getCount();
+
             Log.d("NUMIMAGESELECT", "showAlertDialogButtonClicked: " + num);
-            String ps = String.valueOf(editText.getText());
-            db.add_newPerson_folder(ps);
+
+            String ps = editText.getText().toString();
+
             float[][] personList = new float[num][192];
 
             faceSelect = adapterViewAndroid.getFaceSelected();
+            num = faceSelect.size();
 
             Log.e("GridSelecter","");
             Log.e("GridSelecter","faceSelect = adapterViewAndroid.getFaceSelected() ");
@@ -285,7 +320,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                             if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                                 Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
 
-                                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1);
+                                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1, bitmap, 100);
                                 ImageView img = new ImageView(getApplication());
                                 img.setImageBitmap(m);
                                 ll.addView(img);
@@ -323,7 +358,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
             if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                 Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
 
-                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1);
+                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1, bitmap, 100);
                 ImageView img = new ImageView(getApplication());
                 img.setImageBitmap(m);
                 ll.addView(img);
@@ -371,9 +406,12 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
     }
 
-    public Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm){
-        int width2 = 640;
-        int height2 = 480;
+    public Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm, Bitmap realBitmap, int persen){
+        int width2 = realBitmap.getWidth();
+        int height2 = realBitmap.getHeight();
+
+        persen = 20;
+        //persen = Math.round(persen / 2);
 
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
         int h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
@@ -382,7 +420,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         int y = (int) Math.round((float) (Y * height2));
 
         Bitmap bb = BitmapEditor.getResizedBitmap(bm, width2, height2);
-        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
+        Bitmap b = BitmapEditor.crop(bb, x, y, w + persen, h + persen);
 
         return b;
     }

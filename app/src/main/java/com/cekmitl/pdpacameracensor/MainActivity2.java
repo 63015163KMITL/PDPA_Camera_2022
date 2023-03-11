@@ -205,4 +205,11 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         animationSet2.start();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        navController.navigate(R.id.navigation_home);
+        changColorNavebar(R.id.home_button);
+    }
 }

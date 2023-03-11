@@ -2,6 +2,8 @@ package com.cekmitl.pdpacameracensor;
 
 import static android.widget.Toast.makeText;
 
+import static com.cekmitl.pdpacameracensor.ui.home.HomeFragment.getPersonData;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -32,6 +34,8 @@ public class GridViewAdapter extends BaseAdapter {
     private final String[] gridViewString;
     private final Bitmap[] gridViewImageId;
     private int fullView = 0;
+
+    public PersonDatabase db = null;
 
     private static final String[] CLUBS =
             {"open camera", "choose from gallery"};
@@ -137,19 +141,48 @@ public class GridViewAdapter extends BaseAdapter {
                 }else {
                     // Create an alert builder
 
+                    String[] psName = (String[]) getPersonData().get(0);
+                    Bitmap[] psBitmap = (Bitmap[]) getPersonData().get(1);
+
                     // set the custom layout
                     final View customLayout = inflater.inflate(R.layout.dialog_face_recog_edit_layout, null);
                     builder.setView(customLayout);
 
+                    ImageView psImageView = customLayout.findViewById(R.id.psImageView);
+                    psImageView.setImageBitmap(psBitmap[v.getId()]);
+
                     //EditText edt_name = customLayout.findViewWithTag(v.getTag());
                     EditText edt_name = customLayout.findViewById(R.id.edittext_name_profile);
-                    edt_name.setText(v.getTag().toString());
+                    //edt_name.setText(v.getTag().toString());
+                    edt_name.setText(psName[v.getId()]);
                     edt_name.setSelection(edt_name.getText().length());
+
+                    Button btn_update_face_camera = customLayout.findViewById(R.id.update_face_camera);
+                    btn_update_face_camera.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent i = new Intent(mContext, FaceRecognitionCamera.class);
+                            i.putExtra("psName", psName[v.getId()]); //Optional parameters
+                            mContext.startActivity(i);
+                        }
+                    });
+
+                    Button btn_update_face_gallery = customLayout.findViewById(R.id.update_face_gallery);
+                    btn_update_face_gallery.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent i = new Intent(mContext, AddNewFaceActivity.class);
+                            i.putExtra("psName", psName[v.getId()]); //Optional parameters
+                            mContext.startActivity(i);
+                        }
+                    });
 
                     // create and show the alert dialog
                     AlertDialog dialog = builder.create();
                     dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                     dialog.show();
+
+                    //
 
                     Button button_save = customLayout.findViewById(R.id.button_save);
                     button_save.setOnClickListener(new View.OnClickListener() {

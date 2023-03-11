@@ -1,40 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_round_white"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/image_profile"
+            android:layout_centerHorizontal="true"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_margin="5dp"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            app:cardCornerRadius="80dp">
+
+            <ImageView
+                android:id="@+id/psImageView"
+                android:src="@drawable/aaa"
+                android:scaleType="centerCrop"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+        </androidx.cardview.widget.CardView>
+
         <LinearLayout
-            android:paddingTop="30dp"
+            android:background="@drawable/bg_round_white"
+            android:layout_marginTop="100dp"
+            android:paddingTop="50dp"
             android:paddingLeft="30dp"
             android:paddingRight="30dp"
             android:gravity="center"
             android:orientation="vertical"
             android:paddingBottom="10dp"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/image_profile"
-                android:layout_centerHorizontal="true"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:layout_centerVertical="true"
-                android:layout_margin="5dp"
-                android:clickable="false"
-                android:focusable="false"
-                android:focusableInTouchMode="false"
-                app:cardCornerRadius="50dp">
-
-                <ImageView
-                    android:src="@drawable/aaa"
-                    android:scaleType="centerCrop"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-
-            </androidx.cardview.widget.CardView>
 
             <EditText
                 android:id="@+id/edittext_name_profile"
@@ -56,7 +61,7 @@
                 android:layout_height="wrap_content"/>
 
             <Button
-                android:id="@+id/update_face"
+                android:id="@+id/update_face_camera"
                 android:background="@drawable/bg_round_stroke"
                 android:layout_below="@id/edittext_name_profile"
                 android:gravity="center"
@@ -67,6 +72,7 @@
                 android:layout_height="wrap_content"/>
 
             <Button
+                android:id="@+id/update_face_gallery"
                 android:layout_marginTop="10dp"
                 android:layout_below="@id/edittext_name_profile"
                 android:background="@drawable/bg_round_stroke"
@@ -110,4 +116,7 @@
 
         </LinearLayout>
 
-</LinearLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>
