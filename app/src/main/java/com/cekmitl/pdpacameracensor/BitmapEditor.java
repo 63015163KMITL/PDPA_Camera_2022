@@ -137,10 +137,45 @@ public class BitmapEditor {
 
     public static Bitmap crop(Bitmap bitmap, float x, float y, float newWidth, float newHeight) {
 
-        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, (int)x, (int)y, (int) newWidth, (int) newHeight, null, true);
-        return resizedBitmap;
-    }
+        Log.d("FFmpeg", "Bitmap crop ////////////////");
+        Log.d("FFmpeg", "   X = " + x);
+        Log.d("FFmpeg", "   Y = " + y);
+        Log.d("FFmpeg", "   newH = " + newHeight);
+        Log.d("FFmpeg", "   newW = " + newWidth);
 
+        Log.d("FFmpeg", "   y + height = " + (y + newHeight));
+        Log.d("FFmpeg", "   x + width = " + (x + newWidth));
+
+        Log.d("FFmpeg", "   Bitmap H = " + bitmap.getHeight());
+        Log.d("FFmpeg", "   Bitmap W = " + bitmap.getWidth());
+
+        int nH = bitmap.getHeight()-1;
+        int nW = bitmap.getWidth()-1;
+        int w = 1080, h = 1080;
+
+        if((y + newHeight) >= bitmap.getHeight()){
+            //Log.d("FFmpeg", "   nH = " + nH);
+            //Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, (int)x, (int)y, (int) newWidth, nH, null, true);
+            Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
+            Bitmap resizedBitmap = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
+            Canvas canvas = new Canvas(resizedBitmap);
+
+            return resizedBitmap;
+        }
+
+        if((x + newWidth) >= bitmap.getWidth()){
+//            Log.d("FFmpeg", "   nW = " + nW);
+//            Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, (int)x, (int)y, nW, (int) newHeight, null, true);
+            Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
+            Bitmap resizedBitmap = Bitmap.createBitmap(w, h, conf); // this creates a MUTABLE bitmap
+            Canvas canvas = new Canvas(resizedBitmap);
+            return resizedBitmap;
+        }
+
+        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, (int)x, (int)y, (int) newWidth, (int) newHeight, null, true);
+
+       return resizedBitmap;
+    }
     public static Bitmap crop2(Bitmap bitmap, float x, float y, float newWidth, float newHeight) {
         Log.d("IMAGESIZE", " Bitmap Crop ////////////////////////////////////");
         Log.d("IMAGESIZE", "   x = " + x);

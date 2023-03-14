@@ -159,6 +159,8 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                 home_button.setClickable(false);
                 break;
             case R.id.gallery_button :
+                Intent myIntent = new Intent(MainActivity2.this, FFmpegProcessActivity.class);
+                MainActivity2.this.startActivity(myIntent);
                 icon_gallery.setImageResource(R.drawable.ic_gallery_focus);
                 title_gallery.setTextColor(ContextCompat.getColor(MainActivity2.this, R.color.main_color));
                 gallery_button.setClickable(false);
@@ -205,11 +207,11 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
         animationSet2.start();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        navController.navigate(R.id.navigation_home);
-        changColorNavebar(R.id.home_button);
-    }
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//
+//        navController.navigate(R.id.navigation_home);
+//        changColorNavebar(R.id.home_button);
+//    }
 }

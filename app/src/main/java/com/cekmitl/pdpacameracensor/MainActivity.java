@@ -285,16 +285,40 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 
                     bCapture.setImageResource(R.drawable.ic_recording);
                     //makeText(MainActivity.this, "VIDEO MODE", LENGTH_SHORT).show();
+
+                    //เริ่มการทำงานของ Camera X
+                    cameraProviderFuture = ProcessCameraProvider.getInstance(MainActivity.this);
+                    cameraProviderFuture.addListener(() -> {
+                        try {
+                            cameraProvider = cameraProviderFuture.get();
+                            startCameraXVideo(cameraProvider);
+                        } catch (ExecutionException | InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }, getExecutor());
                 }
 
                 if("PHOTO".equals(((TextView) view).getText().toString())){
+                    clearFocus();
                     startCameraX(cameraProvider);
+
 
                     head_layout_video.setVisibility(View.GONE);
                     head_layout.setVisibility(View.VISIBLE);
 
                     bCapture.setImageResource(R.drawable.ic_camera);
                     //makeText(MainActivity.this, "VIDEO MODE", LENGTH_SHORT).show();
+
+                    //เริ่มการทำงานของ Camera X
+                    cameraProviderFuture = ProcessCameraProvider.getInstance(MainActivity.this);
+                    cameraProviderFuture.addListener(() -> {
+                        try {
+                            cameraProvider = cameraProviderFuture.get();
+                            startCameraX(cameraProvider);
+                        } catch (ExecutionException | InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }, getExecutor());
                 }
             }
         });
@@ -554,7 +578,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
-        //imageAnalysis.setAnalyzer(getExecutor(), this);
+        imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
@@ -772,6 +796,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
 
         @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
+
+
 /*
         if ((h > 70 || w > 70) && ((h < 130 || w < 130))){
             focus_frame = inflater.inflate(R.layout.focus_frame_m, null);

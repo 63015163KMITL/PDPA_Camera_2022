@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".FFmpegProcessActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RelativeLayout
+                android:padding="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/textView3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="time : 00:00:00 s\nFrame Rate : 0 FPS"
+                    tools:ignore="MissingConstraints"/>
+
+                <Button
+                    android:layout_alignParentRight="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SELECT"
+                    android:textColor="@color/white"
+                    tools:ignore="MissingConstraints"/>
+
+            </RelativeLayout>
+
+            <VideoView
+                android:id="@+id/videoView"
+                android:layout_width="1080px"
+                android:layout_height="607px"
+                tools:ignore="MissingConstraints" />
+
+            <SeekBar
+                android:id="@+id/seekBar"
+                android:layout_margin="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <it.mirko.rangeseekbar.RangeSeekBar
+                android:layout_margin="8dp"
+                android:id="@+id/rangeSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_marginTop="10dp"
+                android:layout_width="94dp"
+                android:layout_height="30dp"
+                android:text="Input Video"
+                tools:layout_editor_absoluteX="43dp"
+                tools:layout_editor_absoluteY="42dp"
+                tools:ignore="MissingConstraints" />
+
+            <VideoView
+                android:id="@+id/videoView2"
+                android:layout_width="1080px"
+                android:layout_height="607px"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="43dp"
+                tools:layout_editor_absoluteY="380dp" />
+
+            <SeekBar
+                android:id="@+id/seekBar2"
+                android:layout_margin="10dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/button3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:text="1. ExtractVideoFrame" />
+
+                <Button
+                    android:id="@+id/button4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:text="2. ExtractVideoAudio" />
+
+                <Button
+                    android:id="@+id/button5"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:text="3. MergeImageToVideo" />
+
+                <Button
+                    android:id="@+id/button6"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:text="4. DetectFaceInImage" />
+
+                <Button
+                    android:id="@+id/button7"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:text="5. MergeAudioToVideo" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</RelativeLayout>

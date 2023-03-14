@@ -80,4 +80,12 @@ dependencies {
 //    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-x86"
 //    implementation group: 'org.nd4j', name: 'nd4j-native', version: '1.0.0-beta7', classifier: "android-x86_64"
 
+    //FFMPEG
+    implementation 'com.writingminds:FFmpegAndroid:0.3.2'
+    implementation 'com.arthenica:mobile-ffmpeg-full:4.4'
+
+    //SeekBarRAng
+    implementation 'com.github.Mirkoddd:Range-SeekBar:1.0.9'
+
+
 }

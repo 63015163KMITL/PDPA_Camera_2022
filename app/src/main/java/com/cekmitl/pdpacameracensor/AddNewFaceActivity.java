@@ -46,7 +46,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
     private Classifier detector;
 
     //DETECT FACE
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
     private Bitmap largeIcon;
     private ImageView imageView, ImagePreview, imgPreView;
     public static final int TF_OD_API_INPUT_SIZE = 320;
@@ -177,7 +177,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                 if(psName != null){
 
                     String ps = psName;
-//                    db.add_newPerson_folder(ps);
+                    db.add_newPerson_folder(ps);
                     faceSelect = adapterViewAndroid.getFaceSelected();
 
                     int num = faceSelect.size();
@@ -217,7 +217,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         builder.setPositiveButton("OK", (dialog, which) -> {
             // send data from the AlertDialog to the Activity
             EditText editText = customLayout.findViewById(R.id.editText);
-
+            db.add_newPerson_folder(editText.getText().toString());
             makeText(getApplicationContext(), String.valueOf(editText.getText()) , Toast.LENGTH_SHORT).show();
             int num = adapterViewAndroid.getCount();
 
@@ -317,10 +317,11 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
                         final RectF location = result.getLocation();
                         //                           X - Y - Width - Height
-                            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                                Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
+                        if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                            Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
 
-                                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1, bitmap, 100);
+                            Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1,bitmap,100);
+                            if (m!=null){
                                 ImageView img = new ImageView(getApplication());
                                 img.setImageBitmap(m);
                                 ll.addView(img);
@@ -329,6 +330,8 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                                 Log.e("GRIDVIEW","faceSelect[" + j + "] = " + m.toString());
                                 ++j;
                             }
+
+                        }
                     }
                 }
 
@@ -347,31 +350,39 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
     }
 
+
     public void cropFaceProcess(Bitmap bitmap){
-        Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
-        List<Classifier.Recognition> results = detector.recognizeImage(bitmap1);
+        if (bitmap != null){
+            Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
+            List<Classifier.Recognition> results = detector.recognizeImage(bitmap1);
 
-        for (final Classifier.Recognition result : results) {
+            for (final Classifier.Recognition result : results) {
 
-            final RectF location = result.getLocation();
-            //                           X - Y - Width - Height
-            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
+                final RectF location = result.getLocation();
+                //                           X - Y - Width - Height
+                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                    Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
 
-                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1, bitmap, 100);
-                ImageView img = new ImageView(getApplication());
-                img.setImageBitmap(m);
-                ll.addView(img);
-                insertFaceSelect.add(m);
-                Log.e("GRIDVIEW","faceSelect[" + j + "] = " + m.toString());
-                ++j;
+                    Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1,bitmap,100);
+                    if (m!= null){
+                        ImageView img = new ImageView(getApplication());
+                        img.setImageBitmap(m);
+                        ll.addView(img);
+                        insertFaceSelect.add(m);
+                        Log.e("GRIDVIEW","faceSelect[" + j + "] = " + m.toString());
+                        ++j;
+                    }
+
+                }
             }
+
+            adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this,gridViewString, insertFaceSelect);
+            androidGridView = findViewById(R.id.grid_view);
+            androidGridView.setAdapter(adapterViewAndroid);
         }
 
-        adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this,gridViewString, insertFaceSelect);
-        androidGridView = findViewById(R.id.grid_view);
-        androidGridView.setAdapter(adapterViewAndroid);
     }
+
 
     public Bitmap cropFace(double X, double Y, double width, double height, Bitmap b) throws IOException {
         Log.d("CROPFACE", "width: "+String.valueOf(width) + " H :" + String.valueOf(height) + " X" + X + "  Y" + Y);
@@ -406,11 +417,13 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
     }
 
-    public Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm, Bitmap realBitmap, int persen){
+    public static Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm, Bitmap realBitmap, int persen){
         int width2 = realBitmap.getWidth();
         int height2 = realBitmap.getHeight();
 
-        persen = 20;
+//        int width2 = 1080;
+//        int height2 = 1080;
+        persen = 0;
         //persen = Math.round(persen / 2);
 
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
@@ -420,7 +433,9 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         int y = (int) Math.round((float) (Y * height2));
 
         Bitmap bb = BitmapEditor.getResizedBitmap(bm, width2, height2);
-        Bitmap b = BitmapEditor.crop(bb, x, y, w + persen, h + persen);
+        //Bitmap b = BitmapEditor.crop(bb, x, y, w + persen, h + persen);
+
+        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
 
         return b;
     }

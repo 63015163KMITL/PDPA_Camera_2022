@@ -52,7 +52,7 @@ import java.util.concurrent.Executor;
 import java.io.FileWriter;
 
 public class FaceRecognitionCamera extends AppCompatActivity implements ImageAnalysis.Analyzer{
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.4f;
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
     public static final int TF_OD_API_INPUT_SIZE = 320;
     private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
@@ -63,7 +63,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private ProcessCameraProvider cameraProvider;
-    private int lensFacing = CameraSelector.LENS_FACING_BACK;
+    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
     public PreviewView previewView;
     private ImageCapture imageCapture;
 
@@ -102,15 +102,15 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         previewView = findViewById(R.id.previewView);
 
         //เริ่มการทำงานของ Camera X
-//        cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-//        cameraProviderFuture.addListener(() -> {
-//            try {
-//                cameraProvider = cameraProviderFuture.get();
-//                startCameraX(cameraProvider);
-//            } catch (ExecutionException | InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }, getExecutor());
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+        cameraProviderFuture.addListener(() -> {
+            try {
+                cameraProvider = cameraProviderFuture.get();
+                startCameraX(cameraProvider);
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, getExecutor());
 
         Button next_button = findViewById(R.id.next_button);
         next_button.setOnClickListener(new View.OnClickListener() {
@@ -150,56 +150,35 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
     private Thread detectThread;
 //    private static final Object mPauseLock = new Object();
 //    private static boolean mPaused = false;
+    private int counting = 0;
+    private int count_to_capture = 2; //wait 4
     private int round = 0;
+    private boolean captureState = false;
 
     private void threadWorking(){
         detectThread = new Thread(new Runnable() {
             public void run() {
                 while (isCamOn) {
                     try {
-                        detectThread.join(200);
+
                         Log.e("TIMER_CAM","Number of picutre" + face_crop_bitmap.size());
 //                        handleResult();
 
-                        TextView txt_new = findViewById(R.id.percent_complete);
-                        txt_new.setText((round * 100 / NUM_IMAGE) + "%");
 
-                        ProgressBar progressBar_ring = (ProgressBar) findViewById(R.id.progressBar); // initiate the progress bar
-                        progressBar_ring.setProgress(round);
-                        progressBar_ring.setMax(NUM_IMAGE);
-
-                        Button btn_x = findViewById(R.id.x_button);
-
-                        float focusViewX = progressBar_ring.getX() + progressBar_ring.getWidth() / 2;
-                        float focusViewY = progressBar_ring.getY() + progressBar_ring.getHeight() / 2;
-                        float focusViewW = progressBar_ring.getWidth();
-                        float focusViewH = progressBar_ring.getHeight();
-
-                        Log.e("PROCESSCAPTURE", "");
-                        Log.e("PROCESSCAPTURE", "////////////////////////////////////");
-                        Log.e("PROCESSCAPTURE", "focusView X : " + focusViewX);
-                        Log.e("PROCESSCAPTURE", "focusView Y : " + focusViewY);
-                        Log.e("PROCESSCAPTURE", "focusView W : " + focusViewW);
-                        Log.e("PROCESSCAPTURE", "focusView H : " + focusViewH);
-
-                        float btn_X = btn_x.getX() + btn_x.getWidth() / 2;
-                        float btn_Y = btn_x.getY() + btn_x.getHeight() / 2;
-                        float btn_W = btn_x.getWidth();
-                        float btn_H = btn_x.getHeight();
-
-                        Log.e("PROCESSCAPTURE", "");
-                        Log.e("PROCESSCAPTURE", "btn X : " + btn_X);
-                        Log.e("PROCESSCAPTURE", "btn Y : " + btn_Y);
-                        Log.e("PROCESSCAPTURE", "btn W : " + btn_W);
-                        Log.e("PROCESSCAPTURE", "btn H : " + btn_H);
-
-                        Log.e("PROCESSCAPTURE", "");
+                        detectThread.join(500);
+//                        Log.e("PROCESSCAPTURE", "");
+//                        Log.e("PROCESSCAPTURE", "btn X : " + btn_X);
+//                        Log.e("PROCESSCAPTURE", "btn Y : " + btn_Y);
+//                        Log.e("PROCESSCAPTURE", "btn W : " + btn_W);
+//                        Log.e("PROCESSCAPTURE", "btn H : " + btn_H);
+//
+//                        Log.e("PROCESSCAPTURE", "");
 
 //                        Log.e("PROCESSCAPTURE", "btn_X - btn_W >= focusViewX = " + (btn_X - btn_W ));
 //                        Log.e("PROCESSCAPTURE", "btn_Y + btn_H >= focusViewY = " + (btn_X + btn_H));
 
-                        Log.e("PROCESSCAPTURE", "WIDTH : " + (focusViewX - (focusViewW / 2)) + " < " + ( (btn_X - btn_W / 2) + btn_W ) + " > " + ((focusViewX + (focusViewW / 2))));
-                        Log.e("PROCESSCAPTURE", "HEIGHT : " + (focusViewY - (focusViewH / 2)) + " < " + ( (btn_Y - btn_H / 2) + btn_H ) + " > " + ((focusViewY + (focusViewH / 2))));
+//                        Log.e("PROCESSCAPTURE", "WIDTH : " + (focusViewX - (focusViewW / 2)) + " < " + ( (btn_X - btn_W / 2) + btn_W ) + " > " + ((focusViewX + (focusViewW / 2))));
+//                        Log.e("PROCESSCAPTURE", "HEIGHT : " + (focusViewY - (focusViewH / 2)) + " < " + ( (btn_Y - btn_H / 2) + btn_H ) + " > " + ((focusViewY + (focusViewH / 2))));
                         //Log.e("PROCESSCAPTURE", ( (focusViewY - btn_H / 2) ) + " > " + ( (btn_X + btn_W / 2) + btn_W )+ " < " + ( (focusViewY + btn_H / 2) ));
 //                        Log.e("PROCESSCAPTURE", "IF btn_Y + btn_H >= focusViewY = " + (btn_X + btn_H <= focusViewX));
 
@@ -210,29 +189,72 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
                         //checkFaceInCircle(btn_x, progressBar_ring);
 
-                        round += 1;
+
                         Bitmap imageInput = null;
                         if (bb != null){
                             imageInput = BitmapEditor.rotateBitmap(bb,-90);
                         }
 
                         if (isFoundFace(imageInput)){
-                            face_crop_bitmap.add(imageInput);
+                            if (captureState){
+                                face_crop_bitmap.add(imageInput);
+                                round += 1;
+                                Log.d("PROCESSCAPTURE", "number image: " + round);
+                                TextView txt_new = findViewById(R.id.percent_complete);
+                                txt_new.setText((round * 100 / NUM_IMAGE) + "%");
 
-                            Log.d("PROCESSCAPTURE", "number image: " + round);
+                                ProgressBar progressBar_ring = (ProgressBar) findViewById(R.id.progressBar); // initiate the progress bar
+                                progressBar_ring.setProgress(round);
+                                progressBar_ring.setMax(NUM_IMAGE);
+
+                                Button btn_x = findViewById(R.id.x_button);
+
+                                float focusViewX = progressBar_ring.getX() + progressBar_ring.getWidth() / 2;
+                                float focusViewY = progressBar_ring.getY() + progressBar_ring.getHeight() / 2;
+                                float focusViewW = progressBar_ring.getWidth();
+                                float focusViewH = progressBar_ring.getHeight();
+
+                                Log.e("PROCESSCAPTURE", "");
+                                Log.e("PROCESSCAPTURE", "////////////////////////////////////");
+                                Log.e("PROCESSCAPTURE", "focusView X : " + focusViewX);
+                                Log.e("PROCESSCAPTURE", "focusView Y : " + focusViewY);
+                                Log.e("PROCESSCAPTURE", "focusView W : " + focusViewW);
+                                Log.e("PROCESSCAPTURE", "focusView H : " + focusViewH);
+
+                                float btn_X = btn_x.getX() + btn_x.getWidth() / 2;
+                                float btn_Y = btn_x.getY() + btn_x.getHeight() / 2;
+                                float btn_W = btn_x.getWidth();
+                                float btn_H = btn_x.getHeight();
+                            }else{
+                                if (counting < count_to_capture){
+                                    ++counting;
+                                    captureState = false;
+                                    TextView txt_new = findViewById(R.id.percent_complete);
+                                    txt_new.setText(String.valueOf(counting));
+                                }else {
+                                    captureState = true;
+                                }
+                            }
 
 
 
 //                            checkFaceInCircle
 
+                        }else{
+                            counting = 0;
+                            captureState = false;
+                            TextView txt_new = findViewById(R.id.percent_complete);
+                            txt_new.setText("Face Not Found");
                         }
 
                         if (round >= NUM_IMAGE){
                             isCamOn= false;
-                            //SelectFace();
+                            SelectFace();
                         }
 
                     } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
@@ -302,7 +324,8 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                .setTargetResolution(new Size(1080, 1440))
+                .setTargetResolution(new Size(480, 480))
+                //.setTargetResolution(new Size(1080, 1440))
                 .build();
 
         cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis, imageCapture);
@@ -344,47 +367,46 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         Log.d("PASSINGROUND", String.valueOf(round));
 
         startActivity(intent);
+//        isCamOn = false;
         finish();
+//        detectThread.interrupt();
 
     }
 
 
-    public boolean isFoundFace(Bitmap bitmap){
-        if (bitmap != null){
+    public boolean isFoundFace(Bitmap bitmap) {
+        if (bitmap != null) {
             Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
-            results = detector.recognizeImage(bitmap1);
-            return results != null;
+            List<Classifier.Recognition> results = detector.recognizeImage(bitmap1);
+            for (final Classifier.Recognition result : results) {
+
+                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                    Log.d("FOUNDFACE", "isFoundFace: True");
+                    return true;
+                }
+
+            }
+
         }
+        Log.d("FOUNDFACE", "isFoundFace: False");
         return false;
-//        for (final Classifier.Recognition result : results) {
-//
-//            final RectF location = result.getLocation();
-//            //                           X - Y - Width - Height
-//            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-//                Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
-//
-//                Bitmap m = cropBitmap(location.left, location.top, location.right, location.bottom,  result.getX(), result.getY(), bitmap1);
-//                ImageView img = new ImageView(getApplication());
-//                img.setImageBitmap(m);
-//            }
-//        }
     }
 
-    public Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm){
-        int width2 = 640;
-        int height2 = 480;
-
-        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        int h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
-        int w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
-        int x = (int) Math.round((float) (X * width2));
-        int y = (int) Math.round((float) (Y * height2));
-
-        Bitmap bb = BitmapEditor.getResizedBitmap(bm, width2, height2);
-        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
-
-        return b;
-    }
+//    public Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm){
+//        int width2 = 640;
+//        int height2 = 480;
+//
+//        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
+//        int h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
+//        int w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
+//        int x = (int) Math.round((float) (X * width2));
+//        int y = (int) Math.round((float) (Y * height2));
+//
+//        Bitmap bb = BitmapEditor.getResizedBitmap(bm, width2, height2);
+//        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
+//
+//        return b;
+//    }
 
 
     //DETECT FACE FUNCTION

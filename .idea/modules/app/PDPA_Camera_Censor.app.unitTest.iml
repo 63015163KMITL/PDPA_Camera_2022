@@ -111,6 +111,9 @@
     <orderEntry type="library" scope="TEST" name="Gradle: org.tensorflow:tensorflow-lite-support:0.1.0@aar" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.tensorflow:tensorflow-lite:2.4.0@aar" level="project" />
     <orderEntry type="library" scope="TEST" name="Gradle: org.tensorflow:tensorflow-lite-gpu:2.3.0@aar" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.writingminds:FFmpegAndroid:0.3.2@aar" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.arthenica:mobile-ffmpeg-full:4.4@aar" level="project" />
+    <orderEntry type="library" scope="TEST" name="Gradle: com.github.Mirkoddd:Range-SeekBar:1.0.9@aar" level="project" />
   </component>
   <component name="TestModuleProperties" production-module="PDPA_Camera_Censor.app.main" />
 </module>

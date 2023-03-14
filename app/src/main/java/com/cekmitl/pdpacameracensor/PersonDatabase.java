@@ -20,6 +20,7 @@ public class PersonDatabase {
     private File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
     public Person[] persons;
     private String restricName = "temp";
+    private int MIN_MATCH = 2;
 
     public PersonDatabase() throws IOException {
 
@@ -130,23 +131,19 @@ public class PersonDatabase {
         File f = new File(DOC_PATH + "/Features/" +person);
 
         File[] files = f.listFiles();
-        try{
-            float[][] vectors = new float[files.length][192];
-            int i = 0;
-            for (File file: files) {
-                String filename = file.getName();
+        float[][] vectors = new float[files.length][192];
+        int i = 0;
+        for (File file: files) {
+            String filename = file.getName();
 
-                if (filename.substring(filename.length() - 3).equals("txt") ){
-                    float[] v = getArray(file);
-                    vectors[i]=v;
-                    i++;
-                }
+            if (filename.substring(filename.length() - 3).equals("txt") ){
+                float[] v = getArray(file);
+                vectors[i]=v;
+                i++;
             }
-            return vectors;
-        }catch (NullPointerException e){
 
         }
-        return new float[0][];
+        return vectors;
     }
 
     public Score recognize(float[] array,double confident){
@@ -154,16 +151,17 @@ public class PersonDatabase {
 
         for (Person p: persons) {
             double minSim = 1.00;
-
+            int i = 0;
             for (float[] vector: p.getfeatures()) {
                 double r = EuclideanDistance.run(vector,array);
 
-                if (r < minSim){
+                if (r < confident){
                     minSim = r;
+                    i += 1;
                 }
             }
 
-            if (minSim < confident){
+            if (i >= MIN_MATCH){
                 scores.add(new Score(p.getName(),minSim));
             }
         }
