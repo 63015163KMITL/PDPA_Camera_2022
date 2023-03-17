@@ -1,9 +1,7 @@
 package com.cekmitl.pdpacameracensor;
 
 
-
 import android.graphics.Bitmap;
-import android.os.Environment;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.ops.NormalizeOp;
@@ -11,15 +9,8 @@ import org.tensorflow.lite.support.image.ImageProcessor;
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.image.ops.ResizeOp;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 public class FaceRecogitionProcessor {
     private Interpreter faceNetModelInterpreter;
@@ -41,7 +32,8 @@ public class FaceRecogitionProcessor {
     }
 
     public float[] recognize(Bitmap bitmap){
-        TensorImage tensorImage = TensorImage.fromBitmap(bitmap);
+        Bitmap bmp = bitmap.copy(Bitmap.Config.ARGB_8888,true) ;
+        TensorImage tensorImage = TensorImage.fromBitmap(bmp);
         ByteBuffer faceNetByteBuffer = faceNetImageProcessor.process(tensorImage).getBuffer();
         float[][] faceOutputArray = new float[1][192];
         faceNetModelInterpreter.run(faceNetByteBuffer, faceOutputArray);

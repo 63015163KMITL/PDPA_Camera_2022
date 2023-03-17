@@ -20,7 +20,7 @@ public class PersonDatabase {
     private File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
     public Person[] persons;
     private String restricName = "temp";
-    private int MIN_MATCH = 2;
+    private int MIN_MATCH = 1;
 
     public PersonDatabase() throws IOException {
 

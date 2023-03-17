@@ -1,17 +1,11 @@
 package com.cekmitl.pdpacameracensor;
 
-import static android.view.ViewGroup.*;
+import static android.view.ViewGroup.LayoutParams;
+import static android.view.ViewGroup.OnLongClickListener;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
 import static com.cekmitl.pdpacameracensor.MainActivity.slideView2;
-
 import static java.lang.Integer.parseInt;
-
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.content.ContextCompat;
-
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -28,19 +22,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.style.BackgroundColorSpan;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -50,6 +39,11 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 
 import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
 
@@ -101,6 +95,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public List<Classifier.Recognition> results = null;
 
     //public String state_serol = "16:9";
+
+    //PersonDatabase
+    PersonDatabase db = null;
 
     //Dispaly
     public Display display;
@@ -157,6 +154,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         assert actionBar != null;
         actionBar.hide();
         setContentView(R.layout.activity_preview);
+
+        //Personal Data
+        try {
+            db = new PersonDatabase();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //Face Recog
         try {
@@ -958,8 +962,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 //        }
 //        Log.e("FACERECOG", "resulte : " + r);
 
-        PersonDatabase db = new PersonDatabase();
-
         float[] array1 = faceRecognitionProcesser.recognize(b);
         float[]  array2;
 //        try {
@@ -1093,18 +1095,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
     }
-     public PersonDatabase db = null;
 
     public void frameFocusOnLongClickListener(String id, Bitmap bitmap){
         //showAlertDialogButtonClicked(bitmap);
-
         //makeText(this, "frameFocusOnLongClickListener ID : " + id, LENGTH_SHORT).show();
 
-        try {
-            db = new PersonDatabase();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
 
         String[] strName = (String[]) HomeFragment.getPersonData().get(0);
 
@@ -1117,16 +1113,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         builder.setItems(strName, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
-                makeText(PreviewActivity.this, "strName = " + strName[which], LENGTH_SHORT).show();
-                // makeText(PreviewActivity.this, "bitmap = " + bitmap.toString(), LENGTH_SHORT).show();
-                switch (which) {
-                    case 0: // horse
-                    case 1: // cow
-                    case 2: // camel
-                    case 3: // sheep
-                    case 4: // goat
-                }
 
                 int num = strName.length;
                 Log.d("NUMIMAGESELECT", "showAlertDialogButtonClicked: " + num);

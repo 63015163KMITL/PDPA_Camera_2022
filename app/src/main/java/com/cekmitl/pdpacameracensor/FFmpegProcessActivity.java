@@ -2,10 +2,11 @@ package com.cekmitl.pdpacameracensor;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
-
 import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_CANCEL;
 import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_SUCCESS;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.BlurMaskFilter;
@@ -14,10 +15,25 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.RectF;
+import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.MediaController;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.VideoView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -25,8 +41,6 @@ import com.arthenica.mobileffmpeg.Config;
 import com.arthenica.mobileffmpeg.FFmpeg;
 import com.cekmitl.pdpacameracensor.ui.OutputPack;
 
-
-import org.checkerframework.checker.units.qual.C;
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
 
@@ -35,17 +49,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 import it.mirko.rangeseekbar.OnRangeSeekBarListener;
 import it.mirko.rangeseekbar.RangeSeekBar;
-
-
-
 
 public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeSeekBarListener{
 
@@ -55,13 +63,20 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     private Paint paint_sensor;
 
     private FFmpeg ffmpeg;
-    private File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+    private File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
     public String strMessage = "";
 
     private int video_time;
     private int video_start_time;
     private int video_end_time;
-    private int video_frame_rate;
+    private int video_frame_rate = 25;
+    public int duration;
+    private static int video_height = 1080;
+    private static int video_width = 1080;
+
+    public MediaMetadataRetriever mediaMetadataRetriever;
+    public VideoView myVideoView;
+    public MediaController myMediaController;
 
     //DETECT FACE
     public Classifier detector1;
@@ -78,10 +93,120 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     float CONFIDENT = 0.67f;
     EuclideanDistance distance;
 
+
+    //Seekbar
+    public SeekBar sk;
+    private Canvas canvas;
+
+    public ImageView imgV;
+
+    //RelativeLayout setFocusView
+    RelativeLayout fram_focus_layout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ffmpeg_process);
+
+        Intent intent = getIntent();
+        String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
+
+        fram_focus_layout = findViewById(R.id.fram_focus_layout);
+
+        Uri uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
+
+        myVideoView = findViewById(R.id.videoView);
+        imgV = findViewById(R.id.video_frame_imageview);
+
+        mediaMetadataRetriever = new MediaMetadataRetriever();
+        mediaMetadataRetriever.setDataSource(String.valueOf(uri));
+
+        myVideoView.setVideoURI(uri);
+        myMediaController = new MediaController(this);
+        myVideoView.setMediaController(myMediaController);
+
+        myVideoView.setOnCompletionListener(myVideoViewCompletionListener);
+        myVideoView.setOnPreparedListener(MyVideoViewPreparedListener);
+        myVideoView.setOnErrorListener(myVideoViewErrorListener);
+
+        myVideoView.requestFocus();
+        myVideoView.start();
+
+        ImageView button_video_pause = findViewById(R.id.button_video_pause);
+        button_video_pause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View arg0) {
+
+                int currentPosition = myVideoView.getCurrentPosition();
+                Bitmap bmFrame = mediaMetadataRetriever
+                        .getFrameAtTime(currentPosition * 1000); //unit in microsecond
+
+                if(bmFrame == null){
+                    Toast.makeText(FFmpegProcessActivity.this, "bmFrame == null!", Toast.LENGTH_LONG).show();
+                }else{
+                    imgV.setImageBitmap(bmFrame);
+                }
+
+            }});
+
+        myVideoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (myVideoView.isPlaying()){
+                    myVideoView.pause();
+                }else {
+                    myVideoView.start();
+                }
+            }
+        });
+
+
+
+
+        //SeekBar
+        sk = findViewById(R.id.seekBar);
+//        sk.setMax(300000);
+        sk.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                myVideoView.seekTo(seekBar.getProgress());
+                clearFocus();
+
+                Bitmap bmFrame = mediaMetadataRetriever
+                        .getFrameAtTime(seekBar.getProgress() * 1000, MediaMetadataRetriever.OPTION_PREVIOUS_SYNC); //unit in microsecond
+
+                if(bmFrame == null){
+                    Toast.makeText(FFmpegProcessActivity.this,
+                            "bmFrame == null!",
+                            Toast.LENGTH_LONG).show();
+                }else{
+                    imgV.setImageBitmap(faceDectecFrame(bmFrame));
+                }
+
+            }
+
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+                makeText(FFmpegProcessActivity.this, "seekBar : " + seekBar.getProgress() + "\n Current : " + myVideoView.getCurrentPosition() + "\nDuration() = " + myVideoView.getDuration(), LENGTH_SHORT).show();
+
+
+                    //imgV.setImageBitmap(screenshot(myVideoView));
+                int currentPosition = myVideoView.getCurrentPosition(); //in millisecond
+//                Toast.makeText(FFmpegProcessActivity.this,
+//                        "Current Position: " + currentPosition + " (ms)",
+//                        Toast.LENGTH_LONG).show();
+
+
+
+            }
+        });
 
         RangeSeekBar rangeSeekBar = findViewById(R.id.rangeSeekBar);
 
@@ -131,46 +256,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
         distance = new EuclideanDistance();
 
-//        try {
-//            FaceDetectionInPicture();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-//        ffmpeg = FFmpeg.getInstance(this);
-//
-//        try {
-//            ffmpeg.loadBinary(new LoadBinaryResponseHandler() {
-//
-//                @Override
-//                public void onStart() {
-//                    strMessage += "loadBinary onStart";
-//                    strMessage += "\n\n";
-//                }
-//
-//                @Override
-//                public void onFailure() {
-//                    strMessage += "loadBinary onFailure";
-//                    strMessage += "\n\n";
-//                }
-//
-//                @Override
-//                public void onSuccess() {
-//                    strMessage += "loadBinary onSuccess";
-//                    strMessage += "\n\n";
-//                }
-//
-//                @Override
-//                public void onFinish() {
-//                    strMessage += "loadBinary onFinish";
-//                    strMessage += "\n\n";
-//                }
-//            });
-//        } catch (FFmpegNotSupportedException e) {
-//            // Handle if FFmpeg is not supported by device
-//        }
-//
-//        Log.e("render", "strMessage = " + strMessage);
         File f = new File(INPUT_PATH);
         if (!(f.exists())){
             f.mkdirs();
@@ -180,109 +265,120 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         if (!(f2.exists())){
             f2.mkdirs();
         }
-        ExtractVideoFrame();
-        executeDetect();
-        try {
-            execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        String path = DOC_PATH + "/";
+        String inputVideo = "input.mp4";
+        String tempeFrame = "%d.jpg";
+        String tempeFramePool = "out/";           //Folder
+        String tempeVideo = "tempeVideo.mp4";     //without audio
+        String audio = "audio.mp3";
+        String finalVideoResulte = "final_output.mp4";
+
+        video_frame_rate = 25;
+        video_height = 480;
+        video_width = 480;
+
+//        ExtractVideoFrame("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " " + path + tempeFramePool + tempeFrame);
+//        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+//        MergeImageToVideo("-f image2 -framerate " + video_frame_rate + " -i "+ path + tempeFramePool + tempeFrame + " -c:v libx264 " + path + tempeVideo);
+//        MergeAudioToVideo("-i "+ path + tempeVideo + " -i " + path + audio + "-c:v copy -c:a aac " + path + finalVideoResulte);
+
+//        //ExtractVideoFrame
+//                cmdFFmpeg("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " " + path + tempeFramePool + tempeFrame);
+//        //ExtractVideoAudio
+//                cmdFFmpeg("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+//        //MergeImageToVideo
+//                cmdFFmpeg("-f image2 -framerate " + video_frame_rate + " -i "+ path + tempeFramePool + tempeFrame + " -c:v libx264 " + path + tempeVideo);
+//        //MergeAudioToVideo
+//                cmdFFmpeg("-i "+ path + tempeVideo + " -i " + path + audio + "-c:v copy -c:a aac " + path + finalVideoResulte);
+
+
+//        executeDetect();
+//        try {
+//            execute();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
-    public void ExtractVideoFrame() {
+    public void cmdFFmpeg(String cmd){
+        int rc = FFmpeg.execute(cmd);
+
+        if (rc == RETURN_CODE_SUCCESS) {
+            Log.i(Config.TAG, "Command execution completed successfully.");
+        } else if (rc == RETURN_CODE_CANCEL) {
+            Log.i(Config.TAG, "Command execution cancelled by user.");
+        } else {
+            Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
+            Config.printLastCommandOutput(Log.INFO);
+        }
+
+    }
+
+    public void ExtractVideoFrame(String cmd) {
         //FFmpeg ff = FFmpeg.getInstance(getApplicationContext());
         new Thread(new Runnable() {
             @Override
             public void run() {
-                int rc = FFmpeg.execute("-i " + DOC_PATH + "/input.mp4 -vf scale=480:480 -r 20 " + DOC_PATH + "/out/%d.jpg");
+                int rc = FFmpeg.execute(cmd);
 
                 if (rc == RETURN_CODE_SUCCESS) {
                     Log.i(Config.TAG, "Command execution completed successfully.");
-                    Log.e("render", "Command execution completed successfully.");
                 } else if (rc == RETURN_CODE_CANCEL) {
                     Log.i(Config.TAG, "Command execution cancelled by user.");
-                    Log.e("render", "Command execution cancelled by user.");
                 } else {
                     Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
                     Config.printLastCommandOutput(Log.INFO);
-                    Log.e("render", "Command execution failed with rc=%d and the output below." + rc);
                 }
             }
         }).start();
 
     }
 
-//        Log.e("render", "Grab frame : ExtractVideoFrame");
-//    //ffmpeg -i input.mp4 -q:v 2 temp%05d.jpg
-//        String cmd = "-version";
-//        //String cmd = "-i " + DOC_PATH + "/input.mp4 -q:v 2 " + DOC_PATH + "/out/temp%05d.jpg";
-//        ffmpeg = FFmpeg.getInstance(FFmpegProcessActivity.this);
-//        try {
-//            ffmpeg.execute(cmd.split(" "), new ExecuteBinaryResponseHandler() {
-//
-//                @Override
-//                public void onProgress(String message) {
-//                    Log.e("render", "Grab frame : onProgress" + message);
-//                }
-//            });
-//        } catch (FFmpegCommandAlreadyRunningException e) {
-//            // Handle if FFmpeg is already running
-//            Log.e("render", "Grab frame : ERROR = " + e);
-//        }
 
-
-
-    public void ExtractVideoAudio(){
+    public void ExtractVideoAudio(String cmd){
     //ffmpeg -i input.mp4 -vn -ar 44100 -ac 2 -ab 192k -f mp3 audio.mp3
-        int rc = FFmpeg.execute("-i "+ DOC_PATH + "/input.mp4  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ DOC_PATH + "/audio.mp3");
+        int rc = FFmpeg.execute(cmd);
 
         if (rc == RETURN_CODE_SUCCESS) {
             Log.i(Config.TAG, "Command execution completed successfully.");
-            Log.e("render", "Command execution completed successfully.");
         } else if (rc == RETURN_CODE_CANCEL) {
             Log.i(Config.TAG, "Command execution cancelled by user.");
-            Log.e("render", "Command execution cancelled by user.");
         } else {
             Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
             Config.printLastCommandOutput(Log.INFO);
-            Log.e("render", "Command execution failed with rc=%d and the output below." + rc);
         }
 
 
     }
 
-    public void MergeImageToVideo(){
+    public void MergeImageToVideo(String cmd){
     //ffmpeg -f image2 -framerate 23.976 -i temp%05d.jpg -c:v libx264 out.mp4
-        int rc = FFmpeg.execute("-f image2 -framerate 25 -i "+ DOC_PATH + "/out/%d.jpg -c:v libx264 "+ DOC_PATH + "/audio.mp3");
+        int rc = FFmpeg.execute(cmd);
 
         if (rc == RETURN_CODE_SUCCESS) {
             Log.i(Config.TAG, "Command execution completed successfully.");
-            Log.e("render", "Command execution completed successfully.");
         } else if (rc == RETURN_CODE_CANCEL) {
             Log.i(Config.TAG, "Command execution cancelled by user.");
-            Log.e("render", "Command execution cancelled by user.");
         } else {
             Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
             Config.printLastCommandOutput(Log.INFO);
-            Log.e("render", "Command execution failed with rc=%d and the output below." + rc);
         }
 
     }
 
-    public void MergeAudioToVideo(){
+    public void MergeAudioToVideo(String cmd){
     //ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4
+        int rc = FFmpeg.execute(cmd);
 
-    }
-
-    public void DetectFaceInImage(){
-
-    }
-
-    public void SaveBitmapToJPG(){
-
-    }
-
-    public void DrawFrameInBitmap(){
+        if (rc == RETURN_CODE_SUCCESS) {
+            Log.i(Config.TAG, "Command execution completed successfully.");
+        } else if (rc == RETURN_CODE_CANCEL) {
+            Log.i(Config.TAG, "Command execution cancelled by user.");
+        } else {
+            Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
+            Config.printLastCommandOutput(Log.INFO);
+        }
 
     }
 
@@ -542,7 +638,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 //                        Bitmap bCheck = BitmapEditor.crop(bb, x, y, w, h);
 
                                     //Bitmap bCheck = AddNewFaceActivity.cropBitmap(l, t, r, b,  result.getX(), result.getY(), resize, bm, 100);
-                                    bCheck = cropBitmap(l, t, r, b, result.getX(), result.getY(), resize, resize, 1);
+                                    bCheck = cropBitmap(l, t, r, b, result.getX(), result.getY(), resize);
                                     //Bitmap bCheck = cropBitmap(location.left, location.top, location.right, location.bottom, resize, resize, 1);
                                     //Bitmap bCheck = BitmapEditor.crop(resize, location.left, location.top, location.right, location.bottom);
 //                                float[] array1 = faceRecognitionProcesser.recognize(bCheck);
@@ -556,8 +652,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                                     cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
 //                                }
                                     //setFocusView(bm, location.left, location.top, location.right, location.bottom, result.getX(), result.getY(), 0.05);
-
-
                                     // canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
 
                                 }
@@ -593,21 +687,176 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 }
                     }
 
-
-
         });
 
         t1.start();
     }
 
-    public static Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm, Bitmap realBitmap, int persen){
-//        int width2 = realBitmap.getWidth();
-//        int height2 = realBitmap.getHeight();
+    public static Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bitmap){
 
-        int width2 = VIDEO_SIZE;
-        int height2 = 480;
-        persen = 0;
-        //persen = Math.round(persen / 2);
+        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
+        int h = (int) Math.round((float) ((2 * (height - yPos)) * video_height));
+        int w = (int) Math.round((float) ((2 * (width - xPos)) * video_width));
+        int x = (int) Math.round((float) (X * video_width));
+        int y = Math.round((float) (Y * video_height));
+
+        Bitmap bitmapResized = BitmapEditor.getResizedBitmap(bitmap, video_width, video_height);
+        Bitmap bitmapCropFace = BitmapEditor.crop(bitmapResized, x, y, w - 1, h - 1);
+
+        return bitmapCropFace;
+    }
+
+    public static Bitmap loadBitmapFromView(View v) {
+        if (v.getMeasuredHeight() > 0) {
+            v.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            Bitmap b = Bitmap.createBitmap(v.getMeasuredWidth(), v.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
+            Canvas c = new Canvas(b);
+            v.layout(0, 0, v.getMeasuredWidth(), v.getMeasuredHeight());
+            v.draw(c);
+            return b;
+        }
+        return null;
+    }
+
+    public Bitmap drawFrameBitmap(Bitmap bitmap) {
+        canvas = new Canvas(bitmap);
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        //Bitmap temeBitmap = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
+
+        List<Classifier.Recognition> results = detector1.recognizeImage(BitmapEditor.getResizedBitmap(bitmap, 320, 320));
+        for (final Classifier.Recognition result : results) {
+
+            final RectF location = result.getLocation();
+
+            double l = location.left;   //x
+            double t = location.top;    //y
+            double r = location.right;  //w
+            double b = location.bottom; //h
+
+            float size_video = 480;
+            location.left = location.left * 1080; //1920
+            location.top = location.top * 607;
+            location.right = location.right * 1080;//1920
+            location.bottom = location.bottom * 607;
+
+            //X - Y - Width - Height
+            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                if (db == null) {
+                    try {
+                        db = new PersonDatabase();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+//                bCheck = cropBitmap(l, t, r, b, result.getX(), result.getY(), resize);
+                //Canvas cv = new Canvas(bitmap);
+                canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
+            }
+        }
+        return bitmap;
+    }
+
+    MediaPlayer.OnCompletionListener myVideoViewCompletionListener =
+            new MediaPlayer.OnCompletionListener() {
+
+                @Override
+                public void onCompletion(MediaPlayer arg0) {
+                    Toast.makeText(FFmpegProcessActivity.this, "End of Video",
+                            Toast.LENGTH_LONG).show();
+                }
+            };
+
+    MediaPlayer.OnPreparedListener MyVideoViewPreparedListener =
+            new MediaPlayer.OnPreparedListener() {
+
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+
+                    duration = myVideoView.getDuration(); //in millisecond
+                    sk.setMax(duration);
+                    Toast.makeText(FFmpegProcessActivity.this,
+                            "Duration: " + duration + " (ms)",
+                            Toast.LENGTH_LONG).show();
+
+                }
+            };
+
+    MediaPlayer.OnErrorListener myVideoViewErrorListener =
+            new MediaPlayer.OnErrorListener() {
+
+                @Override
+                public boolean onError(MediaPlayer mp, int what, int extra) {
+
+                    Toast.makeText(FFmpegProcessActivity.this,
+                            "Error!!!",
+                            Toast.LENGTH_LONG).show();
+                    return true;
+                }
+            };
+
+    protected static Bitmap screenshot(View view) {
+            view.setDrawingCacheEnabled(true);
+            Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
+            view.setDrawingCacheEnabled(false);
+
+        return bitmap;
+    }
+
+    public Bitmap faceDectecFrame(Bitmap bitmap){
+        clearFocus();
+        Bitmap resize = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
+        List<Classifier.Recognition> results = detector1.recognizeImage(resize);
+
+        for (final Classifier.Recognition result : results) {
+
+            final RectF location = result.getLocation();
+
+            double l = location.left;   //x
+            double t = location.top;    //y
+            double r = location.right;  //w
+            double b = location.bottom; //h
+//
+            float size_video = 1080;
+            location.left = location.left * size_video; //1920
+            location.top = location.top * size_video;
+            location.right = location.right * size_video;//1920
+            location.bottom = location.bottom * size_video;
+
+            //                           X - Y - Width - Height
+            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                if (db == null) {
+                    try {
+                        db = new PersonDatabase();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                Bitmap bCheck = cropBitmap(l, t, r, b, result.getX(), result.getY(), resize);
+                bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bitmap);
+
+                float[] array1 = faceRecognitionProcesser.recognize(bCheck);
+                Score score = db.recognize(array1, CONFIDENT);
+
+                if (!(score == null)){
+                    setFocusView(l, t, r, b,  "", result.getX(), result.getY(), true);
+//                    canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
+                }else {
+                    setFocusView(l, t, r, b,  "", result.getX(), result.getY(), false);
+//                    canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
+                }
+            }
+        }
+        return bitmap;
+    }
+
+    public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, boolean faceCheck) {
+
+        int height2 = 1080;
+        int width2 = 1080;
 
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
         int h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
@@ -615,12 +864,71 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         int x = (int) Math.round((float) (X * width2));
         int y = (int) Math.round((float) (Y * height2));
 
-        Bitmap bb = BitmapEditor.getResizedBitmap(bm, width2, height2);
-        //Bitmap b = BitmapEditor.crop(bb, x, y, w + persen, h + persen);
+        LayoutInflater inflater = LayoutInflater.from(FFmpegProcessActivity.this);
+        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
 
-        Bitmap b = BitmapEditor.crop(bb, x, y, w-1, h-1);
+        if(faceCheck){
+            focus_frame = inflater.inflate(R.layout.focus_frame, null);
+        }
 
-        return b;
+        TextView txt = new TextView(this);
+        txt.setTextSize(12);
+        txt.setTextColor(Color.WHITE);
+        txt.setSingleLine(true);
+        txt.setPadding(30, 10, 10, 10);
+        txt.setGravity(Gravity.CENTER_VERTICAL|Gravity.BOTTOM);
+
+
+        //------------------------------------------------------------------------------------------------------
+
+        //focus_frame.setOnClickListener(view -> frameFocusOnClickListener(id));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+
+        params.height = h;
+        params.width = w;
+        params.setMargins(x + h, y, 0, 0);
+
+        //-------------------------------------------------------------------
+        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        params1.height = h;
+        params1.width = w;
+        params1.setMargins(x, y, 0, 0);
+
+        LinearLayout layoutTOP = new LinearLayout(FFmpegProcessActivity.this);
+        layoutTOP.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        //layoutTOP.setOrientation(LinearLayout.HORIZONTAL);
+//        layoutTOP.setId(parseInt(id));
+//        faceID[layoutTOP.getId()][0] = "T";
+//        layoutTOP.setOnClickListener(view -> frameFocusOnClickListener(id));
+//        layoutTOP.setOnLongClickListener(new View.OnLongClickListener() {
+//            @Override
+//            public boolean onLongClick(View view) {
+//                frameFocusOnLongClickListener(id, b);
+//                return false;
+//            }
+//        });
+
+        LinearLayout layoutInner;
+        layoutInner = new LinearLayout(FFmpegProcessActivity.this);
+        layoutTOP.setTag(id);
+        Log.e("TAG", "layoutTOP TAG = " + layoutTOP.getTag());
+
+        layoutInner.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        layoutInner.addView(focus_frame);
+        layoutTOP.addView(layoutInner);
+
+
+        fram_focus_layout.addView(layoutTOP, params1);
+        fram_focus_layout.addView(txt, params1);
+
+
+    }
+
+    public void clearFocus() {
+
+        if (null != fram_focus_layout && fram_focus_layout.getChildCount() > 0) {
+            fram_focus_layout.removeViews(0, fram_focus_layout.getChildCount());
+        }
     }
 }
-

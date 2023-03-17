@@ -4,19 +4,11 @@ import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.cekmitl.pdpacameracensor.ui.dashboard.DashboardFragment;
-import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
-import com.cekmitl.pdpacameracensor.ui.notifications.NotificationsFragment;
-import com.google.android.material.badge.BadgeDrawable;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +21,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.cekmitl.pdpacameracensor.databinding.ActivityMain2Binding;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity2 extends AppCompatActivity implements View.OnClickListener{
 
@@ -159,7 +152,8 @@ public class MainActivity2 extends AppCompatActivity implements View.OnClickList
                 home_button.setClickable(false);
                 break;
             case R.id.gallery_button :
-                Intent myIntent = new Intent(MainActivity2.this, FFmpegProcessActivity.class);
+                //         Intent myIntent = new Intent(MainActivity2.this, TestVideo.class);
+                    Intent myIntent = new Intent(MainActivity2.this, FFmpegProcessActivity.class);
                 MainActivity2.this.startActivity(myIntent);
                 icon_gallery.setImageResource(R.drawable.ic_gallery_focus);
                 title_gallery.setTextColor(ContextCompat.getColor(MainActivity2.this, R.color.main_color));

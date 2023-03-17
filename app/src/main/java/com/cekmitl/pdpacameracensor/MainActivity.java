@@ -1,12 +1,53 @@
 package com.cekmitl.pdpacameracensor;
 
-import static android.widget.Toast.*;
+import static android.widget.Toast.LENGTH_SHORT;
+import static android.widget.Toast.makeText;
+
+import android.Manifest;
+import android.animation.AnimatorSet;
+import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.RectF;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.SystemClock;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.util.Size;
+import android.view.Display;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.Chronometer;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
@@ -22,79 +63,17 @@ import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
 
-import android.Manifest;
-import android.animation.AnimatorSet;
-import android.animation.ValueAnimator;
-import android.annotation.SuppressLint;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.res.Configuration;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.SystemClock;
-import android.provider.MediaStore;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.util.Size;
-import android.view.Display;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
-import android.view.animation.AccelerateDecelerateInterpolator;
-import android.widget.Button;
-import android.widget.Chronometer;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-import android.graphics.RectF;
-import android.widget.Toast;
-
-
-import java.util.List;
-
-import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearSnapHelper;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.SnapHelper;
-import android.view.View;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.cekmitl.pdpacameracensor.PickerLayoutManager;
 
 public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer, View.OnClickListener, View.OnLongClickListener, Runnable, SensorEventListener {
 
@@ -659,8 +638,10 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     return;
                 }
 
-                videoCapture.startRecording(
-                        new VideoCapture.OutputFileOptions.Builder(
+                Uri uri = Uri.parse(String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)));
+
+
+                videoCapture.startRecording(new VideoCapture.OutputFileOptions.Builder(
                                 getContentResolver(),
                                 MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                                 contentValues
@@ -669,7 +650,17 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                         new VideoCapture.OnVideoSavedCallback() {
                             @Override
                             public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
-                                makeText(MainActivity.this, "Video has been saved successfully.", LENGTH_SHORT).show();
+                                makeText(MainActivity.this, "Video has been saved successfully." + (MediaStore.Video.Media.EXTERNAL_CONTENT_URI), LENGTH_SHORT).show();
+                                Log.e("videoCapture", "Video has been saved successfully : " + (MediaStore.Video.Media.EXTERNAL_CONTENT_URI));
+                                Log.e("videoCapture", "uri : " + uri);
+                                Log.e("videoCapture", "getContentResolver() : " + getContentResolver());
+                                Log.e("videoCapture", "contentValues : " + contentValues.get("_display_name"));
+
+                                Intent myIntent = new Intent(MainActivity.this, FFmpegProcessActivity.class);
+                                myIntent.putExtra("video_name", "" + contentValues.get("_display_name")); //Optional parameters
+                                MainActivity.this.startActivity(myIntent);
+
+
                             }
 
                             @Override
