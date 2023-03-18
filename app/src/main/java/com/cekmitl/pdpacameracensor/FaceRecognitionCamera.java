@@ -1,5 +1,21 @@
 package com.cekmitl.pdpacameracensor;
 
+import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.RectF;
+import android.os.Bundle;
+import android.os.Environment;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.Size;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -8,48 +24,20 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
-import androidx.camera.core.VideoCapture;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 
-import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.graphics.RectF;
-import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.util.Size;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-
-import java.io.FileWriter;
 
 public class FaceRecognitionCamera extends AppCompatActivity implements ImageAnalysis.Analyzer{
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
@@ -145,7 +133,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 //        detectThread.interrupt();
     }
     private int NUM_SAVED = 0;
-    private int NUM_IMAGE = 10;
+    private int NUM_IMAGE = 20;
     private boolean isCamOn = false;
     private Thread detectThread;
 //    private static final Object mPauseLock = new Object();
@@ -165,7 +153,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 //                        handleResult();
 
 
-                        detectThread.join(500);
+                        detectThread.join(200);
 //                        Log.e("PROCESSCAPTURE", "");
 //                        Log.e("PROCESSCAPTURE", "btn X : " + btn_X);
 //                        Log.e("PROCESSCAPTURE", "btn Y : " + btn_Y);

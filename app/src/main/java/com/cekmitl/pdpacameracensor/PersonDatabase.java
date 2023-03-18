@@ -21,6 +21,7 @@ public class PersonDatabase {
     public Person[] persons;
     private String restricName = "temp";
     private int MIN_MATCH = 1;
+    private float CONF = 0.65f;
 
     public PersonDatabase() throws IOException {
 
@@ -146,7 +147,7 @@ public class PersonDatabase {
         return vectors;
     }
 
-    public Score recognize(float[] array,double confident){
+    public Score recognize(float[] array){
         ArrayList<Score> scores = new ArrayList<>();
 
         for (Person p: persons) {
@@ -155,7 +156,7 @@ public class PersonDatabase {
             for (float[] vector: p.getfeatures()) {
                 double r = EuclideanDistance.run(vector,array);
 
-                if (r < confident){
+                if (r < CONF){
                     minSim = r;
                     i += 1;
                 }

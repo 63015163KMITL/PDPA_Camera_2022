@@ -983,7 +983,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
 
-        Score score = db.recognize(array1,CONFIDENT);
+        Score score = db.recognize(array1);
         if (!(score == null)){
             Log.d("RECOG_RESULT", score.toString());
             txt.setTextColor(Color.parseColor("#fbb040"));

@@ -20,13 +20,6 @@
         android:theme="@style/Theme.PDPACameraCensor"
         tools:targetApi="31">
         <activity
-            android:name=".TestVideo"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
             android:name=".VideoEditor"
             android:exported="false">
             <meta-data

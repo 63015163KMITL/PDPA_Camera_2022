@@ -38,7 +38,11 @@ public class HomeFragment extends Fragment {
         getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.main_color));
         View decorView = getActivity().getWindow().getDecorView(); //set status background black
         decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-
+        try {
+            db = new PersonDatabase();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         HomeViewModel homeViewModel =
                 new ViewModelProvider(this).get(HomeViewModel.class);
 
@@ -68,7 +72,9 @@ public class HomeFragment extends Fragment {
     public static ArrayList<Object> getPersonData(){
         ArrayList<Object> resulte = new ArrayList<>();
         try {
-            db = new PersonDatabase();
+            if (db == null){
+                db = new PersonDatabase();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -26,6 +26,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
@@ -39,7 +40,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.arthenica.mobileffmpeg.Config;
 import com.arthenica.mobileffmpeg.FFmpeg;
-import com.cekmitl.pdpacameracensor.ui.OutputPack;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
@@ -49,7 +49,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import it.mirko.rangeseekbar.OnRangeSeekBarListener;
@@ -62,6 +61,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     private Paint paint;
     private Paint paint_sensor;
 
+    private Button extract_btt,detect_btt;
+    int IMAGENUM;
+
+
     private FFmpeg ffmpeg;
     private File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
     public String strMessage = "";
@@ -69,10 +72,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     private int video_time;
     private int video_start_time;
     private int video_end_time;
-    private int video_frame_rate = 25;
+    private int video_frame_rate = 24;
     public int duration;
-    private static int video_height = 1080;
-    private static int video_width = 1080;
+    private static int video_height = 720;
+    private static int video_width = 720;
 
     public MediaMetadataRetriever mediaMetadataRetriever;
     public VideoView myVideoView;
@@ -81,6 +84,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     //DETECT FACE
     public Classifier detector1;
     public Classifier detector2;
+    public Classifier detector3;
+    public Classifier detector4;
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
     public static final int TF_OD_API_INPUT_SIZE = 320;
     private static int VIDEO_SIZE = 480;
@@ -90,9 +95,15 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     //Face Recog
     private FaceRecogitionProcessor faceRecognitionProcesser;
     private Interpreter faceNetInterpreter;
-    float CONFIDENT = 0.67f;
+//    float CONFIDENT = 0.67f;
     EuclideanDistance distance;
-
+    String path = DOC_PATH + "/";
+    String inputVideo = "input.mp4";
+    String tempeFrame = "%d.jpg";
+    String tempeFramePool = "out/";           //Folder
+    String tempeVideo = "tempeVideo.mp4";     //without audio
+    String audio = "audio.mp3";
+    String finalVideoResulte = "final_output.mp4";
 
     //Seekbar
     public SeekBar sk;
@@ -109,10 +120,19 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         setContentView(R.layout.activity_ffmpeg_process);
 
         Intent intent = getIntent();
+
         String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
 
-        fram_focus_layout = findViewById(R.id.fram_focus_layout);
 
+        extract_btt = findViewById(R.id.button3);
+        detect_btt = findViewById(R.id.button6);
+
+
+
+        fram_focus_layout = findViewById(R.id.fram_focus_layout);
+        if (video_name == null){
+            video_name = "input";
+        }
         Uri uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
 
         myVideoView = findViewById(R.id.videoView);
@@ -130,7 +150,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         myVideoView.setOnErrorListener(myVideoViewErrorListener);
 
         myVideoView.requestFocus();
-        myVideoView.start();
+//        myVideoView.start();
 
         ImageView button_video_pause = findViewById(R.id.button_video_pause);
         button_video_pause.setOnClickListener(new View.OnClickListener() {
@@ -149,6 +169,64 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
             }});
 
+
+        extract_btt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ExtractVideoFrame("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " -threads 4 " + path + tempeFramePool + tempeFrame);
+
+                    }
+                }).start();
+            }
+        });
+
+
+        detect_btt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                processedIMAGE = 0;
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IMAGENUM = getListFile().length;
+                        executeDetect1();
+
+                    }
+                }).start();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IMAGENUM = getListFile().length;
+                        executeDetect2();
+                    }
+                }).start();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IMAGENUM = getListFile().length;
+                        executeDetect3();
+
+                    }
+                }).start();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IMAGENUM = getListFile().length;
+                        executeDetect4();
+
+                    }
+                }).start();
+
+
+
+            }
+        });
         myVideoView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -159,9 +237,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 }
             }
         });
-
-
-
 
         //SeekBar
         sk = findViewById(R.id.seekBar);
@@ -221,6 +296,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 //makeText(this, "detector OK", LENGTH_SHORT).show();
                 detector1 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
                 detector2 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+                detector3 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+                detector4 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
             } catch (IOException e) {
                 Log.e("TEST", "detector ERROR");
                 //makeText(this, "detector ERROR", LENGTH_SHORT).show();
@@ -266,17 +343,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             f2.mkdirs();
         }
 
-        String path = DOC_PATH + "/";
-        String inputVideo = "input.mp4";
-        String tempeFrame = "%d.jpg";
-        String tempeFramePool = "out/";           //Folder
-        String tempeVideo = "tempeVideo.mp4";     //without audio
-        String audio = "audio.mp3";
-        String finalVideoResulte = "final_output.mp4";
 
-        video_frame_rate = 25;
-        video_height = 480;
-        video_width = 480;
+//        video_frame_rate = 25;
+//        video_height = 480;
+//        video_width = 480;
 
 //        ExtractVideoFrame("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " " + path + tempeFramePool + tempeFrame);
 //        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
@@ -317,9 +387,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     public void ExtractVideoFrame(String cmd) {
         //FFmpeg ff = FFmpeg.getInstance(getApplicationContext());
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
                 int rc = FFmpeg.execute(cmd);
 
                 if (rc == RETURN_CODE_SUCCESS) {
@@ -330,11 +397,23 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
                     Config.printLastCommandOutput(Log.INFO);
                 }
-            }
-        }).start();
-
     }
 
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                File tFile = new File(DOC_PATH+"/out");
+//                for (File child : tFile.listFiles()){
+//                    child.delete();
+//                }
+//            }
+//        }).start();
+
+    }
 
     public void ExtractVideoAudio(String cmd){
     //ffmpeg -i input.mp4 -vn -ar 44100 -ac 2 -ab 192k -f mp3 audio.mp3
@@ -351,6 +430,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
 
     }
+
 
     public void MergeImageToVideo(String cmd){
     //ffmpeg -f image2 -framerate 23.976 -i temp%05d.jpg -c:v libx264 out.mp4
@@ -387,138 +467,165 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     }
 
-
-    int counting1 = 1;
-    int counting2 = 2;
-    int FILE_NUMBER = 0;
     long startTime ;
-    Thread workingThread1;
+    int processedIMAGE;
+    public void executeDetect1(){
+        try {
+            long h1 = 1;
+            long h2 = Math.round(IMAGENUM*0.25);
+            for (long i = h1;i<h2;i++){
 
-    public void executeDetect(){
-        workingThread1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-//                        workingThread1.join(1);
+                    startTime = System.nanoTime();
+                    Log.d("CHECKVERSION", "Thread 1 run: " + i);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-                        if (getListFile().length > 3) {
-                            startTime = System.nanoTime();
-                            Log.d("CHECKVERSION", "Thread 1 run: " + counting1);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-                                String oldPath = INPUT_PATH + "/" + String.valueOf(counting1) + ".jpg";
-                                String newPath = OUTPUT_PATH + "/" + String.valueOf(counting1) + ".jpg";
+                        String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
+                        String newPath = OUTPUT_PATH + "/" + String.valueOf(i) + ".jpg";
 //                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
 //                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
 
-                                FaceDetectionInPicture(oldPath, newPath);
+                        FaceDetectionInPicture(oldPath, newPath,detector1);
+                        processedIMAGE++;
 //                                Files.move(oldPath, newPath);
-
-                                counting1 += 1;
-                                long endTime = System.nanoTime();
-                                Log.e("CHECKVERSION", "TIME ALL = " + ((endTime - startTime) / 1000000) + " ms");
-
-                            }
-                        }
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
                 }
             }
-        });
-
-//        workingThread2 = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                while (true){
-//                    try {
-////                        workingThread1.join(1);
-//
-//
-//                        if (getListFile().length > 2){
-//                            Log.d("CHECKVERSION", "Thread 2 run: "+ counting2);
-//                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                                String oldPath = INPUT_PATH+"/"+String.valueOf(counting2)+".jpg";
-//                                String newPath = OUTPUT_PATH+"/"+String.valueOf(counting2)+".jpg";
-////                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
-////                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
-//
-//                                FaceDetectionInPicture(oldPath,newPath,detector2);
-////                                Files.move(oldPath, newPath);
-//
-//                                counting2 += 2;
-//                            }
-//                        }
-//
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                    Log.d("SHOWLISTFILE", "NUMBER OF FILE: "+getListFile().length);
-//                }
-//            }
-//        });
+            while (true){
+                if (processedIMAGE >= IMAGENUM){
+                    recursiveDelete();
+                    break;
+                }
+            }
 
 
-        workingThread1.start();
-//        workingThread2.start();
-
-
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    int SIZE = 480;
+        Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
+    }
+
+    void recursiveDelete(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+//                File allFile = new File(INPUT_PATH);
+//                for (File child : allFile.listFiles()){
+//                    child.delete();
+//                }
+            }
+        }).start();
+
+    }
+
+    public void executeDetect2(){
+        try {
+            long h1 = Math.round(IMAGENUM*0.25);
+            long h2 = Math.round(IMAGENUM*0.50);
+            for (long i = h1;i<=h2;i++){
+
+                startTime = System.nanoTime();
+                Log.d("CHECKVERSION", "Thread 2 run: " + i);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+                    String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
+                    String newPath = OUTPUT_PATH + "/" + String.valueOf(i) + ".jpg";
+//                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
+//                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
+
+                    FaceDetectionInPicture(oldPath, newPath,detector2);
+                    processedIMAGE++;
+//                                Files.move(oldPath, newPath);
+                }
+            }
+            while (true){
+                if (processedIMAGE >= IMAGENUM){
+                    recursiveDelete();
+                    break;
+                }
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
+    }
+
+    public void executeDetect3(){
+        try {
+            long h1 = Math.round(IMAGENUM*0.50);
+            long h2 = Math.round(IMAGENUM*0.75);
+            for (long i = h1;i<=h2;i++){
+
+                startTime = System.nanoTime();
+                Log.d("CHECKVERSION", "Thread 3 run: " + i);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+                    String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
+                    String newPath = OUTPUT_PATH + "/" + String.valueOf(i) + ".jpg";
+//                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
+//                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
+
+                    FaceDetectionInPicture(oldPath, newPath,detector3);
+                    processedIMAGE++;
+//                                Files.move(oldPath, newPath);
+                }
+            }
+            while (true){
+                if (processedIMAGE >= IMAGENUM){
+                    recursiveDelete();
+                    break;
+                }
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
+    }
+
+    public void executeDetect4(){
+        try {
+            long h1 = Math.round(IMAGENUM*0.75);
+            long h2 = IMAGENUM;
+            for (long i = h1;i<=h2;i++){
+
+                startTime = System.nanoTime();
+                Log.d("CHECKVERSION", "Thread 4 run: " + i);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+                    String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
+                    String newPath = OUTPUT_PATH + "/" + String.valueOf(i) + ".jpg";
+//                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
+//                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
+
+                    FaceDetectionInPicture(oldPath, newPath,detector4);
+                    processedIMAGE++;
+//                                Files.move(oldPath, newPath);
+                }
+            }
+            while (true){
+                if (processedIMAGE >= IMAGENUM){
+                    recursiveDelete();
+                    break;
+                }
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
+    }
 
     String INPUT_PATH = DOC_PATH + "/out";
     String OUTPUT_PATH = DOC_PATH + "/out2";
 
-    public void FaceDetectionInPicture(String IMG_PATH,String PATH) throws IOException {
+    public void FaceDetectionInPicture(String IMG_PATH, String PATH, Classifier detector) throws IOException {
 
-
-
-//        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        //Face detection
-//        for (int i = 1; i <= 7890; i++) {
-//            for (int i = 435; i <= 480; i++) {
-            //int i = 435;
-//            Log.e("FFmpeg", "IMAGE NUM : " + i);
-//            long startTime = System.nanoTime();
-//            long startTime_Bitmap = System.nanoTime();
-//            File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             bitmap = BitmapFactory.decodeFile(IMG_PATH);
-//            bitmap = BitmapEditor.getResizedBitmap(bitmap, size_video, size_video);
-            //bitmap = Bitmap.createBitmap(bitmap);
             bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-            //Bitmap temeBitmap = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
-//            canvas = new Canvas(bitmap);
-//            long endTime_Bitmap = System.nanoTime();
-//
-//            long startTime_File = System.nanoTime();
-//            long startTime_handleResult = System.nanoTime();
-//            if (handleResult(bitmap)) {
-                handleResult(bitmap,IMG_PATH,PATH);
-
-                //File dir = new File("/storage/emulated/0/Download/");
-//                File dir = new File("/storage/emulated/0/Download/out2/");
-//                if (!dir.exists()) {
-//                    dir.mkdirs();
-//
-//                }
-
-
-
-//            long endTime_File = System.nanoTime();
-//
-//            long endTime_handleResult = System.nanoTime();
-//            long endTime = System.nanoTime();
-            //long duration = (endTime - startTime_Bitmap) / 1000000;
-//            Log.e("FFmpeg", "");
-//            Log.e("FFmpeg", "Bitmap time = " + ((endTime_Bitmap - startTime_Bitmap) / 1000000) + " ms");
-//            Log.e("FFmpeg", "handleResult time = " + ((endTime_handleResult - startTime_handleResult) / 1000000) + " ms");
-//            Log.e("FFmpeg", "File time = " + ((endTime_File - startTime_File) / 1000000) + " ms");
-//            Log.e("FFmpeg", "TIME ALL = " + ((endTime - startTime) / 1000000) + " ms");
-
-//      }
+            handleResult(bitmap,PATH,detector);
 
     }
 
@@ -528,168 +635,67 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     }
 
     PersonDatabase db;
-
-    ArrayList<OutputPack> pack1 = new ArrayList<>(1500);
-    ArrayList<OutputPack> pack2 = new ArrayList<>();
-    ArrayList<OutputPack> pack3 = new ArrayList<>();
-    int round = 1;
-    private boolean handleResult(Bitmap bm,String oldPath,String newPath) throws IOException {
+    int count = 1;
+    private boolean handleResult(Bitmap bm,String newPath,Classifier detector) throws IOException {
         //clearFocus();
 
         if (bm == null) {
             makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
             Bitmap resize = BitmapEditor.getResizedBitmap(bm, 320, 320);
-            List<Classifier.Recognition> results = detector1.recognizeImage(resize);
+            List<Classifier.Recognition> results = detector.recognizeImage(resize);
             if (results.size() <= 0){
                 Log.e("FFmpeg", "Results FAILLLLLLLLL");
                 return false;
-
             }
+                        for (final Classifier.Recognition result : results) {
 
+                            final RectF location = result.getLocation();
 
-            Log.d("PACK1", "PACK1 "+pack1.size());
-//            Log.d("PACK1", "T1 "+t1.isAlive());
-            switch (round){
-                case 1:
-                    pack1.add(new OutputPack(results,oldPath,newPath,resize,bm));
-                    break;
-                case 2:
-                    pack2.add(new OutputPack(results,oldPath,newPath,resize,bm));
-                    break;
-                case 3:
-                    pack3.add(new OutputPack(results,oldPath,newPath,resize,bm));
-                    break;
+                            double l = location.left;   //x
+                            double t = location.top;    //y
+                            double r = location.right;  //w
+                            double b = location.bottom; //h
+//
+
+                            float size_video = video_width;
+                            location.left = location.left * size_video; //1920
+                            location.top = location.top * size_video;
+                            location.right = location.right * size_video;//1920
+                            location.bottom = location.bottom * size_video;
+
+                            //                           X - Y - Width - Height
+                            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+
+                                Canvas cv = new Canvas(bm);
+
+                                cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
+
+                            }
+                        }
+            File output = new File(newPath);
+            OutputStream os = null;
+            try {
+                os = new FileOutputStream(output);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
-//            round+=1;
-//            if (round>3){
-//                round = 1;
-//            }
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, os);
+            Log.e("THREAD1", "save output #1 : " + output.toString());
 
+            try {
+                os.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-
         Log.e("FFmpeg", "Results OK");
         return true;
-    }
-
-
-    Thread t1,t2,t3;
-    int c = 0;
-    public void execute() throws IOException {
-        t1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true){
-                    if (pack1 != null){
-                        if (pack1.size() > 0 && pack1.get(0).results != null) {
-                            OutputPack pack = pack1.get(0);
-                            List<Classifier.Recognition> results = pack.results;
-                            String newPath = pack.newPath;
-                            String oldPath = pack.oldPath;
-                            Bitmap resize = pack.bitmap;
-                            Bitmap oldImage = pack.oldIMG;
-                            Bitmap bCheck = null;
-                            for (final Classifier.Recognition result : results) {
-
-                                final RectF location = result.getLocation();
-
-                                double l = location.left;   //x
-                                double t = location.top;    //y
-                                double r = location.right;  //w
-                                double b = location.bottom; //h
-//
-
-                                float size_video = 480;
-                                location.left = location.left * size_video; //1920
-                                location.top = location.top * size_video;
-                                location.right = location.right * size_video;//1920
-                                location.bottom = location.bottom * size_video;
-
-                                //                           X - Y - Width - Height
-                                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                                    if (db == null) {
-                                        try {
-                                            db = new PersonDatabase();
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-
-
-//                        int width2 = bm.getWidth();
-//                        int height2 = bm.getHeight();
-//                        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-//                        int h = (int) Math.round((float) ((2 * (r - result.getY())) * height2));
-//                        int w = (int) Math.round((float) ((2 * (b - result.getX())) * width2));
-//                        int x = (int) Math.round((float) (l * width2));
-//                        int y = (int) Math.round((float) (t * height2));
-//
-//                        Bitmap bb = BitmapEditor.getResizedBitmap(bm, width2, height2);
-//                        //Bitmap b = BitmapEditor.crop(bb, x, y, w + persen, h + persen);
-
-//                        Log.d("FFmpeg", "handleResult Bitmap crop ////////////////");
-//                        Log.d("FFmpeg", "   X = " + x);
-//                        Log.d("FFmpeg", "   Y = " + y);
-//                        Log.d("FFmpeg", "   newH = " + h);
-//                        Log.d("FFmpeg", "   newW = " + w);
-//                        Log.d("FFmpeg", "   Bitmap H = " + bb.getHeight());
-//                        Log.d("FFmpeg", "   Bitmap W = " + bb.getWidth());
-//
-//                        Bitmap bCheck = BitmapEditor.crop(bb, x, y, w, h);
-
-                                    //Bitmap bCheck = AddNewFaceActivity.cropBitmap(l, t, r, b,  result.getX(), result.getY(), resize, bm, 100);
-                                    bCheck = cropBitmap(l, t, r, b, result.getX(), result.getY(), resize);
-                                    //Bitmap bCheck = cropBitmap(location.left, location.top, location.right, location.bottom, resize, resize, 1);
-                                    //Bitmap bCheck = BitmapEditor.crop(resize, location.left, location.top, location.right, location.bottom);
-//                                float[] array1 = faceRecognitionProcesser.recognize(bCheck);
-//                                //db.save_image(face,"Tu");
-//                                Score score = db.recognize(array1, CONFIDENT);
-                                    Canvas cv = new Canvas(oldImage);
-//
-//                                if (!(score == null)){
-//                                    cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
-//                                }else {
-                                    cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
-//                                }
-                                    //setFocusView(bm, location.left, location.top, location.right, location.bottom, result.getX(), result.getY(), 0.05);
-                                    // canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
-
-                                }
-                            }
-                            if (oldImage!=null){
-                                File output = new File(newPath);
-                                OutputStream os = null;
-                                try {
-                                    os = new FileOutputStream(output);
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
-                                }
-                                oldImage.compress(Bitmap.CompressFormat.JPEG, 100, os);
-                                Log.e("THREAD1", "save output : " + output.toString());
-                                try {
-                                    os.flush();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                try {
-                                    os.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-//                File oldFile = new File(IMG_PATH);
-//                oldFile.delete();
-                            pack1.remove(0);
-//                        c++;
-                        }
-                    }
-                }
-                    }
-
-        });
-
-        t1.start();
     }
 
     public static Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bitmap){
@@ -839,7 +845,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 Canvas canvas = new Canvas(bitmap);
 
                 float[] array1 = faceRecognitionProcesser.recognize(bCheck);
-                Score score = db.recognize(array1, CONFIDENT);
+                Score score = db.recognize(array1);
 
                 if (!(score == null)){
                     setFocusView(l, t, r, b,  "", result.getX(), result.getY(), true);
