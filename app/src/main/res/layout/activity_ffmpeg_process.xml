@@ -53,6 +53,12 @@
                     android:layout_width="1080px"
                     android:layout_height="1080px"/>
 
+                <ImageView
+                    android:layout_alignParentBottom="true"
+                    android:background="@drawable/bg_fade_black_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"/>
+
             <RelativeLayout
                 android:id="@+id/fram_focus_layout"
                 android:layout_width="1080px"
@@ -89,7 +95,7 @@
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/text_view_video_time_duration"
+                        android:id="@+id/text_view_video_time_current"
                         android:textColor="@color/white"
                         android:text="00:00"
                         android:layout_centerVertical="true"
@@ -97,7 +103,7 @@
                         android:layout_height="wrap_content"/>
 
                     <TextView
-                        android:id="@+id/text_view_video_time_current"
+                        android:id="@+id/text_view_video_time_duration"
                         android:layout_alignParentRight="true"
                         android:layout_centerVertical="true"
                         android:textColor="@color/white"
@@ -113,15 +119,8 @@
 
                         <ImageButton
                             android:src="@android:drawable/ic_media_play"
-                            android:textColor="@color/white"
+                            android:background="#00000000"
                             android:id="@+id/button_video_play"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"/>
-
-                        <ImageButton
-                            android:src="@android:drawable/ic_media_pause"
-                            android:textColor="@color/white"
-                            android:id="@+id/button_video_pause"
                             android:layout_width="40dp"
                             android:layout_height="40dp"/>
 
@@ -139,6 +138,7 @@
                 android:layout_height="wrap_content" />
 
             <LinearLayout
+                android:visibility="gone"
                 android:orientation="vertical"
                 android:padding="20dp"
                 android:layout_width="match_parent"

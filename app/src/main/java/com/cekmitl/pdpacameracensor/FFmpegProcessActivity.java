@@ -27,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
@@ -36,6 +37,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.arthenica.mobileffmpeg.Config;
@@ -54,14 +56,15 @@ import java.util.List;
 import it.mirko.rangeseekbar.OnRangeSeekBarListener;
 import it.mirko.rangeseekbar.RangeSeekBar;
 
-public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeSeekBarListener{
+public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeSeekBarListener, View.OnClickListener {
 
     private Canvas canvas1;
     private Bitmap bitmap = null;
     private Paint paint;
     private Paint paint_sensor;
 
-    private Button extract_btt,detect_btt;
+    private Button extract_btt, detect_btt;
+    private ImageButton button_video_play, button_video_pause;
     int IMAGENUM;
 
 
@@ -77,8 +80,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     private static int video_height = 720;
     private static int video_width = 720;
 
-    public MediaMetadataRetriever mediaMetadataRetriever;
-    public VideoView myVideoView;
+    public MediaMetadataRetriever retriever;
+    public VideoView videoView;
     public MediaController myMediaController;
 
     //DETECT FACE
@@ -86,9 +89,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     public Classifier detector2;
     public Classifier detector3;
     public Classifier detector4;
+
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
     public static final int TF_OD_API_INPUT_SIZE = 320;
-    private static int VIDEO_SIZE = 480;
+
     private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
 
@@ -119,14 +123,23 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ffmpeg_process);
 
-        Intent intent = getIntent();
+        //ลบ Action Bar ออก
+        ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
+        actionBar.hide();
 
+        Intent intent = getIntent();
         String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
 
 
         extract_btt = findViewById(R.id.button3);
         detect_btt = findViewById(R.id.button6);
 
+        button_video_play = findViewById(R.id.button_video_play);
+
+        extract_btt.setOnClickListener(this);
+        detect_btt.setOnClickListener(this);
+        button_video_play.setOnClickListener(this);
 
 
         fram_focus_layout = findViewById(R.id.fram_focus_layout);
@@ -135,108 +148,29 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         }
         Uri uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
 
-        myVideoView = findViewById(R.id.videoView);
+        videoView = findViewById(R.id.videoView);
         imgV = findViewById(R.id.video_frame_imageview);
 
-        mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(String.valueOf(uri));
+        retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(String.valueOf(uri));
 
-        myVideoView.setVideoURI(uri);
-        myMediaController = new MediaController(this);
-        myVideoView.setMediaController(myMediaController);
+        videoView.setVideoURI(uri);
+//        myMediaController = new MediaController(this);
+//        videoView.setMediaController(myMediaController);
 
-        myVideoView.setOnCompletionListener(myVideoViewCompletionListener);
-        myVideoView.setOnPreparedListener(MyVideoViewPreparedListener);
-        myVideoView.setOnErrorListener(myVideoViewErrorListener);
+        videoView.setOnCompletionListener(myVideoViewCompletionListener);
+        videoView.setOnPreparedListener(MyVideoViewPreparedListener);
+        videoView.setOnErrorListener(myVideoViewErrorListener);
 
-        myVideoView.requestFocus();
+        videoView.requestFocus();
+
+//        video_width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+//        video_height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+        video_width = 1080;
+        video_height = 607;
+
+        videoView.start();
 //        myVideoView.start();
-
-        ImageView button_video_pause = findViewById(R.id.button_video_pause);
-        button_video_pause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View arg0) {
-
-                int currentPosition = myVideoView.getCurrentPosition();
-                Bitmap bmFrame = mediaMetadataRetriever
-                        .getFrameAtTime(currentPosition * 1000); //unit in microsecond
-
-                if(bmFrame == null){
-                    Toast.makeText(FFmpegProcessActivity.this, "bmFrame == null!", Toast.LENGTH_LONG).show();
-                }else{
-                    imgV.setImageBitmap(bmFrame);
-                }
-
-            }});
-
-
-        extract_btt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ExtractVideoFrame("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " -threads 4 " + path + tempeFramePool + tempeFrame);
-
-                    }
-                }).start();
-            }
-        });
-
-
-        detect_btt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                processedIMAGE = 0;
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        IMAGENUM = getListFile().length;
-                        executeDetect1();
-
-                    }
-                }).start();
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        IMAGENUM = getListFile().length;
-                        executeDetect2();
-                    }
-                }).start();
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        IMAGENUM = getListFile().length;
-                        executeDetect3();
-
-                    }
-                }).start();
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        IMAGENUM = getListFile().length;
-                        executeDetect4();
-
-                    }
-                }).start();
-
-
-
-            }
-        });
-        myVideoView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (myVideoView.isPlaying()){
-                    myVideoView.pause();
-                }else {
-                    myVideoView.start();
-                }
-            }
-        });
 
         //SeekBar
         sk = findViewById(R.id.seekBar);
@@ -244,22 +178,21 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         sk.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                myVideoView.seekTo(seekBar.getProgress());
-                clearFocus();
+                if(b) {
+                    videoView.seekTo(seekBar.getProgress());
+                    clearFocus();
 
-                Bitmap bmFrame = mediaMetadataRetriever
-                        .getFrameAtTime(seekBar.getProgress() * 1000, MediaMetadataRetriever.OPTION_PREVIOUS_SYNC); //unit in microsecond
+                    TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
+                    text_view_video_time_current.setText("" + milisecToTimeFormat(seekBar.getProgress()));
 
-                if(bmFrame == null){
-                    Toast.makeText(FFmpegProcessActivity.this,
-                            "bmFrame == null!",
-                            Toast.LENGTH_LONG).show();
-                }else{
-                    imgV.setImageBitmap(faceDectecFrame(bmFrame));
+                    Bitmap bmFrame = retriever.getFrameAtTime(seekBar.getProgress() * 1000, MediaMetadataRetriever.OPTION_PREVIOUS_SYNC); //unit in microsecond
+                    if(bmFrame == null){
+                        makeText(FFmpegProcessActivity.this, "bmFrame == null!", Toast.LENGTH_LONG).show();
+                    }else{
+                        imgV.setImageBitmap(faceDectecFrame(bmFrame));
+                    }
                 }
-
             }
-
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -268,18 +201,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
-                makeText(FFmpegProcessActivity.this, "seekBar : " + seekBar.getProgress() + "\n Current : " + myVideoView.getCurrentPosition() + "\nDuration() = " + myVideoView.getDuration(), LENGTH_SHORT).show();
-
-
-                    //imgV.setImageBitmap(screenshot(myVideoView));
-                int currentPosition = myVideoView.getCurrentPosition(); //in millisecond
-//                Toast.makeText(FFmpegProcessActivity.this,
-//                        "Current Position: " + currentPosition + " (ms)",
-//                        Toast.LENGTH_LONG).show();
-
-
-
+                //makeText(FFmpegProcessActivity.this, "seekBar : " + seekBar.getProgress() + "\n Current : " + videoView.getCurrentPosition() + "\nDuration() = " + videoView.getDuration(), LENGTH_SHORT).show();
             }
         });
 
@@ -303,13 +225,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 //makeText(this, "detector ERROR", LENGTH_SHORT).show();
                 e.printStackTrace();
             }
-
-        bitmap = BitmapFactory.decodeFile("/storage/emulated/0/Download/tempfile.jpg");
-        //bitmap = BitmapEditor.getResizedBitmap(bitmap, 1080, 607);
-        //bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
-
-        bitmap = Bitmap.createBitmap(bitmap);
-        bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+//
+//        bitmap = BitmapFactory.decodeFile("/storage/emulated/0/Download/tempfile.jpg");
+//        //bitmap = BitmapEditor.getResizedBitmap(bitmap, 1080, 607);
+//        //bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+//
+//        bitmap = Bitmap.createBitmap(bitmap);
+//        bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
 
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -472,7 +394,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     public void executeDetect1(){
         try {
             long h1 = 1;
-            long h2 = Math.round(IMAGENUM*0.25);
+            long h2 = Math.round(IMAGENUM * 0.25);
             for (long i = h1;i<h2;i++){
 
                     startTime = System.nanoTime();
@@ -649,14 +571,12 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 return false;
             }
                         for (final Classifier.Recognition result : results) {
-
                             final RectF location = result.getLocation();
 
                             double l = location.left;   //x
                             double t = location.top;    //y
                             double r = location.right;  //w
                             double b = location.bottom; //h
-//
 
                             float size_video = video_width;
                             location.left = location.left * size_video; //1920
@@ -712,18 +632,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         return bitmapCropFace;
     }
 
-    public static Bitmap loadBitmapFromView(View v) {
-        if (v.getMeasuredHeight() > 0) {
-            v.measure(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            Bitmap b = Bitmap.createBitmap(v.getMeasuredWidth(), v.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
-            Canvas c = new Canvas(b);
-            v.layout(0, 0, v.getMeasuredWidth(), v.getMeasuredHeight());
-            v.draw(c);
-            return b;
-        }
-        return null;
-    }
-
     public Bitmap drawFrameBitmap(Bitmap bitmap) {
         canvas = new Canvas(bitmap);
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
@@ -757,58 +665,59 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 }
 
 //                bCheck = cropBitmap(l, t, r, b, result.getX(), result.getY(), resize);
-                //Canvas cv = new Canvas(bitmap);
+                Canvas cv = new Canvas(bitmap);
                 canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
             }
         }
         return bitmap;
     }
 
-    MediaPlayer.OnCompletionListener myVideoViewCompletionListener =
-            new MediaPlayer.OnCompletionListener() {
-
+    MediaPlayer.OnCompletionListener myVideoViewCompletionListener = new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer arg0) {
-                    Toast.makeText(FFmpegProcessActivity.this, "End of Video",
-                            Toast.LENGTH_LONG).show();
+                    Toast.makeText(FFmpegProcessActivity.this, "End of Video", Toast.LENGTH_LONG).show();
                 }
             };
 
-    MediaPlayer.OnPreparedListener MyVideoViewPreparedListener =
-            new MediaPlayer.OnPreparedListener() {
-
+    MediaPlayer.OnPreparedListener MyVideoViewPreparedListener = new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
+                    duration = videoView.getDuration(); //in millisecond
+                    sk.setMax(videoView.getDuration());
+                    sk.postDelayed(onEverySecond, 1000);
+                    //Toast.makeText(FFmpegProcessActivity.this,"Duration: " + duration + " (ms)",Toast.LENGTH_LONG).show();
 
-                    duration = myVideoView.getDuration(); //in millisecond
-                    sk.setMax(duration);
-                    Toast.makeText(FFmpegProcessActivity.this,
-                            "Duration: " + duration + " (ms)",
-                            Toast.LENGTH_LONG).show();
+                    TextView text_view_video_time_duration = findViewById(R.id.text_view_video_time_duration);
+                    text_view_video_time_duration.setText("" + milisecToTimeFormat(videoView.getDuration()));
 
                 }
             };
 
-    MediaPlayer.OnErrorListener myVideoViewErrorListener =
-            new MediaPlayer.OnErrorListener() {
+            private Runnable onEverySecond = new Runnable() {
+                @Override
+                public void run() {
+//                    makeText(FFmpegProcessActivity.this, "onEverySecond OK", LENGTH_SHORT).show();
+                    if(sk != null) {
+                        sk.setProgress(videoView.getCurrentPosition());
+//                        makeText(FFmpegProcessActivity.this, "Runnable OK", LENGTH_SHORT).show();
+                        TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
+                        text_view_video_time_current.setText("" + milisecToTimeFormat(videoView.getCurrentPosition()));
+                    }
 
+                    if(videoView.isPlaying()) {
+//                        makeText(FFmpegProcessActivity.this, "isPlaying OK", LENGTH_SHORT).show();
+                        sk.postDelayed(onEverySecond, 1000);
+                    }
+                }
+            };
+
+    MediaPlayer.OnErrorListener myVideoViewErrorListener = new MediaPlayer.OnErrorListener() {
                 @Override
                 public boolean onError(MediaPlayer mp, int what, int extra) {
-
-                    Toast.makeText(FFmpegProcessActivity.this,
-                            "Error!!!",
-                            Toast.LENGTH_LONG).show();
+                    Toast.makeText(FFmpegProcessActivity.this,"Error!!!",Toast.LENGTH_LONG).show();
                     return true;
                 }
             };
-
-    protected static Bitmap screenshot(View view) {
-            view.setDrawingCacheEnabled(true);
-            Bitmap bitmap = Bitmap.createBitmap(view.getDrawingCache());
-            view.setDrawingCacheEnabled(false);
-
-        return bitmap;
-    }
 
     public Bitmap faceDectecFrame(Bitmap bitmap){
         clearFocus();
@@ -861,14 +770,11 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, boolean faceCheck) {
 
-        int height2 = 1080;
-        int width2 = 1080;
-
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        int h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
-        int w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
-        int x = (int) Math.round((float) (X * width2));
-        int y = (int) Math.round((float) (Y * height2));
+        int h = (int) Math.round((float) ((2 * (height - yPos)) * video_height));
+        int w = (int) Math.round((float) ((2 * (width - xPos)) * video_width));
+        int x = (int) Math.round((float) (X * video_width));
+        int y = (int) Math.round((float) (Y * video_height));
 
         LayoutInflater inflater = LayoutInflater.from(FFmpegProcessActivity.this);
         @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
@@ -926,7 +832,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
 
         fram_focus_layout.addView(layoutTOP, params1);
-        fram_focus_layout.addView(txt, params1);
+        //fram_focus_layout.addView(txt, params1);
 
 
     }
@@ -936,5 +842,75 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         if (null != fram_focus_layout && fram_focus_layout.getChildCount() > 0) {
             fram_focus_layout.removeViews(0, fram_focus_layout.getChildCount());
         }
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.button_video_play:
+                button_video_play.setImageResource((android.R.drawable.ic_media_pause));
+                if (videoView.isPlaying()){
+                    videoView.pause();
+                }else {
+                    button_video_play.setImageResource(android.R.drawable.ic_media_play);
+                    videoView.start();
+                    clearFocus();
+                    sk.postDelayed(onEverySecond, 1000);
+                }
+                break;
+            case R.id.button3:
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ExtractVideoFrame("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " -threads 4 " + path + tempeFramePool + tempeFrame);
+                    }
+                }).start();
+                break;
+            case R.id.button6:
+                processedIMAGE = 0;
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IMAGENUM = getListFile().length;
+                        executeDetect1();
+                    }
+                }).start();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IMAGENUM = getListFile().length;
+                        executeDetect2();
+                    }
+                }).start();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IMAGENUM = getListFile().length;
+                        executeDetect3();
+                    }
+                }).start();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        IMAGENUM = getListFile().length;
+                        executeDetect4();
+                    }
+                }).start();
+                break;
+        }
+    }
+
+    public String milisecToTimeFormat(long durationInMillis){
+        long millis = durationInMillis % 1000;
+        long second = (durationInMillis / 1000) % 60;
+        long minute = (durationInMillis / (1000 * 60)) % 60;
+        long hour = (durationInMillis / (1000 * 60 * 60)) % 24;
+
+//        String time = String.format("%02d:%02d:%02d.%d", hour, minute, second, millis);
+        String time = String.format("%02d:%02d", minute, second);
+        return time;
     }
 }
