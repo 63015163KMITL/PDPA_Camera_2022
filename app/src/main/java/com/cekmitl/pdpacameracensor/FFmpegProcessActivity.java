@@ -63,14 +63,19 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     private Paint paint;
     private Paint paint_sensor;
 
-    private Button extract_btt, detect_btt;
+    private Button next_btt, detect_btt;
     private ImageButton button_video_play, button_video_pause;
+    private int VIDEO_HIGH;
+    private int VIDEO_WIDTH;
     int IMAGENUM;
-
-
-    private FFmpeg ffmpeg;
     private File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
+    String INPUT_PATH = DOC_PATH + "/out";
+    String OUTPUT_PATH = DOC_PATH + "/out2";
+    private FFmpeg ffmpeg;
+
     public String strMessage = "";
+
+
 
     private int video_time;
     private int video_start_time;
@@ -85,6 +90,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     public MediaController myMediaController;
 
     //DETECT FACE
+    public Classifier detector;
     public Classifier detector1;
     public Classifier detector2;
     public Classifier detector3;
@@ -99,19 +105,26 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     //Face Recog
     private FaceRecogitionProcessor faceRecognitionProcesser;
     private Interpreter faceNetInterpreter;
-//    float CONFIDENT = 0.67f;
+    //    float CONFIDENT = 0.67f;
     EuclideanDistance distance;
     String path = DOC_PATH + "/";
     String inputVideo = "input.mp4";
     String tempeFrame = "%d.jpg";
     String tempeFramePool = "out/";           //Folder
-    String tempeVideo = "tempeVideo.mp4";     //without audio
-    String audio = "audio.mp3";
+    String tempeVideo = "out.mp4";     //without audio
+    String audio = "out2/audio.mp3";
     String finalVideoResulte = "final_output.mp4";
+    String VIDEO_NAME = "";
+    private Uri uri;
 
     //Seekbar
     public SeekBar sk;
     private Canvas canvas;
+
+    boolean isT1Done = false;
+    boolean isT2Done = false;
+    boolean isT3Done = false;
+    boolean isT4Done = false;
 
     public ImageView imgV;
 
@@ -131,22 +144,31 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         Intent intent = getIntent();
         String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
 
-
-        extract_btt = findViewById(R.id.button3);
         detect_btt = findViewById(R.id.button6);
-
+        next_btt = findViewById(R.id.nextBtt);
         button_video_play = findViewById(R.id.button_video_play);
 
-        extract_btt.setOnClickListener(this);
+
         detect_btt.setOnClickListener(this);
+        next_btt.setOnClickListener(this);
         button_video_play.setOnClickListener(this);
 
 
         fram_focus_layout = findViewById(R.id.fram_focus_layout);
         if (video_name == null){
             video_name = "input";
+            VIDEO_NAME = "input";
+        }else{
+            inputVideo = video_name+".mp4";
+            tempeFramePool = video_name+"/";
+            tempeVideo = video_name+"_temp.mp4";
+            audio = video_name+"/audio.mp3";
+            finalVideoResulte = video_name + "_output.mp4";
+            INPUT_PATH = DOC_PATH + "/" + video_name;
+            OUTPUT_PATH = DOC_PATH + "/" +video_name;
+            VIDEO_NAME = video_name;
         }
-        Uri uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
+        uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
 
         videoView = findViewById(R.id.videoView);
         imgV = findViewById(R.id.video_frame_imageview);
@@ -163,13 +185,15 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         videoView.setOnErrorListener(myVideoViewErrorListener);
 
         videoView.requestFocus();
+//
+        video_width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+        video_height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+//
+//        makeText(this, "video_width = " + video_width + "    video_height = " + video_height, LENGTH_SHORT).show();
+//        video_width = 1080;
+//        video_height = 607;
 
-//        video_width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-//        video_height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-        video_width = 1080;
-        video_height = 607;
-
-        videoView.start();
+//        videoView.start();
 //        myVideoView.start();
 
         //SeekBar
@@ -213,25 +237,19 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
         rangeSeekBar.setOnRangeSeekBarListener((OnRangeSeekBarListener) FFmpegProcessActivity.this);
 
-            try {
-                Log.e("TEST", "detector OK");
-                //makeText(this, "detector OK", LENGTH_SHORT).show();
-                detector1 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
-                detector2 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
-                detector3 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
-                detector4 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
-            } catch (IOException e) {
-                Log.e("TEST", "detector ERROR");
-                //makeText(this, "detector ERROR", LENGTH_SHORT).show();
-                e.printStackTrace();
-            }
-//
-//        bitmap = BitmapFactory.decodeFile("/storage/emulated/0/Download/tempfile.jpg");
-//        //bitmap = BitmapEditor.getResizedBitmap(bitmap, 1080, 607);
-//        //bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
-//
-//        bitmap = Bitmap.createBitmap(bitmap);
-//        bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        try {
+            Log.e("TEST", "detector OK");
+            //makeText(this, "detector OK", LENGTH_SHORT).show();
+            detector = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+            detector1 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+            detector2 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+            detector3 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+            detector4 = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
+        } catch (IOException e) {
+            Log.e("TEST", "detector ERROR");
+            //makeText(this, "detector ERROR", LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
 
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -309,39 +327,30 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     public void ExtractVideoFrame(String cmd) {
         //FFmpeg ff = FFmpeg.getInstance(getApplicationContext());
-                int rc = FFmpeg.execute(cmd);
+        int rc = FFmpeg.execute(cmd);
+        p1 = true;
 
-                if (rc == RETURN_CODE_SUCCESS) {
-                    Log.i(Config.TAG, "Command execution completed successfully.");
-                } else if (rc == RETURN_CODE_CANCEL) {
-                    Log.i(Config.TAG, "Command execution cancelled by user.");
-                } else {
-                    Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
-                    Config.printLastCommandOutput(Log.INFO);
-                }
-    }
+        if (rc == RETURN_CODE_SUCCESS) {
 
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                File tFile = new File(DOC_PATH+"/out");
-//                for (File child : tFile.listFiles()){
-//                    child.delete();
-//                }
-//            }
-//        }).start();
-
+            Log.i(Config.TAG, "Command execution completed successfully.");
+            checkVideoSize();
+            processDetect();
+        } else if (rc == RETURN_CODE_CANCEL) {
+            Log.i(Config.TAG, "Command execution cancelled by user.");
+        } else {
+            Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
+            Config.printLastCommandOutput(Log.INFO);
+        }
     }
 
     public void ExtractVideoAudio(String cmd){
-    //ffmpeg -i input.mp4 -vn -ar 44100 -ac 2 -ab 192k -f mp3 audio.mp3
+        //ffmpeg -i input.mp4 -vn -ar 44100 -ac 2 -ab 192k -f mp3 audio.mp3
         int rc = FFmpeg.execute(cmd);
 
+
         if (rc == RETURN_CODE_SUCCESS) {
+            p4 = true;
+            MergeAudioToVideo("-i "+ path + tempeVideo + " -i " + path + audio + " -c:v copy -c:a aac " + path + finalVideoResulte);
             Log.i(Config.TAG, "Command execution completed successfully.");
         } else if (rc == RETURN_CODE_CANCEL) {
             Log.i(Config.TAG, "Command execution cancelled by user.");
@@ -355,11 +364,20 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
 
     public void MergeImageToVideo(String cmd){
-    //ffmpeg -f image2 -framerate 23.976 -i temp%05d.jpg -c:v libx264 out.mp4
+        //ffmpeg -f image2 -framerate 23.976 -i temp%05d.jpg -c:v libx264 out.mp4
+
         int rc = FFmpeg.execute(cmd);
 
         if (rc == RETURN_CODE_SUCCESS) {
+            p3 = true;
             Log.i(Config.TAG, "Command execution completed successfully.");
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+                }
+            }).start();
+
         } else if (rc == RETURN_CODE_CANCEL) {
             Log.i(Config.TAG, "Command execution cancelled by user.");
         } else {
@@ -370,11 +388,20 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     }
 
     public void MergeAudioToVideo(String cmd){
-    //ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4
+        //ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4
         int rc = FFmpeg.execute(cmd);
 
         if (rc == RETURN_CODE_SUCCESS) {
+            p5 = true;
             Log.i(Config.TAG, "Command execution completed successfully.");
+            deleteFolder(INPUT_PATH);
+            deleteFiles(DOC_PATH+"/"+tempeVideo);
+
+//        myMediaController = new MediaController(this);
+//        videoView.setMediaController(myMediaController);
+
+
+//            makeText(FFmpegProcessActivity.this, "Success", LENGTH_SHORT).show();
         } else if (rc == RETURN_CODE_CANCEL) {
             Log.i(Config.TAG, "Command execution cancelled by user.");
         } else {
@@ -390,34 +417,38 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     }
 
     long startTime ;
-    int processedIMAGE;
+    int processedIMAGE1 = 0;
+    int processedIMAGE2 = 0;
+    int processedIMAGE3 = 0;
+    int processedIMAGE4 = 0;
     public void executeDetect1(){
         try {
+            boolean isT1Done = false;
+
             long h1 = 1;
             long h2 = Math.round(IMAGENUM * 0.25);
             for (long i = h1;i<h2;i++){
 
-                    startTime = System.nanoTime();
-                    Log.d("CHECKVERSION", "Thread 1 run: " + i);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startTime = System.nanoTime();
+                Log.d("CHECKVERSION", "Thread 1 run: " + i);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-                        String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-                        String newPath = OUTPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-//                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
-//                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
+                    String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
 
-                        FaceDetectionInPicture(oldPath, newPath,detector1);
-                        processedIMAGE++;
+
+                    FaceDetectionInPicture(oldPath, detector1);
+                    processedIMAGE1++;
 //                                Files.move(oldPath, newPath);
                 }
             }
+            isT1Done = true;
             while (true){
-                if (processedIMAGE >= IMAGENUM){
-                    recursiveDelete();
+                if (isT2Done && isT3Done && isT4Done){
+                    p2 = true;
+                    mergeVideo();
                     break;
                 }
             }
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -425,21 +456,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
     }
 
-    void recursiveDelete(){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-//                File allFile = new File(INPUT_PATH);
-//                for (File child : allFile.listFiles()){
-//                    child.delete();
-//                }
-            }
-        }).start();
-
-    }
-
     public void executeDetect2(){
         try {
+            isT2Done = false;
+
             long h1 = Math.round(IMAGENUM*0.25);
             long h2 = Math.round(IMAGENUM*0.50);
             for (long i = h1;i<=h2;i++){
@@ -449,23 +469,14 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-                    String newPath = OUTPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-//                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
-//                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
 
-                    FaceDetectionInPicture(oldPath, newPath,detector2);
-                    processedIMAGE++;
+
+                    FaceDetectionInPicture(oldPath, detector2);
+                    processedIMAGE2++;
 //                                Files.move(oldPath, newPath);
                 }
             }
-            while (true){
-                if (processedIMAGE >= IMAGENUM){
-                    recursiveDelete();
-                    break;
-                }
-            }
-
-
+            isT2Done = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -474,6 +485,9 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     public void executeDetect3(){
         try {
+
+            isT3Done = false;
+
             long h1 = Math.round(IMAGENUM*0.50);
             long h2 = Math.round(IMAGENUM*0.75);
             for (long i = h1;i<=h2;i++){
@@ -483,23 +497,14 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-                    String newPath = OUTPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-//                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
-//                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
 
-                    FaceDetectionInPicture(oldPath, newPath,detector3);
-                    processedIMAGE++;
+
+                    FaceDetectionInPicture(oldPath, detector3);
+                    processedIMAGE3++;
 //                                Files.move(oldPath, newPath);
                 }
             }
-            while (true){
-                if (processedIMAGE >= IMAGENUM){
-                    recursiveDelete();
-                    break;
-                }
-            }
-
-
+            isT3Done = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -508,6 +513,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     public void executeDetect4(){
         try {
+            isT4Done = false;
             long h1 = Math.round(IMAGENUM*0.75);
             long h2 = IMAGENUM;
             for (long i = h1;i<=h2;i++){
@@ -517,22 +523,14 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-                    String newPath = OUTPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-//                                Path oldPath = Paths.get(INPUT_PATH+"/"+String.valueOf(counting)+".jpg");
-//                                Path newPath = Paths.get(OUTPUT_PATH+"/"+String.valueOf(counting)+".jpg");
 
-                    FaceDetectionInPicture(oldPath, newPath,detector4);
-                    processedIMAGE++;
+
+                    FaceDetectionInPicture(oldPath, detector4);
+                    processedIMAGE4++;
 //                                Files.move(oldPath, newPath);
                 }
             }
-            while (true){
-                if (processedIMAGE >= IMAGENUM){
-                    recursiveDelete();
-                    break;
-                }
-            }
-
+            isT4Done = true;
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -540,14 +538,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
     }
 
-    String INPUT_PATH = DOC_PATH + "/out";
-    String OUTPUT_PATH = DOC_PATH + "/out2";
 
-    public void FaceDetectionInPicture(String IMG_PATH, String PATH, Classifier detector) throws IOException {
 
-            bitmap = BitmapFactory.decodeFile(IMG_PATH);
-            bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-            handleResult(bitmap,PATH,detector);
+    public void FaceDetectionInPicture(String IMG_PATH,Classifier detector) throws IOException {
+
+        bitmap = BitmapFactory.decodeFile(IMG_PATH);
+        bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        handleResult(bitmap,IMG_PATH,detector);
 
     }
 
@@ -564,35 +561,27 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         if (bm == null) {
             makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
-            Bitmap resize = BitmapEditor.getResizedBitmap(bm, 320, 320);
-            List<Classifier.Recognition> results = detector.recognizeImage(resize);
+//            Bitmap resize = ;
+            List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(bm, 320, 320));
             if (results.size() <= 0){
                 Log.e("FFmpeg", "Results FAILLLLLLLLL");
                 return false;
             }
-                        for (final Classifier.Recognition result : results) {
-                            final RectF location = result.getLocation();
+            for (final Classifier.Recognition result : results) {
+                final RectF location = result.getLocation();
 
-                            double l = location.left;   //x
-                            double t = location.top;    //y
-                            double r = location.right;  //w
-                            double b = location.bottom; //h
+//                            float size_video = video_width;
+                location.left = location.left * VIDEO_WIDTH; //1920
+                location.top = location.top * VIDEO_HIGH;
+                location.right = location.right * VIDEO_WIDTH;//1920
+                location.bottom = location.bottom * VIDEO_HIGH;
 
-                            float size_video = video_width;
-                            location.left = location.left * size_video; //1920
-                            location.top = location.top * size_video;
-                            location.right = location.right * size_video;//1920
-                            location.bottom = location.bottom * size_video;
-
-                            //                           X - Y - Width - Height
-                            if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-
-                                Canvas cv = new Canvas(bm);
-
-                                cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
-
-                            }
-                        }
+                //                           X - Y - Width - Height
+                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
+                    Canvas cv = new Canvas(bm);
+                    cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
+                }
+            }
             File output = new File(newPath);
             OutputStream os = null;
             try {
@@ -673,56 +662,56 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     }
 
     MediaPlayer.OnCompletionListener myVideoViewCompletionListener = new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer arg0) {
-                    Toast.makeText(FFmpegProcessActivity.this, "End of Video", Toast.LENGTH_LONG).show();
-                }
-            };
+        @Override
+        public void onCompletion(MediaPlayer arg0) {
+            Toast.makeText(FFmpegProcessActivity.this, "End of Video", Toast.LENGTH_LONG).show();
+        }
+    };
 
     MediaPlayer.OnPreparedListener MyVideoViewPreparedListener = new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    duration = videoView.getDuration(); //in millisecond
-                    sk.setMax(videoView.getDuration());
-                    sk.postDelayed(onEverySecond, 1000);
-                    //Toast.makeText(FFmpegProcessActivity.this,"Duration: " + duration + " (ms)",Toast.LENGTH_LONG).show();
+        @Override
+        public void onPrepared(MediaPlayer mp) {
+            duration = videoView.getDuration(); //in millisecond
+            sk.setMax(videoView.getDuration());
+            sk.postDelayed(onEverySecond, 1000);
+            //Toast.makeText(FFmpegProcessActivity.this,"Duration: " + duration + " (ms)",Toast.LENGTH_LONG).show();
 
-                    TextView text_view_video_time_duration = findViewById(R.id.text_view_video_time_duration);
-                    text_view_video_time_duration.setText("" + milisecToTimeFormat(videoView.getDuration()));
+            TextView text_view_video_time_duration = findViewById(R.id.text_view_video_time_duration);
+            text_view_video_time_duration.setText("" + milisecToTimeFormat(videoView.getDuration()));
 
-                }
-            };
+        }
+    };
 
-            private Runnable onEverySecond = new Runnable() {
-                @Override
-                public void run() {
+    private Runnable onEverySecond = new Runnable() {
+        @Override
+        public void run() {
 //                    makeText(FFmpegProcessActivity.this, "onEverySecond OK", LENGTH_SHORT).show();
-                    if(sk != null) {
-                        sk.setProgress(videoView.getCurrentPosition());
+            if(sk != null) {
+                sk.setProgress(videoView.getCurrentPosition());
 //                        makeText(FFmpegProcessActivity.this, "Runnable OK", LENGTH_SHORT).show();
-                        TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
-                        text_view_video_time_current.setText("" + milisecToTimeFormat(videoView.getCurrentPosition()));
-                    }
+                TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
+                text_view_video_time_current.setText("" + milisecToTimeFormat(videoView.getCurrentPosition()));
+            }
 
-                    if(videoView.isPlaying()) {
+            if(videoView.isPlaying()) {
 //                        makeText(FFmpegProcessActivity.this, "isPlaying OK", LENGTH_SHORT).show();
-                        sk.postDelayed(onEverySecond, 1000);
-                    }
-                }
-            };
+                sk.postDelayed(onEverySecond, 1000);
+            }
+        }
+    };
 
     MediaPlayer.OnErrorListener myVideoViewErrorListener = new MediaPlayer.OnErrorListener() {
-                @Override
-                public boolean onError(MediaPlayer mp, int what, int extra) {
-                    Toast.makeText(FFmpegProcessActivity.this,"Error!!!",Toast.LENGTH_LONG).show();
-                    return true;
-                }
-            };
+        @Override
+        public boolean onError(MediaPlayer mp, int what, int extra) {
+            Toast.makeText(FFmpegProcessActivity.this,"Error!!!",Toast.LENGTH_LONG).show();
+            return true;
+        }
+    };
 
     public Bitmap faceDectecFrame(Bitmap bitmap){
         clearFocus();
         Bitmap resize = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
-        List<Classifier.Recognition> results = detector1.recognizeImage(resize);
+        List<Classifier.Recognition> results = detector.recognizeImage(resize);
 
         for (final Classifier.Recognition result : results) {
 
@@ -858,49 +847,97 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     sk.postDelayed(onEverySecond, 1000);
                 }
                 break;
-            case R.id.button3:
+            case R.id.nextBtt:
+
+
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        ExtractVideoFrame("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " -threads 4 " + path + tempeFramePool + tempeFrame);
+
+                        //                    ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
+//                        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+
+//                        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+                        ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
+                        progress();
+
+//                        MergeImageToVideo("-f image2 -threads 3 -framerate 24 -i "+ path + "out/%d.jpg " + path + "out.mp4");
                     }
                 }).start();
+
+//                new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//
+//                    }
+//                }).start();
                 break;
-            case R.id.button6:
-                processedIMAGE = 0;
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        IMAGENUM = getListFile().length;
-                        executeDetect1();
-                    }
-                }).start();
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        IMAGENUM = getListFile().length;
-                        executeDetect2();
-                    }
-                }).start();
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        IMAGENUM = getListFile().length;
-                        executeDetect3();
-                    }
-                }).start();
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        IMAGENUM = getListFile().length;
-                        executeDetect4();
-                    }
-                }).start();
-                break;
+//            case R.id.nextBtt:
+//                mergeVideo();
+//
+//                break;
         }
+    }
+
+    void checkVideoSize(){
+//        File f = new File(INPUT_PATH+"/out/1.jpg");
+        Bitmap tBitmap = BitmapFactory.decodeFile(INPUT_PATH+"/1.jpg").copy(Bitmap.Config.ARGB_8888, true);
+        VIDEO_HIGH = tBitmap.getHeight();
+        VIDEO_WIDTH = tBitmap.getWidth();
+    }
+
+
+    void mergeVideo(){
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                MergeImageToVideo("-f image2 -threads 2 -framerate 24 -i "+ path + VIDEO_NAME+"/%d.jpg " + path + tempeVideo);
+
+            }
+        }).start();
+
+    }
+
+
+
+    void processDetect(){
+        processedIMAGE1 = 0;
+        processedIMAGE2 = 0;
+        processedIMAGE3 = 0;
+        processedIMAGE4 = 0;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IMAGENUM = getListFile().length;
+                executeDetect1();
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IMAGENUM = getListFile().length;
+                executeDetect2();
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IMAGENUM = getListFile().length;
+                executeDetect3();
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                IMAGENUM = getListFile().length;
+                executeDetect4();
+            }
+        }).start();
     }
 
     public String milisecToTimeFormat(long durationInMillis){
@@ -912,5 +949,97 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 //        String time = String.format("%02d:%02d:%02d.%d", hour, minute, second, millis);
         String time = String.format("%02d:%02d", minute, second);
         return time;
+    }
+
+
+
+    Thread progressThread;
+    boolean p1=false;
+    boolean p2=false;
+    boolean p3=false;
+    boolean p4=false;
+    boolean p5=false;
+
+
+    void progress(){
+        progressThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                Log.d("PROGRESSVIDEO", "Starting ...");
+                Log.d("PROGRESSVIDEO", "EXTRACT IMAGE : START..");
+                while (true){
+
+                    if (p1){
+                        Log.d("PROGRESSVIDEO", "EXTRACT IMAGE : FINISH");
+                        break;
+                    }
+                }
+                int num = 0;
+                while (true){
+                    int pNum = processedIMAGE1 + processedIMAGE2 + processedIMAGE3 + processedIMAGE4;
+                    if (pNum>num && pNum <= IMAGENUM){
+                        num = pNum;
+                        Log.d("PROGRESSVIDEO", "DETECT FACE: "+num + "/"+ IMAGENUM);
+                    }
+                    if (p2){
+                        Log.d("PROGRESSVIDEO", "DETECT FACE : FINISH");
+                        break;
+                    }
+
+                }
+                Log.d("PROGRESSVIDEO", "MERGE VIDEO : START..");
+                while (true) {
+                    if (p3){
+                        Log.d("PROGRESSVIDEO", "MERGE VIDEO : FINISH");
+                        break;
+                    }
+                }
+                Log.d("PROGRESSVIDEO", "EXTRACT AUDIO : START..");
+                while (true){
+                    if (p4){
+                        Log.d("PROGRESSVIDEO", "EXTRACT AUDIO : FINISH");
+                        break;
+                    }
+                }
+                Log.d("PROGRESSVIDEO", "MERGE AUDIO : START..");
+                while (true){
+                    if (p4){
+                        Log.d("PROGRESSVIDEO", "MERGE AUDIO : FINISH");
+                        break;
+                    }
+                }
+                Log.d("PROGRESSVIDEO", "RENDER COMPLETE!!");
+            }
+        });
+
+        progressThread.start();
+    }
+
+    void deleteFolder(String path){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File f = new File(path);
+                for (File child : f.listFiles()){
+                    child.delete();
+                }
+                f.delete();
+            }
+        }).start();
+
+    }
+
+
+
+    void deleteFiles(String path){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File f = new File(path);
+                f.delete();
+            }
+        }).start();
+
     }
 }

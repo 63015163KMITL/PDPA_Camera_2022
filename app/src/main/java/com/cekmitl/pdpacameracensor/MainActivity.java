@@ -363,7 +363,8 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                     chronometer.setBase(SystemClock.elapsedRealtime());
                     stopTime = 0;
                     chronometer.stop();
-
+                    isWorking = false;
+                    pauseThread();
 
                     videoCapture.stopRecording();
                     statRecord = false;
