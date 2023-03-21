@@ -6,6 +6,7 @@ import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_CANCEL;
 import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_SUCCESS;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -121,6 +122,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     public SeekBar sk;
     private Canvas canvas;
 
+    ProgressDialog progressDialogP1;
+    ProgressDialog progressDialogP2;
+    ProgressDialog progressDialogP3;
+    ProgressDialog progressDialogP4;
+    ProgressDialog progressDialogP5;
+
+
     boolean isT1Done = false;
     boolean isT2Done = false;
     boolean isT3Done = false;
@@ -186,12 +194,14 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
         videoView.requestFocus();
 //
-        video_width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-        video_height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+//        video_width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+//        video_height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
 //
 //        makeText(this, "video_width = " + video_width + "    video_height = " + video_height, LENGTH_SHORT).show();
-//        video_width = 1080;
-//        video_height = 607;
+
+        //Size of frame preview
+        video_width = 1080;
+        video_height = 607;
 
 //        videoView.start();
 //        myVideoView.start();
@@ -206,14 +216,15 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     videoView.seekTo(seekBar.getProgress());
                     clearFocus();
 
-                    TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
-                    text_view_video_time_current.setText("" + milisecToTimeFormat(seekBar.getProgress()));
-
+//
+//                    TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
+//                    text_view_video_time_current.setText("" + milisecToTimeFormat(seekBar.getProgress()));
+//
                     Bitmap bmFrame = retriever.getFrameAtTime(seekBar.getProgress() * 1000, MediaMetadataRetriever.OPTION_PREVIOUS_SYNC); //unit in microsecond
                     if(bmFrame == null){
                         makeText(FFmpegProcessActivity.this, "bmFrame == null!", Toast.LENGTH_LONG).show();
                     }else{
-                        imgV.setImageBitmap(faceDectecFrame(bmFrame));
+                        faceDectecFrame(bmFrame);
                     }
                 }
             }
@@ -309,6 +320,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
+
     }
 
     public void cmdFFmpeg(String cmd){
@@ -691,6 +703,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 //                        makeText(FFmpegProcessActivity.this, "Runnable OK", LENGTH_SHORT).show();
                 TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
                 text_view_video_time_current.setText("" + milisecToTimeFormat(videoView.getCurrentPosition()));
+
             }
 
             if(videoView.isPlaying()) {
@@ -724,9 +737,9 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 //
             float size_video = 1080;
             location.left = location.left * size_video; //1920
-            location.top = location.top * size_video;
+            location.top = location.top * 607;
             location.right = location.right * size_video;//1920
-            location.bottom = location.bottom * size_video;
+            location.bottom = location.bottom * 607;
 
             //                           X - Y - Width - Height
             if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
@@ -849,6 +862,38 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 break;
             case R.id.nextBtt:
 
+//                progressDialogP1 = new ProgressDialog(FFmpegProcessActivity.this);
+//                progressDialogP1.setMessage("Extracting..."); // Setting Message
+//                progressDialogP1.setTitle("Extract All Frame"); // Setting Title
+//                progressDialogP1.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
+//                progressDialogP1.show(); // Display Progress Dialog
+//                progressDialogP1.setCancelable(false);
+
+                progressDialogP2 = new ProgressDialog(FFmpegProcessActivity.this);
+                progressDialogP2.setMessage("Loading..."); // Setting Message
+                progressDialogP2.setTitle("RENDER"); // Setting Title
+                progressDialogP2.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL); // Progress Dialog Style Spinner
+                progressDialogP2.setMax(100);
+                progressDialogP2.show();
+                progressDialogP2.setCancelable(false);
+//
+//                progressDialogP3 = new ProgressDialog(FFmpegProcessActivity.this);
+//                progressDialogP3.setMessage("Loading..."); // Setting Message
+//                progressDialogP3.setTitle("MERGE VIDEO"); // Setting Title
+//                progressDialogP3.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
+//                progressDialogP3.setCancelable(false);
+//
+//                progressDialogP4 = new ProgressDialog(FFmpegProcessActivity.this);
+//                progressDialogP4.setMessage("Loading..."); // Setting Message
+//                progressDialogP4.setTitle("EXTRACT AUDIO"); // Setting Title
+//                progressDialogP4.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
+//                progressDialogP4.setCancelable(false);
+//
+//                progressDialogP5 = new ProgressDialog(FFmpegProcessActivity.this);
+//                progressDialogP5.setMessage("Loading..."); // Setting Message
+//                progressDialogP5.setTitle("MERGE VIDEO + AUDIO"); // Setting Title
+//                progressDialogP5.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
+//                progressDialogP5.setCancelable(false);
 
                 new Thread(new Runnable() {
                     @Override
@@ -861,9 +906,77 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                         ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
                         progress();
 
+
+                        while (true) {
+                            if (p1) {
+                                progressDialogP2.incrementProgressBy(20);
+//                                progressDialogP1.dismiss();
+                                ; // Display Progress Dialog
+                                break;
+                            }
+
+                        }
+//                        progressDialogP2.show();
+
+                        int val = 20;
+                        int num = 0;
+                        int savedNum = 0;
+                        int updateNum = 0;
+                        IMAGENUM = getListFile().length;
+                        while (true){
+
+                            float newNum = ( ((float) processedIMAGE1 + (float)processedIMAGE2 + (float)processedIMAGE3 + (float)processedIMAGE4) / (float)IMAGENUM) * (float)20;
+
+
+                            if(newNum > 0){
+                                updateNum = (int)newNum - savedNum;
+                                savedNum = (int)newNum;
+                            }
+
+                            progressDialogP2.incrementProgressBy(updateNum);
+
+//                            if (pNum > num && pNum <= IMAGENUM){
+//                                num = pNum;
+//                                Log.d("PROGRESSVIDEO", "DETECT FACE: " + num + "/"+ IMAGENUM);
+//                            }
+//
+                            if(p2){
+//                                progressDialogP2.incrementProgressBy(updateNum);
+                                break;
+                            }
+                        }
+                        while (true){
+
+                            if(p3){
+                                progressDialogP2.incrementProgressBy(20);
+//                                progressDialogP3.dismiss();
+//                                progressDialogP4.show();
+                                break;
+                            }
+                        }
+                        while (true){
+
+                            if(p4){
+                                progressDialogP2.incrementProgressBy(20);
+//                                progressDialogP4.dismiss();
+//                                progressDialogP5.show();
+                                break;
+                            }
+                        }
+                        while (true){
+
+                            if(p5){
+                                progressDialogP2.incrementProgressBy(20);
+                                progressDialogP2.dismiss();
+                                break;
+                            }
+                        }
+
 //                        MergeImageToVideo("-f image2 -threads 3 -framerate 24 -i "+ path + "out/%d.jpg " + path + "out.mp4");
+
                     }
                 }).start();
+
 
 //                new Thread(new Runnable() {
 //                    @Override
@@ -960,11 +1073,11 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     boolean p4=false;
     boolean p5=false;
 
-
     void progress(){
         progressThread = new Thread(new Runnable() {
             @Override
             public void run() {
+
 
                 Log.d("PROGRESSVIDEO", "Starting ...");
                 Log.d("PROGRESSVIDEO", "EXTRACT IMAGE : START..");
@@ -972,15 +1085,17 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
                     if (p1){
                         Log.d("PROGRESSVIDEO", "EXTRACT IMAGE : FINISH");
+                        //progressDialog.dismiss();
                         break;
                     }
                 }
+
                 int num = 0;
                 while (true){
                     int pNum = processedIMAGE1 + processedIMAGE2 + processedIMAGE3 + processedIMAGE4;
-                    if (pNum>num && pNum <= IMAGENUM){
+                    if (pNum > num && pNum <= IMAGENUM){
                         num = pNum;
-                        Log.d("PROGRESSVIDEO", "DETECT FACE: "+num + "/"+ IMAGENUM);
+                        Log.d("PROGRESSVIDEO", "DETECT FACE: " + num + "/"+ IMAGENUM);
                     }
                     if (p2){
                         Log.d("PROGRESSVIDEO", "DETECT FACE : FINISH");

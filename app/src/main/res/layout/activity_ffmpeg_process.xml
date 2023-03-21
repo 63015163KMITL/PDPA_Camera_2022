@@ -17,20 +17,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/textView3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="time : 00:00:00 s\nFrame Rate : 0 FPS"
-                    android:textColor="@color/white"
-                    tools:ignore="MissingConstraints" />
 
                 <Button
                     android:id="@+id/nextBtt"
                     android:layout_alignParentRight="true"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="SELECT"
+                    android:text="EXPORT"
                     android:textColor="@color/white"
                     tools:ignore="MissingConstraints"/>
 
@@ -212,8 +205,8 @@
             </LinearLayout>
 
             <View
-                android:layout_marginRight="10dp"
-                android:layout_marginLeft="10dp"
+                android:layout_marginRight="7dp"
+                android:layout_marginLeft="7dp"
                 android:layout_width="1dp"
                 android:layout_height="70dp"
                 android:background="#55FFFFFF" />
@@ -294,7 +287,7 @@
                 <ImageView
                     android:layout_width="45dp"
                     android:layout_height="47dp"
-                    android:background="@android:drawable/ic_menu_crop" />
+                    android:background="@android:drawable/ic_menu_upload_you_tube" />
 
                 <TextView
                     android:layout_marginTop="5dp"
