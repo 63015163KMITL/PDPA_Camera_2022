@@ -20,13 +20,6 @@
         android:theme="@style/Theme.PDPACameraCensor"
         tools:targetApi="31">
         <activity
-            android:name=".VideoEditor"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
             android:name=".FFmpegProcessActivity"
             android:theme="@style/Theme.PDPACameraCenso.Dark"
             android:exported="false">
@@ -35,7 +28,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".GridViewFaceSelectorAdapter"
+            android:name=".ViewAdapter.GridViewFaceSelectorAdapter"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
@@ -58,22 +51,14 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".MainActivity2"
+            android:name=".MainActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".MainActivityNew"
-            android:exported="false"
-            android:label="@string/title_activity_main2">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
-        <activity
-            android:name=".MainActivity"
+            android:name=".MainCameraActivity"
             android:exported="false"
             android:theme="@style/Theme.PDPACameraCenso.Dark">
             <meta-data
@@ -89,6 +74,7 @@
         <activity
             android:name=".GalleryActivity"
             android:exported="false"
+            android:theme="@style/Theme.PDPACameraCenso.Dark"
             android:hardwareAccelerated="false" />
         <activity
             android:name=".PreviewActivity"

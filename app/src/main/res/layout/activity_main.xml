@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#F6F6F6"
-    tools:context=".MainActivity">
+    tools:context=".MainCameraActivity">
 
     <LinearLayout
         android:id="@+id/head_layout"
@@ -216,7 +216,7 @@
                                 android:layout_height="match_parent"
                                 android:background="@color/white"
                                 android:scaleType="centerCrop"
-                                android:src="@drawable/xxx" />
+                                android:src="@drawable/test_img" />
 
                         </androidx.cardview.widget.CardView>
 
@@ -233,7 +233,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/aaa" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -250,7 +250,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/img_test" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -267,7 +267,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/test" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -321,7 +321,7 @@
                                 android:layout_height="match_parent"
                                 android:background="@color/white"
                                 android:scaleType="centerCrop"
-                                android:src="@drawable/ccc" />
+                                android:src="@drawable/test_img" />
 
                         </androidx.cardview.widget.CardView>
 

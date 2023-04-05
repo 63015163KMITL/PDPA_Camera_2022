@@ -38,5 +38,11 @@
         <item name="colorAccent">@color/main_color</item>
     </style>
 
+    //Dialog Style
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/anim_dialog_slide_left</item>
+        <item name="android:windowExitAnimation">@anim/anim_dialog_slide_right</item>
+    </style>
+
 
 </resources>

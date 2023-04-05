@@ -15,10 +15,10 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.cekmitl.pdpacameracensor.GridViewAdapter;
-import com.cekmitl.pdpacameracensor.Person;
-import com.cekmitl.pdpacameracensor.PersonDatabase;
+import com.cekmitl.pdpacameracensor.Process.Person;
+import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.R;
+import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewAdapter;
 import com.cekmitl.pdpacameracensor.databinding.FragmentHomeBinding;
 
 import java.io.IOException;

@@ -1,20 +1,23 @@
 package com.cekmitl.pdpacameracensor;
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.widget.Toast;
 
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
+import com.cekmitl.pdpacameracensor.ViewAdapter.RecyclerViewAdapter;
 
-import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import java.util.ArrayList;
 
 public class GalleryActivity extends AppCompatActivity {
 
@@ -29,6 +32,10 @@ public class GalleryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallery);
+
+        ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
+        actionBar.hide();
 
         // we are calling a method to request
         // the permissions to read external storage.

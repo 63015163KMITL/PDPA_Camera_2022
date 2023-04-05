@@ -23,24 +23,26 @@
         <LinearLayout
             android:padding="10dp"
             android:id="@+id/header"
-            android:layout_marginBottom="20dp"
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/pdpa"
-                android:text="PDPA"
-                android:textSize="42dp"
-                android:textColor="@color/white"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
 
-            <RelativeLayout
+
+            <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/pdpa"
+                    android:text="PDPA"
+                    android:textSize="42dp"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:layout_marginRight="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
 
                 <TextView
                     android:text="Camera"
@@ -50,19 +52,39 @@
                     android:layout_height="wrap_content"/>
 
                 <TextView
+                    android:visibility="gone"
                     android:layout_alignParentRight="true"
-                    android:text="version 1.5.2"
+                    android:text="KMITL 2023"
                     android:textSize="22dp"
                     android:textColor="@color/white"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
 
-            </RelativeLayout>
+            </LinearLayout>
 
 
         </LinearLayout>
 
         <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_round_white"
+            android:padding="15dp">
+
+            <GridView
+                android:id="@+id/grid_view_gallery"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:columnWidth="110dp"
+                android:gravity="center"
+                android:clickable="true"
+                android:numColumns="4" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:visibility="gone"
             android:layout_below="@id/header"
             android:padding="20dp"
             android:background="@drawable/bg_round_white"
@@ -169,6 +191,7 @@
         android:layout_height="wrap_content">
 
         <TextView
+            android:visibility="gone"
             android:layout_marginBottom="10dp"
             android:text="Gallery"
             android:textSize="@dimen/font_mid"
@@ -177,10 +200,11 @@
             android:layout_height="wrap_content"/>
 
         <LinearLayout
+            android:visibility="gone"
             android:background="@drawable/bg_round_white"
             android:padding="10dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="200dp">
 
             <androidx.cardview.widget.CardView
                 android:layout_width="60dp"
@@ -221,7 +245,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/xxx" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -238,7 +262,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/aaa" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -255,7 +279,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/aaa" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -272,7 +296,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/img_test" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 
@@ -289,7 +313,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/test" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 

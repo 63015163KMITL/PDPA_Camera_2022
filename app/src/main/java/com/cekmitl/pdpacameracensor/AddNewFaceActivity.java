@@ -2,12 +2,6 @@ package com.cekmitl.pdpacameracensor;
 
 import static android.widget.Toast.makeText;
 
-import static java.lang.Integer.parseInt;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -19,7 +13,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
@@ -27,6 +20,17 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.cekmitl.pdpacameracensor.ImageEditor.BitmapEditor;
+import com.cekmitl.pdpacameracensor.Process.Classifier;
+import com.cekmitl.pdpacameracensor.Process.FaceRecogitionProcessor;
+import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
+import com.cekmitl.pdpacameracensor.Process.YoloV5Classifier;
+import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewFaceSelectorAdapter;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;

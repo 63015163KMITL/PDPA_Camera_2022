@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".MainActivity"
+    tools:context=".MainCameraActivity"
     android:background="#000000"
     android:paddingTop="0dp">
 
@@ -330,7 +330,7 @@
                             android:layout_height="match_parent"
                             android:background="@color/white"
                             android:scaleType="centerCrop"
-                            android:src="@drawable/xxx" />
+                            android:src="@drawable/test_img" />
 
                     </androidx.cardview.widget.CardView>
 

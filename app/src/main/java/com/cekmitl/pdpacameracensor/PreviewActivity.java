@@ -4,7 +4,7 @@ import static android.view.ViewGroup.LayoutParams;
 import static android.view.ViewGroup.OnLongClickListener;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
-import static com.cekmitl.pdpacameracensor.MainActivity.slideView2;
+import static com.cekmitl.pdpacameracensor.MainCameraActivity.slideView2;
 import static java.lang.Integer.parseInt;
 
 import android.annotation.SuppressLint;
@@ -29,7 +29,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -45,6 +44,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 
+import com.cekmitl.pdpacameracensor.ImageEditor.BitmapEditor;
+import com.cekmitl.pdpacameracensor.ImageEditor.DrawingView;
+import com.cekmitl.pdpacameracensor.Process.Classifier;
+import com.cekmitl.pdpacameracensor.Process.EuclideanDistance;
+import com.cekmitl.pdpacameracensor.Process.FaceRecogitionProcessor;
+import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
+import com.cekmitl.pdpacameracensor.Process.Score;
+import com.cekmitl.pdpacameracensor.Process.YoloV5Classifier;
 import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
 
 import org.tensorflow.lite.Interpreter;
@@ -150,6 +157,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
         //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //ลบ Action Bar ออก
+
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.hide();
@@ -268,53 +276,36 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         //    stricker[i] = Integer.parseInt("R.drawable.stricker" + (i+1));
         //}
 
-        stricker[0] = R.drawable.ic_not;
-        stricker[1] = R.drawable.stricker2;
-        stricker[2] = R.drawable.stricker3;
-        stricker[3] = R.drawable.stricker4;
-        stricker[4] = R.drawable.stricker5;
-        stricker[5] = R.drawable.stricker6;
-        stricker[6] = R.drawable.stricker7;
-        stricker[7] = R.drawable.stricker8;
-        stricker[8] = R.drawable.stricker9;
-        stricker[9] = R.drawable.stricker10;
-        stricker[10] = R.drawable.stricker11;
-        stricker[11] = R.drawable.stricker12;
-        stricker[12] = R.drawable.stricker13;
-        stricker[13] = R.drawable.stricker14;
-        stricker[14] = R.drawable.stricker15;
-
-
-        simpleGrid = (GridView) findViewById(R.id.GridView_stricker); // init GridView
-        // Create an object of CustomAdapter and set Adapter to GirdView
-        StrickerGridViewAdapter customAdapter = new StrickerGridViewAdapter(getApplicationContext(), stricker);
-        simpleGrid.setAdapter(customAdapter);
-        // implement setOnItemClickListener event on GridView
-        simpleGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // set an Intent to Another Activity
-                //Intent intent = new Intent(MainActivity.this, SecondActivity.class);
-                //intent.putExtra("image", logos[position]); // put image data in Intent
-                //startActivity(intent); // start Intent
-                //makeText(PreviewActivity.this, "STRICKER = " + stricker[position], LENGTH_SHORT).show();
-
-                clearFocus();
-                for (int i = 0; i < facePosition.size(); i++){
-                    String[] a = facePosition.get(i).split("/");
-                    //setFocusView2(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), stricker[position]);
-                    Log.e("TAG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-
-                    LinearLayout layoutInner = fram_focus_layout.findViewWithTag(i + "");
-                    Log.e("TAG","stricker[position] = " + stricker[position]);
-                    Log.e("TAG","layoutInner TAG = " + layoutInner.getTag());
-
-                    //layoutInner.setBackground(ContextCompat.getDrawable(PreviewActivity.this, R.drawable.stricker15));
-
-
-                }
-            }
-        });
+//        simpleGrid = (GridView) findViewById(R.id.GridView_stricker); // init GridView
+//        // Create an object of CustomAdapter and set Adapter to GirdView
+//        StrickerGridViewAdapter customAdapter = new StrickerGridViewAdapter(getApplicationContext(), getBitmapFromAsset(PreviewActivity.this));
+//        simpleGrid.setAdapter(customAdapter);
+//        // implement setOnItemClickListener event on GridView
+//        simpleGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                // set an Intent to Another Activity
+//                //Intent intent = new Intent(MainCameraActivity.this, SecondActivity.class);
+//                //intent.putExtra("image", logos[position]); // put image data in Intent
+//                //startActivity(intent); // start Intent
+//                //makeText(PreviewActivity.this, "STRICKER = " + stricker[position], LENGTH_SHORT).show();
+//
+//                clearFocus();
+//                for (int i = 0; i < facePosition.size(); i++){
+//                    String[] a = facePosition.get(i).split("/");
+//                    //setFocusView2(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), stricker[position]);
+//                    Log.e("TAG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+//
+//                    LinearLayout layoutInner = fram_focus_layout.findViewWithTag(i + "");
+//                    Log.e("TAG","stricker[position] = " + stricker[position]);
+//                    Log.e("TAG","layoutInner TAG = " + layoutInner.getTag());
+//
+//                    //layoutInner.setBackground(ContextCompat.getDrawable(PreviewActivity.this, R.drawable.stricker15));
+//
+//
+//                }
+//            }
+//        });
 
         //END STRICKER /////////////////////////////////////////////////////////////////////////////
 
@@ -347,51 +338,57 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         // END PAINT  /////////////////////////////////////////
 
-        // Get intent form MainActivity
+        // Get intent form MainCameraActivity
         Intent intent = getIntent();
-        String value = intent.getStringExtra("key");
-        String value_resolution = intent.getStringExtra("resolution");
+        String intenPath = intent.getStringExtra("key");
+//        String intentFrom = intent.getStringExtra("intentFrom");
+//        String intentPath = intent.getStringExtra("intenPath");
+        String value_resolution = "";
+        value_resolution = intent.getStringExtra("resolution");
         //String value_orientation = intent.getStringExtra("orientation");
         //String value_main_camera = intent.getStringExtra("main_camera");
 
-        //makeText(this, "orientation = " + value_orientation, LENGTH_SHORT).show();
-        File file = new File(value);
-        Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+        Bitmap inputBitma = BitmapFactory.decodeFile(new File(intenPath).getAbsolutePath());
+//        if(intentFrom.equals("gallery")){
+//            inputBitma = BitmapFactory.decodeFile(new File(intentPath).getAbsolutePath());
+//        }else if (intentFrom.equals("camera")){
+//            inputBitma = BitmapFactory.decodeFile(new File(value).getAbsolutePath());
+//        }
 
         //set real size of photo
-        heightPhoto = myBitmap.getHeight();
-        widthPhoto = myBitmap.getWidth();
+        heightPhoto = inputBitma.getHeight();
+        widthPhoto = inputBitma.getWidth();
 
         int img_height = 0;
         int img_width = 0;
         int y = 0;
         int x = 0;
 
-        if (value_resolution.equals("4:3")) {
-            img_height = myBitmap.getWidth();
-            img_width = (myBitmap.getWidth() / 4) * 3;
-            y = (myBitmap.getHeight() - img_width) / 2;
-            x = (img_width - myBitmap.getHeight()) / 2;
-
-        } else if (value_resolution.equals("16:9")) {
-            img_height = myBitmap.getWidth();
-            img_width = (myBitmap.getWidth() / 16) * 9;
-            y = (myBitmap.getHeight() - img_width) / 2;
-            x = 0;//(img_width - myBitmap.getHeight()) / 2;
-
-        } else if (value_resolution.equals("1:1")) {
-            img_height = myBitmap.getHeight();
-            img_width = myBitmap.getHeight();
-            y = (myBitmap.getHeight() - img_width) / 2;
-            x = (myBitmap.getWidth() - myBitmap.getHeight()) / 2;
-        }
+//        if (value_resolution.equals("4:3")) {
+//            img_height = inputBitma.getWidth();
+//            img_width = (inputBitma.getWidth() / 4) * 3;
+//            y = (inputBitma.getHeight() - img_width) / 2;
+//            x = (img_width - inputBitma.getHeight()) / 2;
+//
+//        } else if (value_resolution.equals("16:9")) {
+//            img_height = inputBitma.getWidth();
+//            img_width = (inputBitma.getWidth() / 16) * 9;
+//            y = (inputBitma.getHeight() - img_width) / 2;
+//            x = 0;//(img_width - inputBitma.getHeight()) / 2;
+//
+//        } else if (value_resolution.equals("1:1")) {
+//            img_height = inputBitma.getHeight();
+//            img_width = inputBitma.getHeight();
+//            y = (inputBitma.getHeight() - img_width) / 2;
+//            x = (inputBitma.getWidth() - inputBitma.getHeight()) / 2;
+//        }
 
         //ภาพถ่ายที่ผ่านการหมุนตามเข้มนาฬิกาแล้ว = Rotate
         //set photo rotate
         Matrix matrix = new Matrix();
         //matrix.postRotate(Integer.parseInt(value_orientation));
         //matrix.postRotate(Integer.parseInt("0"));
-        //Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
+        //Bitmap rotated = Bitmap.createBitmap(inputBitma, x, y, img_height, img_width, matrix, true);
 
         ImageButton btnSave = (ImageButton) findViewById(R.id.button_save_image);
         btnSave.setOnClickListener(new View.OnClickListener() {
@@ -437,7 +434,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 dialog.show();
                 ///getImageUri((PreviewActivity.this), rotated);
 
-                //String savedImageURL = MediaStore.Images.Media.insertImage((PreviewActivity.this).getContentResolver(), myBitmap, "filename", null);
+                //String savedImageURL = MediaStore.Images.Media.insertImage((PreviewActivity.this).getContentResolver(), inputBitma, "filename", null);
                 //บันทึกรูปลง Grallery
                 //Uri savedImageURI = Uri.parse(savedImageURL);
                 //Toast.makeText(PreviewActivity.this, "savedImageURL = " + contentValues, Toast.LENGTH_SHORT).show();
@@ -467,7 +464,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
 
         //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.pe);
-        nowPhotoPreview = myBitmap;
+        nowPhotoPreview = inputBitma;
         //nowPhotoPreview = rotated;
 
         imgPreView = findViewById(R.id.ImagePreview);
@@ -607,8 +604,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        MainActivity.resumeThread();
-        MainActivity.isWorking = true;
+        com.cekmitl.pdpacameracensor.MainCameraActivity.resumeThread();
+        com.cekmitl.pdpacameracensor.MainCameraActivity.isWorking = true;
     }
 
     @Override
@@ -950,7 +947,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
          */
-        Bitmap face = BitmapFactory.decodeResource(PreviewActivity.this.getResources(),R.drawable.py2);
+        Bitmap face = BitmapFactory.decodeResource(PreviewActivity.this.getResources(),R.drawable.test_img);
 
         LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
         @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
@@ -1226,7 +1223,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onResume() {
         super.onResume();
-        MainActivity.pauseThread();
+        com.cekmitl.pdpacameracensor.MainCameraActivity.pauseThread();
     }
 
     public void setFocusViewBlur(double X, double Y, double width, double height, double xPos, double yPos, double blurRadius, String id) {

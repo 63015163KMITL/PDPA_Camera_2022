@@ -12,20 +12,20 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.cekmitl.pdpacameracensor.ui.dashboard.DashboardFragment"
+        android:id="@+id/navigation_gallery"
+        android:name="com.cekmitl.pdpacameracensor.ui.gallery.GalleryFragment"
         android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_gallery" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.cekmitl.pdpacameracensor.ui.notifications.NotificationsFragment"
+        android:id="@+id/navigation_setting"
+        android:name="com.cekmitl.pdpacameracensor.ui.setting.SettingFragment"
         android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        tools:layout="@layout/fragment_setting" />
 
     <fragment
         android:id="@+id/navigation_facerecognition"
-        android:name="com.cekmitl.pdpacameracensor.FaceRecognitionFragment"
+        android:name="com.cekmitl.pdpacameracensor.ui.facerecognition.FaceRecognitionFragment"
         android:label="Face Recognition"
         tools:layout="@layout/fragment_face_recognition" />
 

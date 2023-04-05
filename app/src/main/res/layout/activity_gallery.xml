@@ -3,10 +3,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000"
+    android:orientation="vertical"
     tools:context=".GalleryActivity">
+
+    <TextView
+        android:layout_margin="20dp"
+        android:textSize="30dp"
+        android:textColor="@color/white"
+        android:text="Gallery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/idRVImages"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
 </LinearLayout>

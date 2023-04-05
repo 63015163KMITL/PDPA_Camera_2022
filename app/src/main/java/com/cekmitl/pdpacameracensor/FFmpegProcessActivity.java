@@ -4,8 +4,10 @@ import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
 import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_CANCEL;
 import static com.arthenica.mobileffmpeg.Config.RETURN_CODE_SUCCESS;
+import static com.cekmitl.pdpacameracensor.ui.home.HomeFragment.getPersonData;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -16,6 +18,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.RectF;
+import android.graphics.drawable.ColorDrawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -27,13 +30,16 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -43,6 +49,17 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.arthenica.mobileffmpeg.Config;
 import com.arthenica.mobileffmpeg.FFmpeg;
+import com.cekmitl.pdpacameracensor.ImageEditor.BitmapEditor;
+import com.cekmitl.pdpacameracensor.Process.Classifier;
+import com.cekmitl.pdpacameracensor.Process.EuclideanDistance;
+import com.cekmitl.pdpacameracensor.Process.FaceRecogitionProcessor;
+import com.cekmitl.pdpacameracensor.Process.Person;
+import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
+import com.cekmitl.pdpacameracensor.Process.Score;
+import com.cekmitl.pdpacameracensor.Process.YoloV5Classifier;
+import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewAdapter;
+import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewPersonListSelectorAdapter;
+import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewStickerListSelectorAdapter;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
@@ -59,24 +76,52 @@ import it.mirko.rangeseekbar.RangeSeekBar;
 
 public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeSeekBarListener, View.OnClickListener {
 
-    private Canvas canvas1;
     private Bitmap bitmap = null;
-    private Paint paint;
-    private Paint paint_sensor;
+
+    private static int PAINT_OPTION_RECTANGLE = 1, PAINT_OPTION_CIRCLE = 2;
+
+    private LinearLayout button_option_face, button_option_blur, button_option_sticker, button_option_shape, button_option_cut;
+
+    //Dialog Layout
+    AlertDialog.Builder dialogBuilder;
+    AlertDialog alertDialog;
+
+    //Spinner
+    private Spinner spFrameRate, spVdieoResol;
+    private String[] frame_rate = {"25 FPS (recommend)", "30 FPS", "60 FPS"};
+    private String[] video_resolution = {"480px (recommend)", "640px", "720px", "1080px"};
+
+    //Dialog Content
+    private TextView textview_vide_detail;
+    private EditText edittext_video_name;
 
     private Button next_btt, detect_btt;
-    private ImageButton button_video_play, button_video_pause;
+    private ImageButton button_video_play;
     private int VIDEO_HIGH;
     private int VIDEO_WIDTH;
     int IMAGENUM;
     private File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES);
     String INPUT_PATH = DOC_PATH + "/out";
     String OUTPUT_PATH = DOC_PATH + "/out2";
-    private FFmpeg ffmpeg;
 
-    public String strMessage = "";
+    //----------------------------------------------------------------------------------------------
+    //Face Select Option
+    private String[] strFace_selected;
 
+    //Blur Option val
+    private int blur_radius = 0;
+    private int blur_size = 0;
 
+    //Sticker Option val
+    private Bitmap sticker_option;
+    private int sticker_size = 0;
+
+    //Shape Option val (Canvas)
+    private Canvas canvas;
+    private Paint paint;
+    private int shape_color = Color.parseColor("#000000");
+    private int shape_size = 0;
+    //----------------------------------------------------------------------------------------------
 
     private int video_time;
     private int video_start_time;
@@ -120,24 +165,28 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     //Seekbar
     public SeekBar sk;
-    private Canvas canvas;
 
-    ProgressDialog progressDialogP1;
     ProgressDialog progressDialogP2;
-    ProgressDialog progressDialogP3;
-    ProgressDialog progressDialogP4;
-    ProgressDialog progressDialogP5;
-
 
     boolean isT1Done = false;
     boolean isT2Done = false;
     boolean isT3Done = false;
     boolean isT4Done = false;
 
-    public ImageView imgV;
 
     //RelativeLayout setFocusView
     RelativeLayout fram_focus_layout;
+
+    //Gird view person list
+    private GridView androidGridView;
+    private GridViewAdapter adapterViewAndroid;
+
+    //Person Data
+    static Person[] persons;
+    static PersonDatabase db;
+
+    private String[] listPerson_name;
+    private Bitmap[] listPerson_image;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,62 +198,67 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         assert actionBar != null;
         actionBar.hide();
 
-        Intent intent = getIntent();
-        String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
-
+        //Button
         detect_btt = findViewById(R.id.button6);
         next_btt = findViewById(R.id.nextBtt);
         button_video_play = findViewById(R.id.button_video_play);
 
+        button_option_face = findViewById(R.id.button_option_face);
+        button_option_blur = findViewById(R.id.button_option_blur);
+        button_option_sticker = findViewById(R.id.button_option_sticker);
+        button_option_shape = findViewById(R.id.button_option_shape);
+        button_option_cut = findViewById(R.id.button_option_cut);
 
         detect_btt.setOnClickListener(this);
         next_btt.setOnClickListener(this);
         button_video_play.setOnClickListener(this);
 
+        button_option_face.setOnClickListener(this);
+        button_option_blur.setOnClickListener(this);
+        button_option_sticker.setOnClickListener(this);
+        button_option_shape.setOnClickListener(this);
+        button_option_cut.setOnClickListener(this);
+
+
+        Intent intent = getIntent();
+        String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
 
         fram_focus_layout = findViewById(R.id.fram_focus_layout);
         if (video_name == null){
             video_name = "input";
             VIDEO_NAME = "input";
         }else{
-            inputVideo = video_name+".mp4";
-            tempeFramePool = video_name+"/";
-            tempeVideo = video_name+"_temp.mp4";
-            audio = video_name+"/audio.mp3";
+            inputVideo = video_name + ".mp4";
+            tempeFramePool = video_name + "/";
+            tempeVideo = video_name +"_temp.mp4";
+            audio = video_name + "/audio.mp3";
             finalVideoResulte = video_name + "_output.mp4";
             INPUT_PATH = DOC_PATH + "/" + video_name;
-            OUTPUT_PATH = DOC_PATH + "/" +video_name;
+            OUTPUT_PATH = DOC_PATH + "/" + video_name;
             VIDEO_NAME = video_name;
         }
-        uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
 
-        videoView = findViewById(R.id.videoView);
-        imgV = findViewById(R.id.video_frame_imageview);
+        uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
 
         retriever = new MediaMetadataRetriever();
         retriever.setDataSource(String.valueOf(uri));
 
+        videoView = findViewById(R.id.videoView);
         videoView.setVideoURI(uri);
-//        myMediaController = new MediaController(this);
-//        videoView.setMediaController(myMediaController);
-
         videoView.setOnCompletionListener(myVideoViewCompletionListener);
         videoView.setOnPreparedListener(MyVideoViewPreparedListener);
         videoView.setOnErrorListener(myVideoViewErrorListener);
-
         videoView.requestFocus();
-//
-//        video_width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-//        video_height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-//
-//        makeText(this, "video_width = " + video_width + "    video_height = " + video_height, LENGTH_SHORT).show();
 
         //Size of frame preview
         video_width = 1080;
         video_height = 607;
 
-//        videoView.start();
-//        myVideoView.start();
+        //Paint Default
+        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.parseColor("#000000"));
+        paint.setMaskFilter(new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL));
 
         //SeekBar
         sk = findViewById(R.id.seekBar);
@@ -216,10 +270,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     videoView.seekTo(seekBar.getProgress());
                     clearFocus();
 
-//
-//                    TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
-//                    text_view_video_time_current.setText("" + milisecToTimeFormat(seekBar.getProgress()));
-//
                     Bitmap bmFrame = retriever.getFrameAtTime(seekBar.getProgress() * 1000, MediaMetadataRetriever.OPTION_PREVIOUS_SYNC); //unit in microsecond
                     if(bmFrame == null){
                         makeText(FFmpegProcessActivity.this, "bmFrame == null!", Toast.LENGTH_LONG).show();
@@ -236,16 +286,14 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                //makeText(FFmpegProcessActivity.this, "seekBar : " + seekBar.getProgress() + "\n Current : " + videoView.getCurrentPosition() + "\nDuration() = " + videoView.getDuration(), LENGTH_SHORT).show();
+
             }
         });
 
         RangeSeekBar rangeSeekBar = findViewById(R.id.rangeSeekBar);
-
         rangeSeekBar.setStartProgress(20); // default is 0
         rangeSeekBar.setEndProgress(80); // default is 50
         rangeSeekBar.setMinDifference(5); // default is 20
-
         rangeSeekBar.setOnRangeSeekBarListener((OnRangeSeekBarListener) FFmpegProcessActivity.this);
 
         try {
@@ -261,18 +309,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             //makeText(this, "detector ERROR", LENGTH_SHORT).show();
             e.printStackTrace();
         }
-
-
-        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setColor(Color.parseColor("#FFC733"));
-        paint.setStrokeWidth(5);
-
-        //paint_sensor
-        paint_sensor = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint_sensor.setStyle(Paint.Style.FILL);
-        paint_sensor.setColor(Color.parseColor("#000000"));
-        paint_sensor.setMaskFilter(new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL));
 
         //Face Recog
         try {
@@ -294,33 +330,12 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             f2.mkdirs();
         }
 
+        //Initial GridView list person
+        listPerson_name = (String[]) getPersonData().get(0);
+        listPerson_image = (Bitmap[]) getPersonData().get(1);
 
-//        video_frame_rate = 25;
-//        video_height = 480;
-//        video_width = 480;
-
-//        ExtractVideoFrame("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " " + path + tempeFramePool + tempeFrame);
-//        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
-//        MergeImageToVideo("-f image2 -framerate " + video_frame_rate + " -i "+ path + tempeFramePool + tempeFrame + " -c:v libx264 " + path + tempeVideo);
-//        MergeAudioToVideo("-i "+ path + tempeVideo + " -i " + path + audio + "-c:v copy -c:a aac " + path + finalVideoResulte);
-
-//        //ExtractVideoFrame
-//                cmdFFmpeg("-i " + path + inputVideo + " -vf scale=" + video_height + ":" + video_width + " -r " + video_frame_rate + " " + path + tempeFramePool + tempeFrame);
-//        //ExtractVideoAudio
-//                cmdFFmpeg("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
-//        //MergeImageToVideo
-//                cmdFFmpeg("-f image2 -framerate " + video_frame_rate + " -i "+ path + tempeFramePool + tempeFrame + " -c:v libx264 " + path + tempeVideo);
-//        //MergeAudioToVideo
-//                cmdFFmpeg("-i "+ path + tempeVideo + " -i " + path + audio + "-c:v copy -c:a aac " + path + finalVideoResulte);
-
-
-//        executeDetect();
-//        try {
-//            execute();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
+        Log.e("person","listPerson_name : " + listPerson_name.toString());
+        Log.e("person","listPerson_iamge : " + listPerson_image.toString());
     }
 
     public void cmdFFmpeg(String cmd){
@@ -340,10 +355,9 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     public void ExtractVideoFrame(String cmd) {
         //FFmpeg ff = FFmpeg.getInstance(getApplicationContext());
         int rc = FFmpeg.execute(cmd);
-        p1 = true;
 
         if (rc == RETURN_CODE_SUCCESS) {
-
+            p1 = true;
             Log.i(Config.TAG, "Command execution completed successfully.");
             checkVideoSize();
             processDetect();
@@ -358,8 +372,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     public void ExtractVideoAudio(String cmd){
         //ffmpeg -i input.mp4 -vn -ar 44100 -ac 2 -ab 192k -f mp3 audio.mp3
         int rc = FFmpeg.execute(cmd);
-
-
         if (rc == RETURN_CODE_SUCCESS) {
             p4 = true;
             MergeAudioToVideo("-i "+ path + tempeVideo + " -i " + path + audio + " -c:v copy -c:a aac " + path + finalVideoResulte);
@@ -370,16 +382,12 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
             Config.printLastCommandOutput(Log.INFO);
         }
-
-
     }
 
 
     public void MergeImageToVideo(String cmd){
         //ffmpeg -f image2 -framerate 23.976 -i temp%05d.jpg -c:v libx264 out.mp4
-
         int rc = FFmpeg.execute(cmd);
-
         if (rc == RETURN_CODE_SUCCESS) {
             p3 = true;
             Log.i(Config.TAG, "Command execution completed successfully.");
@@ -396,31 +404,22 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
             Config.printLastCommandOutput(Log.INFO);
         }
-
     }
 
     public void MergeAudioToVideo(String cmd){
         //ffmpeg -i video.mp4 -i audio.wav -c:v copy -c:a aac output.mp4
         int rc = FFmpeg.execute(cmd);
-
         if (rc == RETURN_CODE_SUCCESS) {
             p5 = true;
             Log.i(Config.TAG, "Command execution completed successfully.");
             deleteFolder(INPUT_PATH);
             deleteFiles(DOC_PATH+"/"+tempeVideo);
-
-//        myMediaController = new MediaController(this);
-//        videoView.setMediaController(myMediaController);
-
-
-//            makeText(FFmpegProcessActivity.this, "Success", LENGTH_SHORT).show();
         } else if (rc == RETURN_CODE_CANCEL) {
             Log.i(Config.TAG, "Command execution cancelled by user.");
         } else {
             Log.i(Config.TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
             Config.printLastCommandOutput(Log.INFO);
         }
-
     }
 
     @Override
@@ -444,13 +443,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 startTime = System.nanoTime();
                 Log.d("CHECKVERSION", "Thread 1 run: " + i);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-
-
                     FaceDetectionInPicture(oldPath, detector1);
                     processedIMAGE1++;
-//                                Files.move(oldPath, newPath);
+//                  Files.move(oldPath, newPath);
                 }
             }
             isT1Done = true;
@@ -461,7 +457,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     break;
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -475,17 +470,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             long h1 = Math.round(IMAGENUM*0.25);
             long h2 = Math.round(IMAGENUM*0.50);
             for (long i = h1;i<=h2;i++){
-
                 startTime = System.nanoTime();
                 Log.d("CHECKVERSION", "Thread 2 run: " + i);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-
-
                     FaceDetectionInPicture(oldPath, detector2);
                     processedIMAGE2++;
-//                                Files.move(oldPath, newPath);
+//                  Files.move(oldPath, newPath);
                 }
             }
             isT2Done = true;
@@ -497,23 +488,17 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     public void executeDetect3(){
         try {
-
             isT3Done = false;
-
             long h1 = Math.round(IMAGENUM*0.50);
             long h2 = Math.round(IMAGENUM*0.75);
             for (long i = h1;i<=h2;i++){
-
                 startTime = System.nanoTime();
                 Log.d("CHECKVERSION", "Thread 3 run: " + i);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-
-
                     FaceDetectionInPicture(oldPath, detector3);
                     processedIMAGE3++;
-//                                Files.move(oldPath, newPath);
+//                  Files.move(oldPath, newPath);
                 }
             }
             isT3Done = true;
@@ -529,17 +514,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             long h1 = Math.round(IMAGENUM*0.75);
             long h2 = IMAGENUM;
             for (long i = h1;i<=h2;i++){
-
                 startTime = System.nanoTime();
                 Log.d("CHECKVERSION", "Thread 4 run: " + i);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-
-
                     FaceDetectionInPicture(oldPath, detector4);
                     processedIMAGE4++;
-//                                Files.move(oldPath, newPath);
+//                  Files.move(oldPath, newPath);
                 }
             }
             isT4Done = true;
@@ -550,30 +531,22 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
     }
 
-
-
     public void FaceDetectionInPicture(String IMG_PATH,Classifier detector) throws IOException {
-
         bitmap = BitmapFactory.decodeFile(IMG_PATH);
         bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         handleResult(bitmap,IMG_PATH,detector);
 
     }
 
-
     private File[] getListFile(){
         return new File(INPUT_PATH).listFiles();
     }
-
-    PersonDatabase db;
     int count = 1;
-    private boolean handleResult(Bitmap bm,String newPath,Classifier detector) throws IOException {
-        //clearFocus();
 
+    private boolean handleResult(Bitmap bm,String newPath,Classifier detector) throws IOException {
         if (bm == null) {
             makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
-//            Bitmap resize = ;
             List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(bm, 320, 320));
             if (results.size() <= 0){
                 Log.e("FFmpeg", "Results FAILLLLLLLLL");
@@ -582,18 +555,19 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
 
-//                            float size_video = video_width;
+//              float size_video = video_width;
                 location.left = location.left * VIDEO_WIDTH; //1920
                 location.top = location.top * VIDEO_HIGH;
                 location.right = location.right * VIDEO_WIDTH;//1920
                 location.bottom = location.bottom * VIDEO_HIGH;
 
-                //                           X - Y - Width - Height
+                //X - Y - Width - Height
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                     Canvas cv = new Canvas(bm);
-                    cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
+                    cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
                 }
             }
+
             File output = new File(newPath);
             OutputStream os = null;
             try {
@@ -629,7 +603,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
         Bitmap bitmapResized = BitmapEditor.getResizedBitmap(bitmap, video_width, video_height);
         Bitmap bitmapCropFace = BitmapEditor.crop(bitmapResized, x, y, w - 1, h - 1);
-
         return bitmapCropFace;
     }
 
@@ -641,9 +614,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
         List<Classifier.Recognition> results = detector1.recognizeImage(BitmapEditor.getResizedBitmap(bitmap, 320, 320));
         for (final Classifier.Recognition result : results) {
-
             final RectF location = result.getLocation();
-
             double l = location.left;   //x
             double t = location.top;    //y
             double r = location.right;  //w
@@ -686,8 +657,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             duration = videoView.getDuration(); //in millisecond
             sk.setMax(videoView.getDuration());
             sk.postDelayed(onEverySecond, 1000);
-            //Toast.makeText(FFmpegProcessActivity.this,"Duration: " + duration + " (ms)",Toast.LENGTH_LONG).show();
-
             TextView text_view_video_time_duration = findViewById(R.id.text_view_video_time_duration);
             text_view_video_time_duration.setText("" + milisecToTimeFormat(videoView.getDuration()));
 
@@ -697,17 +666,17 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     private Runnable onEverySecond = new Runnable() {
         @Override
         public void run() {
-//                    makeText(FFmpegProcessActivity.this, "onEverySecond OK", LENGTH_SHORT).show();
+//          makeText(FFmpegProcessActivity.this, "onEverySecond OK", LENGTH_SHORT).show();
             if(sk != null) {
                 sk.setProgress(videoView.getCurrentPosition());
-//                        makeText(FFmpegProcessActivity.this, "Runnable OK", LENGTH_SHORT).show();
+//              makeText(FFmpegProcessActivity.this, "Runnable OK", LENGTH_SHORT).show();
                 TextView text_view_video_time_current = findViewById(R.id.text_view_video_time_current);
                 text_view_video_time_current.setText("" + milisecToTimeFormat(videoView.getCurrentPosition()));
 
             }
 
             if(videoView.isPlaying()) {
-//                        makeText(FFmpegProcessActivity.this, "isPlaying OK", LENGTH_SHORT).show();
+//              makeText(FFmpegProcessActivity.this, "isPlaying OK", LENGTH_SHORT).show();
                 sk.postDelayed(onEverySecond, 1000);
             }
         }
@@ -727,21 +696,19 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         List<Classifier.Recognition> results = detector.recognizeImage(resize);
 
         for (final Classifier.Recognition result : results) {
-
             final RectF location = result.getLocation();
-
             double l = location.left;   //x
             double t = location.top;    //y
             double r = location.right;  //w
             double b = location.bottom; //h
-//
+
             float size_video = 1080;
             location.left = location.left * size_video; //1920
             location.top = location.top * 607;
             location.right = location.right * size_video;//1920
             location.bottom = location.bottom * 607;
 
-            //                           X - Y - Width - Height
+            //X - Y - Width - Height
             if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                 if (db == null) {
                     try {
@@ -760,10 +727,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
                 if (!(score == null)){
                     setFocusView(l, t, r, b,  "", result.getX(), result.getY(), true);
-//                    canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
+//                  canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
                 }else {
                     setFocusView(l, t, r, b,  "", result.getX(), result.getY(), false);
-//                    canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
+//                  canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint_sensor);
                 }
             }
         }
@@ -826,17 +793,12 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         layoutInner = new LinearLayout(FFmpegProcessActivity.this);
         layoutTOP.setTag(id);
         Log.e("TAG", "layoutTOP TAG = " + layoutTOP.getTag());
-
         layoutInner.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-
         layoutInner.addView(focus_frame);
         layoutTOP.addView(layoutInner);
 
-
         fram_focus_layout.addView(layoutTOP, params1);
         //fram_focus_layout.addView(txt, params1);
-
-
     }
 
     public void clearFocus() {
@@ -848,13 +810,14 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     @Override
     public void onClick(View view) {
+        View layoutView = getLayoutInflater().inflate(R.layout.dialog_option_shap, null);
         switch (view.getId()) {
             case R.id.button_video_play:
-                button_video_play.setImageResource((android.R.drawable.ic_media_pause));
                 if (videoView.isPlaying()){
                     videoView.pause();
+                    button_video_play.setImageResource((android.R.drawable.ic_media_play));
                 }else {
-                    button_video_play.setImageResource(android.R.drawable.ic_media_play);
+                    button_video_play.setImageResource(android.R.drawable.ic_media_pause);
                     videoView.start();
                     clearFocus();
                     sk.postDelayed(onEverySecond, 1000);
@@ -862,157 +825,209 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 break;
             case R.id.nextBtt:
 
-//                progressDialogP1 = new ProgressDialog(FFmpegProcessActivity.this);
-//                progressDialogP1.setMessage("Extracting..."); // Setting Message
-//                progressDialogP1.setTitle("Extract All Frame"); // Setting Title
-//                progressDialogP1.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
-//                progressDialogP1.show(); // Display Progress Dialog
-//                progressDialogP1.setCancelable(false);
+                dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
+                View layoutView_Render = getLayoutInflater().inflate(R.layout.dialog_option_render, null);
+                dialogBuilder.setView(layoutView_Render);
+                alertDialog = dialogBuilder.create();
+                alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                alertDialog.setCanceledOnTouchOutside(true);
+                alertDialog.getWindow().setGravity(Gravity.BOTTOM);
 
-                progressDialogP2 = new ProgressDialog(FFmpegProcessActivity.this);
-                progressDialogP2.setMessage("Loading..."); // Setting Message
-                progressDialogP2.setTitle("RENDER"); // Setting Title
-                progressDialogP2.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL); // Progress Dialog Style Spinner
-                progressDialogP2.setMax(100);
-                progressDialogP2.show();
-                progressDialogP2.setCancelable(false);
-//
-//                progressDialogP3 = new ProgressDialog(FFmpegProcessActivity.this);
-//                progressDialogP3.setMessage("Loading..."); // Setting Message
-//                progressDialogP3.setTitle("MERGE VIDEO"); // Setting Title
-//                progressDialogP3.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
-//                progressDialogP3.setCancelable(false);
-//
-//                progressDialogP4 = new ProgressDialog(FFmpegProcessActivity.this);
-//                progressDialogP4.setMessage("Loading..."); // Setting Message
-//                progressDialogP4.setTitle("EXTRACT AUDIO"); // Setting Title
-//                progressDialogP4.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
-//                progressDialogP4.setCancelable(false);
-//
-//                progressDialogP5 = new ProgressDialog(FFmpegProcessActivity.this);
-//                progressDialogP5.setMessage("Loading..."); // Setting Message
-//                progressDialogP5.setTitle("MERGE VIDEO + AUDIO"); // Setting Title
-//                progressDialogP5.setProgressStyle(ProgressDialog.STYLE_SPINNER); // Progress Dialog Style Spinner
-//                progressDialogP5.setCancelable(false);
+                // Dialog Spinner
+                spFrameRate = layoutView_Render.findViewById(R.id.spinner_frame_rate_selector);
+                spVdieoResol = layoutView_Render.findViewById(R.id.spinner_video_resol_selector);
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
+                ArrayAdapter spFrameRateVale = new ArrayAdapter(getBaseContext(), android.R.layout.simple_spinner_item, frame_rate);
+                spFrameRateVale.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spFrameRate.setAdapter(spFrameRateVale);
 
-                        //                    ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
-//                        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
-
-//                        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
-                        ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
-                        progress();
+                ArrayAdapter spVideoResol = new ArrayAdapter(getBaseContext(), android.R.layout.simple_spinner_item, video_resolution);
+                spVideoResol.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spVdieoResol.setAdapter(spVideoResol);
 
 
-                        while (true) {
-                            if (p1) {
-                                progressDialogP2.incrementProgressBy(20);
-//                                progressDialogP1.dismiss();
-                                ; // Display Progress Dialog
-                                break;
-                            }
-
-                        }
-//                        progressDialogP2.show();
-
-                        int val = 20;
-                        int num = 0;
-                        int savedNum = 0;
-                        int updateNum = 0;
-                        IMAGENUM = getListFile().length;
-                        while (true){
-
-                            float newNum = ( ((float) processedIMAGE1 + (float)processedIMAGE2 + (float)processedIMAGE3 + (float)processedIMAGE4) / (float)IMAGENUM) * (float)20;
-
-
-                            if(newNum > 0){
-                                updateNum = (int)newNum - savedNum;
-                                savedNum = (int)newNum;
-                            }
-
-                            progressDialogP2.incrementProgressBy(updateNum);
-
-//                            if (pNum > num && pNum <= IMAGENUM){
-//                                num = pNum;
-//                                Log.d("PROGRESSVIDEO", "DETECT FACE: " + num + "/"+ IMAGENUM);
-//                            }
-//
-                            if(p2){
-//                                progressDialogP2.incrementProgressBy(updateNum);
-                                break;
-                            }
-                        }
-                        while (true){
-
-                            if(p3){
-                                progressDialogP2.incrementProgressBy(20);
-//                                progressDialogP3.dismiss();
-//                                progressDialogP4.show();
-                                break;
-                            }
-                        }
-                        while (true){
-
-                            if(p4){
-                                progressDialogP2.incrementProgressBy(20);
-//                                progressDialogP4.dismiss();
-//                                progressDialogP5.show();
-                                break;
-                            }
-                        }
-                        while (true){
-
-                            if(p5){
-                                progressDialogP2.incrementProgressBy(20);
-                                progressDialogP2.dismiss();
-                                break;
-                            }
-                        }
-
-//                        MergeImageToVideo("-f image2 -threads 3 -framerate 24 -i "+ path + "out/%d.jpg " + path + "out.mp4");
-
-                    }
-                }).start();
-
-
-//                new Thread(new Runnable() {
+//                spFrameRate.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 //                    @Override
-//                    public void run() {
+//                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+//
+//                                if(i == 1){
+//                                    video_frame_rate = 25;
+//                                }else {
+//                                    video_frame_rate = 30;
+//                                }
+//                    }
+//                });
+//
+//                spVdieoResol.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//                    @Override
+//                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 //
 //                    }
-//                }).start();
+//                });
+
+                //
+                String VideoTime = "00:05:00";
+                String path = "Storage/Movie/";
+
+                textview_vide_detail = layoutView_Render.findViewById(R.id.textview_vide_detail);
+                textview_vide_detail.setText("TIME : " + VideoTime + "\nPath : " + path);
+
+                edittext_video_name = layoutView_Render.findViewById(R.id.edittext_video_name);
+                edittext_video_name.setEnabled(false);
+
+                Button button_render_video = layoutView_Render.findViewById(R.id.button_render_video);
+                button_render_video.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        progressDialogP2 = new ProgressDialog(FFmpegProcessActivity.this);
+                        progressDialogP2.setMessage("Loading..."); // Setting Message
+                        progressDialogP2.setTitle("RENDER"); // Setting Title
+                        progressDialogP2.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL); // Progress Dialog Style Spinner
+                        progressDialogP2.setMax(100);
+                        progressDialogP2.show();
+                        progressDialogP2.setCancelable(false);
+
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
+                                //progress();
+                                while (true) {
+                                    if (p1) {
+                                        progressDialogP2.incrementProgressBy(20);
+                                        break;
+                                    }
+                                }
+
+                                int val = 20;
+                                int num = 0;
+                                int savedNum = 0;
+                                int updateNum = 0;
+                                IMAGENUM = getListFile().length;
+
+                                while (true){
+                                    float newNum = ( ((float) processedIMAGE1 + (float)processedIMAGE2 + (float)processedIMAGE3 + (float)processedIMAGE4) / (float)IMAGENUM) * (float)20;
+                                    if(newNum > 0){
+                                        updateNum = (int)newNum - savedNum;
+                                        savedNum = (int)newNum;
+
+                                        Log.e("debug_render","newNum > 0 : " + newNum);
+                                    }
+
+                                    progressDialogP2.incrementProgressBy(updateNum);
+
+                                    if(p2){
+                                        Log.e("debug_render","if P2 = true");
+                                        break;
+                                    }
+                                }
+
+                                while (true){
+                                    if(p3){
+                                        progressDialogP2.incrementProgressBy(20);
+                                        break;
+                                    }
+                                }
+
+                                while (true){
+                                    if(p4){
+                                        progressDialogP2.incrementProgressBy(20);
+                                        break;
+                                    }
+                                }
+
+                                while (true){
+                                    if(p5){
+                                        progressDialogP2.incrementProgressBy(20);
+                                        progressDialogP2.dismiss();
+                                        break;
+                                    }
+                                }
+                            }
+                        }).start();
+                    }
+                });
+
+                alertDialog.show();
+
                 break;
-//            case R.id.nextBtt:
-//                mergeVideo();
-//
-//                break;
+
+            case R.id.button_option_shape:
+                dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
+                layoutView = getLayoutInflater().inflate(R.layout.dialog_option_shap, null);
+                dialogBuilder.setView(layoutView);
+                alertDialog = dialogBuilder.create();
+                alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                alertDialog.setCanceledOnTouchOutside(true);
+                alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+                alertDialog.show();
+                break;
+            case R.id.button_option_blur:
+                dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
+                layoutView = getLayoutInflater().inflate(R.layout.dialog_option_blur, null);
+                dialogBuilder.setView(layoutView);
+                alertDialog = dialogBuilder.create();
+                alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                alertDialog.setCanceledOnTouchOutside(true);
+                alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+                alertDialog.show();
+                break;
+
+            case R.id.button_option_sticker:
+                dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
+                View layoutView_dialog_option_sticker = getLayoutInflater().inflate(R.layout.dialog_option_sticker, null);
+                dialogBuilder.setView(layoutView_dialog_option_sticker);
+                alertDialog = dialogBuilder.create();
+                alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                alertDialog.setCanceledOnTouchOutside(true);
+                alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+
+                GridViewStickerListSelectorAdapter dapterViewAndroid = new GridViewStickerListSelectorAdapter(FFmpegProcessActivity.this);
+                GridView androidGridView = layoutView_dialog_option_sticker.findViewById(R.id.GridView_stricker);
+                androidGridView.setAdapter(dapterViewAndroid);
+
+                alertDialog.show();
+                break;
+
+            case R.id.button_option_face:
+                dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
+                View layoutView_dialog_option_face = getLayoutInflater().inflate(R.layout.dialog_option_face, null);
+                dialogBuilder.setView(layoutView_dialog_option_face);
+                alertDialog = dialogBuilder.create();
+//                alertDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
+                alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                alertDialog.setCanceledOnTouchOutside(true);
+                alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+
+
+                GridViewPersonListSelectorAdapter dapterViewAndroidFace = new GridViewPersonListSelectorAdapter(FFmpegProcessActivity.this, listPerson_name, listPerson_image, 0);
+                androidGridView = layoutView_dialog_option_face.findViewById(R.id.GridView_person_list);
+                androidGridView.setAdapter(dapterViewAndroidFace);
+
+
+
+                alertDialog.show();
+                break;
         }
     }
 
     void checkVideoSize(){
-//        File f = new File(INPUT_PATH+"/out/1.jpg");
+//      File f = new File(INPUT_PATH+"/out/1.jpg");
         Bitmap tBitmap = BitmapFactory.decodeFile(INPUT_PATH+"/1.jpg").copy(Bitmap.Config.ARGB_8888, true);
         VIDEO_HIGH = tBitmap.getHeight();
         VIDEO_WIDTH = tBitmap.getWidth();
     }
 
-
     void mergeVideo(){
-
         new Thread(new Runnable() {
             @Override
             public void run() {
                 MergeImageToVideo("-f image2 -threads 2 -framerate 24 -i "+ path + VIDEO_NAME+"/%d.jpg " + path + tempeVideo);
-
             }
         }).start();
 
     }
-
-
 
     void processDetect(){
         processedIMAGE1 = 0;
@@ -1064,8 +1079,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         return time;
     }
 
-
-
     Thread progressThread;
     boolean p1=false;
     boolean p2=false;
@@ -1077,7 +1090,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         progressThread = new Thread(new Runnable() {
             @Override
             public void run() {
-
 
                 Log.d("PROGRESSVIDEO", "Starting ...");
                 Log.d("PROGRESSVIDEO", "EXTRACT IMAGE : START..");
@@ -1091,6 +1103,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 }
 
                 int num = 0;
+
                 while (true){
                     int pNum = processedIMAGE1 + processedIMAGE2 + processedIMAGE3 + processedIMAGE4;
                     if (pNum > num && pNum <= IMAGENUM){
@@ -1104,6 +1117,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
                 }
                 Log.d("PROGRESSVIDEO", "MERGE VIDEO : START..");
+
                 while (true) {
                     if (p3){
                         Log.d("PROGRESSVIDEO", "MERGE VIDEO : FINISH");
@@ -1111,6 +1125,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     }
                 }
                 Log.d("PROGRESSVIDEO", "EXTRACT AUDIO : START..");
+
                 while (true){
                     if (p4){
                         Log.d("PROGRESSVIDEO", "EXTRACT AUDIO : FINISH");
@@ -1118,6 +1133,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     }
                 }
                 Log.d("PROGRESSVIDEO", "MERGE AUDIO : START..");
+
                 while (true){
                     if (p4){
                         Log.d("PROGRESSVIDEO", "MERGE AUDIO : FINISH");
@@ -1127,7 +1143,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 Log.d("PROGRESSVIDEO", "RENDER COMPLETE!!");
             }
         });
-
         progressThread.start();
     }
 
@@ -1145,8 +1160,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     }
 
-
-
     void deleteFiles(String path){
         new Thread(new Runnable() {
             @Override
@@ -1155,6 +1168,24 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 f.delete();
             }
         }).start();
-
     }
+
+    public void canvasPainOption(int option){
+        switch (option){
+            case 1 :
+                paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                paint.setStyle(Paint.Style.STROKE);
+                paint.setColor(Color.parseColor("#FFC733"));
+                paint.setStrokeWidth(5);
+                break;
+
+            case 2 : //PAINT_OPTION_RECTANGLE
+                paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                paint.setStyle(Paint.Style.FILL);
+                paint.setColor(Color.parseColor("#000000"));
+                paint.setMaskFilter(new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL));
+                break;
+        }
+    }
+
 }
