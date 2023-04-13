@@ -1370,15 +1370,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 final RectF location = result.getLocation();
                 //                           X - Y - Width - Height
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                    if (true) {
-                        try {
-                            Log.e("IMG","      - location = " + location);
-                            setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        facePosition.add(location.left + "/" + location.top + "/" + location.right + "/" + location.bottom + "/" + result.getX() + "/" + result.getY() + "/" + i);
+                    try {
+                        Log.e("IMG","      - location = " + location);
+                        setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+                    facePosition.add(location.left + "/" + location.top + "/" + location.right + "/" + location.bottom + "/" + result.getX() + "/" + result.getY() + "/" + i);
                 }
                 i++;
             }

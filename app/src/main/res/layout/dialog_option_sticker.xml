@@ -31,6 +31,7 @@
                 android:layout_height="wrap_content"/>
 
             <TextView
+                android:id="@+id/button_sticker_ok"
                 android:layout_alignParentRight="true"
                 android:text="OK"
                 android:textSize="25dp"
@@ -95,6 +96,7 @@
                 android:layout_height="wrap_content">
 
                 <TextView
+                    android:id="@+id/text_sticker_size"
                     android:textColor="@color/white"
                     android:text="100"
                     android:textSize="18dp"
@@ -103,6 +105,7 @@
                     android:layout_height="wrap_content"/>
 
                 <SeekBar
+                    android:id="@+id/seekbar_sticker_size"
                     android:progressDrawable="@drawable/seek_bar"
                     android:splitTrack="false"
                     android:thumb="@drawable/seekbar_drawable_thumb"

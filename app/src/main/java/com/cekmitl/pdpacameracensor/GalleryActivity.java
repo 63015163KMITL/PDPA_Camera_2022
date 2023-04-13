@@ -112,29 +112,48 @@ public class GalleryActivity extends AppCompatActivity {
 
             // this method will stores all the images
             // from the gallery in Cursor
-            Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
+//            Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
+
+            Cursor cursor_photo = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
+            Cursor cursor_video = getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
 
             // below line is to get total number of images
-            int count = cursor.getCount();
+            int count_photo = cursor_photo.getCount();
+            int count_video = cursor_video.getCount();
 
             // on below line we are running a loop to add
             // the image file path in our array list.
-            for (int i = 0; i < count; i++) {
+
+            for (int i = 0; i < count_video; i++) {
 
                 // on below line we are moving our cursor position
-                cursor.moveToPosition(i);
+                cursor_video.moveToPosition(i);
 
                 // on below line we are getting image file path
-                int dataColumnIndex = cursor.getColumnIndex(MediaStore.Images.Media.DATA);
+                int dataColumnIndex = cursor_video.getColumnIndex(MediaStore.Images.Media.DATA);
 
                 // after that we are getting the image file path
                 // and adding that path in our array list.
-                imagePaths.add(cursor.getString(dataColumnIndex));
+                imagePaths.add(cursor_video.getString(dataColumnIndex));
+            }
+            
+            for (int i = 0; i < count_photo; i++) {
+
+                // on below line we are moving our cursor position
+                cursor_photo.moveToPosition(i);
+
+                // on below line we are getting image file path
+                int dataColumnIndex = cursor_photo.getColumnIndex(MediaStore.Images.Media.DATA);
+
+                // after that we are getting the image file path
+                // and adding that path in our array list.
+                imagePaths.add(cursor_photo.getString(dataColumnIndex));
             }
             imageRVAdapter.notifyDataSetChanged();
             // after adding the data to our
             // array list we are closing our cursor.
-            cursor.close();
+            cursor_photo.close();
+            cursor_video.close();
         }
     }
 

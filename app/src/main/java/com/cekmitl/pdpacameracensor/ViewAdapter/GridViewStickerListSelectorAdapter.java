@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.cekmitl.pdpacameracensor.R;
 
@@ -20,13 +19,16 @@ public class GridViewStickerListSelectorAdapter extends BaseAdapter {
 
     private Context mContext;
     private Bitmap[] sticker;
+    private Bitmap[] selectedSticker;
+    private int[] id;
 
     LayoutInflater inflater;
 
-    public GridViewStickerListSelectorAdapter(Context context) {
+    public GridViewStickerListSelectorAdapter(Context context, Bitmap[] selectedSticker, int [] id) {
         mContext = context;
+        this.selectedSticker = selectedSticker;
         sticker = getBitmapFromAsset(mContext);
-
+        this.id = id;
 //        Log.e("sticker", "sticker : " + sticker.toString());
 //        this.sticker = sticker;
 
@@ -59,6 +61,8 @@ public class GridViewStickerListSelectorAdapter extends BaseAdapter {
             gridViewAndroid = inflater.inflate(R.layout.activity_grid_view_sticker_selector_adapter, null);
             ImageView imageViewAndroid = gridViewAndroid.findViewById(R.id.sticker_icon);
             imageViewAndroid.setImageBitmap(sticker[i]);
+            gridViewAndroid.setTag(i);
+
         }else {
             gridViewAndroid = (View) convertView;
         }
@@ -67,9 +71,11 @@ public class GridViewStickerListSelectorAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
 
-                Toast.makeText(mContext, "Hello", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(mContext, "Hello", Toast.LENGTH_SHORT).show();
                 v.setBackgroundResource(R.drawable.bg_round_list_selector);
-
+                selectedSticker[0] = sticker[i];
+                id[0] = (int) v.getTag();
+//                Toast.makeText(mContext, v.getTag().toString(), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -90,7 +96,7 @@ public class GridViewStickerListSelectorAdapter extends BaseAdapter {
 //            bitmap[i] = BitmapFactory.decodeStream(assets.open(String.valueOf(Uri.parse(path + "stricker" + (i + 1) + ".png"))));
             // Read a Bitmap from Assets
             try {
-                InputStream open = assetManager.open("sticker/stricker" + i + ".png");
+                InputStream open = assetManager.open("sticker/stricker" + i+1 + ".png");
                 bitmap[i] = BitmapFactory.decodeStream(open);
             } catch (IOException e) {
                 e.printStackTrace();

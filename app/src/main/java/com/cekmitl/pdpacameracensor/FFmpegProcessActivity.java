@@ -37,6 +37,7 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
+import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -55,6 +56,7 @@ import com.cekmitl.pdpacameracensor.Process.EuclideanDistance;
 import com.cekmitl.pdpacameracensor.Process.FaceRecogitionProcessor;
 import com.cekmitl.pdpacameracensor.Process.Person;
 import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
+import com.cekmitl.pdpacameracensor.Process.RenderOption;
 import com.cekmitl.pdpacameracensor.Process.Score;
 import com.cekmitl.pdpacameracensor.Process.YoloV5Classifier;
 import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewAdapter;
@@ -69,6 +71,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import it.mirko.rangeseekbar.OnRangeSeekBarListener;
@@ -77,10 +80,13 @@ import it.mirko.rangeseekbar.RangeSeekBar;
 public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeSeekBarListener, View.OnClickListener {
 
     private Bitmap bitmap = null;
+    RenderOption rd = null;
 
     private static int PAINT_OPTION_RECTANGLE = 1, PAINT_OPTION_CIRCLE = 2;
 
     private LinearLayout button_option_face, button_option_blur, button_option_sticker, button_option_shape, button_option_cut;
+    int CENSOR_TPYE = 0;
+    int CENSOR_SIZE = 0;
 
     //Dialog Layout
     AlertDialog.Builder dialogBuilder;
@@ -118,7 +124,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     //Shape Option val (Canvas)
     private Canvas canvas;
-    private Paint paint;
+
     private int shape_color = Color.parseColor("#000000");
     private int shape_size = 0;
     //----------------------------------------------------------------------------------------------
@@ -149,8 +155,17 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
 
     //Face Recog
-    private FaceRecogitionProcessor faceRecognitionProcesser;
-    private Interpreter faceNetInterpreter;
+    private FaceRecogitionProcessor faceRecognitionProcesser1;
+    private Interpreter faceNetInterpreter1;
+
+    private FaceRecogitionProcessor faceRecognitionProcesser2;
+    private Interpreter faceNetInterpreter2;
+
+    private FaceRecogitionProcessor faceRecognitionProcesser3;
+    private Interpreter faceNetInterpreter3;
+
+    private FaceRecogitionProcessor faceRecognitionProcesser4;
+    private Interpreter faceNetInterpreter4;
     //    float CONFIDENT = 0.67f;
     EuclideanDistance distance;
     String path = DOC_PATH + "/";
@@ -219,7 +234,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         button_option_shape.setOnClickListener(this);
         button_option_cut.setOnClickListener(this);
 
-
+        if (db == null) {
+            try {
+                db = new PersonDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         Intent intent = getIntent();
         String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
 
@@ -254,11 +275,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         video_width = 1080;
         video_height = 607;
 
-        //Paint Default
-        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.parseColor("#000000"));
-        paint.setMaskFilter(new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL));
+
 
         //SeekBar
         sk = findViewById(R.id.seekBar);
@@ -312,11 +329,17 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
         //Face Recog
         try {
-            faceNetInterpreter = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
+            faceNetInterpreter1 = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
+            faceNetInterpreter2 = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
+            faceNetInterpreter3 = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
+            faceNetInterpreter4 = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        faceRecognitionProcesser = new FaceRecogitionProcessor(faceNetInterpreter);
+        faceRecognitionProcesser1 = new FaceRecogitionProcessor(faceNetInterpreter1);
+        faceRecognitionProcesser2 = new FaceRecogitionProcessor(faceNetInterpreter2);
+        faceRecognitionProcesser3 = new FaceRecogitionProcessor(faceNetInterpreter3);
+        faceRecognitionProcesser4 = new FaceRecogitionProcessor(faceNetInterpreter4);
 
         distance = new EuclideanDistance();
 
@@ -444,7 +467,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 Log.d("CHECKVERSION", "Thread 1 run: " + i);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-                    FaceDetectionInPicture(oldPath, detector1);
+                    FaceDetectionInPicture(oldPath, detector1,faceRecognitionProcesser1);
                     processedIMAGE1++;
 //                  Files.move(oldPath, newPath);
                 }
@@ -474,7 +497,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 Log.d("CHECKVERSION", "Thread 2 run: " + i);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-                    FaceDetectionInPicture(oldPath, detector2);
+                    FaceDetectionInPicture(oldPath, detector2,faceRecognitionProcesser2);
                     processedIMAGE2++;
 //                  Files.move(oldPath, newPath);
                 }
@@ -496,7 +519,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 Log.d("CHECKVERSION", "Thread 3 run: " + i);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-                    FaceDetectionInPicture(oldPath, detector3);
+                    FaceDetectionInPicture(oldPath, detector3,faceRecognitionProcesser3);
                     processedIMAGE3++;
 //                  Files.move(oldPath, newPath);
                 }
@@ -518,7 +541,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 Log.d("CHECKVERSION", "Thread 4 run: " + i);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     String oldPath = INPUT_PATH + "/" + String.valueOf(i) + ".jpg";
-                    FaceDetectionInPicture(oldPath, detector4);
+                    FaceDetectionInPicture(oldPath, detector4,faceRecognitionProcesser4);
                     processedIMAGE4++;
 //                  Files.move(oldPath, newPath);
                 }
@@ -531,10 +554,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         Log.d("SHOWLISTFILE", "NUMBER OF FILE: " + getListFile().length);
     }
 
-    public void FaceDetectionInPicture(String IMG_PATH,Classifier detector) throws IOException {
+    public void FaceDetectionInPicture(String IMG_PATH,Classifier detector,FaceRecogitionProcessor faceRecogitionProcessor) throws IOException {
         bitmap = BitmapFactory.decodeFile(IMG_PATH);
         bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-        handleResult(bitmap,IMG_PATH,detector);
+        handleResult(bitmap,IMG_PATH,detector,faceRecogitionProcessor);
 
     }
 
@@ -543,7 +566,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     }
     int count = 1;
 
-    private boolean handleResult(Bitmap bm,String newPath,Classifier detector) throws IOException {
+    private boolean handleResult(Bitmap bm,String newPath,Classifier detector,FaceRecogitionProcessor faceRecognitionProcesser) throws IOException {
         if (bm == null) {
             makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
@@ -552,8 +575,15 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 Log.e("FFmpeg", "Results FAILLLLLLLLL");
                 return false;
             }
+
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
+
+
+                double l = location.left;   //x
+                double t = location.top;    //y
+                double r = location.right;  //w
+                double b = location.bottom; //h
 
 //              float size_video = video_width;
                 location.left = location.left * VIDEO_WIDTH; //1920
@@ -563,8 +593,57 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
                 //X - Y - Width - Height
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                    Canvas cv = new Canvas(bm);
-                    cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
+//
+                    if (db == null) {
+                        try {
+                            db = new PersonDatabase();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
+                    if (selectedFace.size() > 0){
+
+
+                        Bitmap resize = cropBitmap(l, t, r, b, result.getX(), result.getY(), bm);
+                        float[] array1 = faceRecognitionProcesser.recognize(resize);
+                        Score score = db.recognize(array1,selectedFace);
+                        if (score == null){
+//                        setFocusView(l, t, r, b,  "", result.getX(), result.getY(), true);
+                            //Canvas cv = new Canvas(bm);
+                            //cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, rd._paint);
+                            if (CENSOR_TPYE == 0){
+                                bm = BitmapEditor.blurOverlay(bm, resize, location.left, location.top, location.right, location.bottom,CENSOR_SIZE);
+                            }else if (CENSOR_TPYE == 1){
+                                bm = BitmapEditor.stickerOverlay(bm, selectedSticker[0], location.left, location.top, location.right, location.bottom,CENSOR_SIZE);
+                            }else {
+                                Canvas cv = new Canvas(bm);
+                                cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, getPaint());
+                            }
+
+
+
+                            //bm = BitmapEditor.stickerOverlay(bm, selectedSticker[0], location.left, location.top, location.right, location.bottom);
+                        }
+                    }else{
+                        Bitmap resize = cropBitmap(l, t, r, b, result.getX(), result.getY(), bm);
+                        if (CENSOR_TPYE == 0){
+                            bm = BitmapEditor.blurOverlay(bm, resize, location.left, location.top, location.right, location.bottom,20);
+                        }else if (CENSOR_TPYE == 1){
+                            bm = BitmapEditor.stickerOverlay(bm, selectedSticker[0], location.left, location.top, location.right, location.bottom,100);
+                        }else {
+                            Canvas cv = new Canvas(bm);
+                            cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, getPaint());
+                        }
+//                        Canvas cv = new Canvas(bm);
+//                        cv.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, rd._paint);
+
+                        //Sticker
+//                        bm = BitmapEditor.stickerOverlay(bm, selectedSticker[0], location.left, location.top, location.right, location.bottom);
+
+                    }
+
                 }
             }
 
@@ -638,7 +717,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
 //                bCheck = cropBitmap(l, t, r, b, result.getX(), result.getY(), resize);
                 Canvas cv = new Canvas(bitmap);
-                canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, paint);
+
+                canvas.drawRoundRect(location.left, location.top, location.right, location.bottom, 10, 10, rd._paint);
             }
         }
         return bitmap;
@@ -722,7 +802,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
                 Canvas canvas = new Canvas(bitmap);
 
-                float[] array1 = faceRecognitionProcesser.recognize(bCheck);
+                float[] array1 = faceRecognitionProcesser1.recognize(bCheck);
                 Score score = db.recognize(array1);
 
                 if (!(score == null)){
@@ -808,6 +888,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         }
     }
 
+    ArrayList<String> selectedFace = new ArrayList<>();
+    Bitmap[] selectedSticker = new Bitmap[1];
+    int[] idSticker = new int[1];
+
+    String strShape = "REG";    //REG - CIR
+//    int shapeColor = Color.parseColor("#000");
+
     @Override
     public void onClick(View view) {
         View layoutView = getLayoutInflater().inflate(R.layout.dialog_option_shap, null);
@@ -824,7 +911,11 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 }
                 break;
             case R.id.nextBtt:
+                if (rd == null){
+                    rd = new RenderOption(getPaint());
 
+                }
+                makeText(this, String.valueOf(CENSOR_TPYE), LENGTH_SHORT).show();
                 dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
                 View layoutView_Render = getLayoutInflater().inflate(R.layout.dialog_option_render, null);
                 dialogBuilder.setView(layoutView_Render);
@@ -845,29 +936,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 spVideoResol.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
                 spVdieoResol.setAdapter(spVideoResol);
 
-
-//                spFrameRate.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//                    @Override
-//                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//
-//                                if(i == 1){
-//                                    video_frame_rate = 25;
-//                                }else {
-//                                    video_frame_rate = 30;
-//                                }
-//                    }
-//                });
-//
-//                spVdieoResol.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//                    @Override
-//                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-//
-//                    }
-//                });
-
-                //
                 String VideoTime = "00:05:00";
-                String path = "Storage/Movie/";
+                //String path = "Storage/Movies/";
 
                 textview_vide_detail = layoutView_Render.findViewById(R.id.textview_vide_detail);
                 textview_vide_detail.setText("TIME : " + VideoTime + "\nPath : " + path);
@@ -900,8 +970,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                                     }
                                 }
 
-                                int val = 20;
-                                int num = 0;
                                 int savedNum = 0;
                                 int updateNum = 0;
                                 IMAGENUM = getListFile().length;
@@ -912,7 +980,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                                         updateNum = (int)newNum - savedNum;
                                         savedNum = (int)newNum;
 
-                                        Log.e("debug_render","newNum > 0 : " + newNum);
+//                                        Log.e("debug_render","newNum > 0 : " + newNum);
                                     }
 
                                     progressDialogP2.incrementProgressBy(updateNum);
@@ -941,6 +1009,14 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                                     if(p5){
                                         progressDialogP2.incrementProgressBy(20);
                                         progressDialogP2.dismiss();
+
+                                        Intent intent = new Intent(android.content.Intent.ACTION_VIEW);
+                                        Uri data = Uri.parse(path + finalVideoResulte);
+                                        intent.setDataAndType(data, "video/mp4");
+                                        startActivity(intent);
+
+                                        finish();
+
                                         break;
                                     }
                                 }
@@ -955,23 +1031,128 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
             case R.id.button_option_shape:
                 dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
-                layoutView = getLayoutInflater().inflate(R.layout.dialog_option_shap, null);
-                dialogBuilder.setView(layoutView);
+                View layoutView_dialog_option_shap = getLayoutInflater().inflate(R.layout.dialog_option_shap, null);
+                dialogBuilder.setView(layoutView_dialog_option_shap);
                 alertDialog = dialogBuilder.create();
                 alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 alertDialog.setCanceledOnTouchOutside(true);
                 alertDialog.getWindow().setGravity(Gravity.BOTTOM);
+
+
+                //SHAPE
+                RadioButton radio_shape_reg = layoutView_dialog_option_shap.findViewById(R.id.radio_shape_reg);
+                radio_shape_reg.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        strShape = "REG";
+                        makeText(FFmpegProcessActivity.this, "REG", LENGTH_SHORT).show();
+                    }
+                });
+
+                RadioButton radio_shape_cir = layoutView_dialog_option_shap.findViewById(R.id.radio_shape_cir);
+                radio_shape_cir.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        strShape = "CIR";
+                        makeText(FFmpegProcessActivity.this, "CIR", LENGTH_SHORT).show();
+                    }
+                });
+
+
+                //SHAPE COLOR
+                RadioButton radio_color = layoutView_dialog_option_shap.findViewById(R.id.radio_color_black);
+                radio_color.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+//                        shapeColor = Color.parseColor("#000");
+                        makeText(FFmpegProcessActivity.this, "COLOR", LENGTH_SHORT).show();
+                    }
+                });
+
+                TextView text_shape_size = layoutView_dialog_option_shap.findViewById(R.id.text_shape_size);
+
+                //SEEKBAR SHAPE SIZE
+                SeekBar seekbar_shape_size = layoutView_dialog_option_shap.findViewById(R.id.seekbar_shape_size);
+                seekbar_shape_size.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                        text_shape_size.setText(i + "");
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+
+                    }
+                });
+
+                TextView button_shape_ok = layoutView_dialog_option_shap.findViewById(R.id.button_shape_ok);
+                button_shape_ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        renderOptionSelect("SHAPE", seekbar_shape_size.getProgress());
+                        disableButton(button_option_shape);
+                        alertDialog.dismiss();
+                    }
+                });
+
                 alertDialog.show();
                 break;
             case R.id.button_option_blur:
                 dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
-                layoutView = getLayoutInflater().inflate(R.layout.dialog_option_blur, null);
-                dialogBuilder.setView(layoutView);
+                View layoutView_dialog_option_blur = getLayoutInflater().inflate(R.layout.dialog_option_blur, null);
+                dialogBuilder.setView(layoutView_dialog_option_blur);
                 alertDialog = dialogBuilder.create();
                 alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 alertDialog.setCanceledOnTouchOutside(true);
                 alertDialog.getWindow().setGravity(Gravity.BOTTOM);
                 alertDialog.show();
+
+                TextView text_blur_radius = layoutView_dialog_option_blur.findViewById(R.id.text_blur_radius);
+                TextView text_blur_size = layoutView_dialog_option_blur.findViewById(R.id.text_blur_size);
+
+                SeekBar sbBlurRadius = layoutView_dialog_option_blur.findViewById(R.id.seekbar_blur_radius);
+                sbBlurRadius.setMax(100);
+                sbBlurRadius.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                        text_blur_radius.setText(i + "");
+                       // makeText(FFmpegProcessActivity.this, "sbBlurRadius : " + i, LENGTH_SHORT).show();
+
+                    }
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) { }
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {}
+                });
+
+                SeekBar sbBlurSize = layoutView_dialog_option_blur.findViewById(R.id.seekbar_blur_size);
+                sbBlurSize.setMax(100);
+                sbBlurSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                        text_blur_size.setText(i + "");
+                    }
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) { }
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {}
+                });
+
+                TextView button_blur_ok = layoutView_dialog_option_blur.findViewById(R.id.button_blur_ok);
+                button_blur_ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        renderOptionSelect("BLUR", sbBlurSize.getProgress());
+                        disableButton(button_option_blur);
+                        alertDialog.dismiss();
+                    }
+                });
+
                 break;
 
             case R.id.button_option_sticker:
@@ -983,14 +1164,44 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 alertDialog.setCanceledOnTouchOutside(true);
                 alertDialog.getWindow().setGravity(Gravity.BOTTOM);
 
-                GridViewStickerListSelectorAdapter dapterViewAndroid = new GridViewStickerListSelectorAdapter(FFmpegProcessActivity.this);
+                GridViewStickerListSelectorAdapter dapterViewAndroid = new GridViewStickerListSelectorAdapter(FFmpegProcessActivity.this, selectedSticker,idSticker);
                 GridView androidGridView = layoutView_dialog_option_sticker.findViewById(R.id.GridView_stricker);
                 androidGridView.setAdapter(dapterViewAndroid);
-
+//                makeText(this, String.valueOf(idSticker[0]), LENGTH_SHORT).show();
                 alertDialog.show();
+
+                //selectedSticker[0] = selected Sticker
+
+                TextView text_sticker_size = layoutView_dialog_option_sticker.findViewById(R.id.text_sticker_size);
+
+                SeekBar seekbar_sticker_size = layoutView_dialog_option_sticker.findViewById(R.id.seekbar_sticker_size);
+                seekbar_sticker_size.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                        text_sticker_size.setText(i + "");
+
+                    }
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {}
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {}
+                });
+
+                TextView button_sticker_ok = layoutView_dialog_option_sticker.findViewById(R.id.button_sticker_ok);
+                button_sticker_ok.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        renderOptionSelect("STICKER", seekbar_sticker_size.getProgress());
+                        disableButton(button_option_sticker);
+                        alertDialog.dismiss();
+                    }
+                });
+
+
                 break;
 
             case R.id.button_option_face:
+
                 dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
                 View layoutView_dialog_option_face = getLayoutInflater().inflate(R.layout.dialog_option_face, null);
                 dialogBuilder.setView(layoutView_dialog_option_face);
@@ -1000,12 +1211,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 alertDialog.setCanceledOnTouchOutside(true);
                 alertDialog.getWindow().setGravity(Gravity.BOTTOM);
 
-
-                GridViewPersonListSelectorAdapter dapterViewAndroidFace = new GridViewPersonListSelectorAdapter(FFmpegProcessActivity.this, listPerson_name, listPerson_image, 0);
+                GridViewPersonListSelectorAdapter dapterViewAndroidFace = new GridViewPersonListSelectorAdapter(FFmpegProcessActivity.this, listPerson_name, listPerson_image, 0, selectedFace);
                 androidGridView = layoutView_dialog_option_face.findViewById(R.id.GridView_person_list);
+
                 androidGridView.setAdapter(dapterViewAndroidFace);
-
-
 
                 alertDialog.show();
                 break;
@@ -1086,104 +1295,101 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     boolean p4=false;
     boolean p5=false;
 
-    void progress(){
-        progressThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                Log.d("PROGRESSVIDEO", "Starting ...");
-                Log.d("PROGRESSVIDEO", "EXTRACT IMAGE : START..");
-                while (true){
-
-                    if (p1){
-                        Log.d("PROGRESSVIDEO", "EXTRACT IMAGE : FINISH");
-                        //progressDialog.dismiss();
-                        break;
-                    }
-                }
-
-                int num = 0;
-
-                while (true){
-                    int pNum = processedIMAGE1 + processedIMAGE2 + processedIMAGE3 + processedIMAGE4;
-                    if (pNum > num && pNum <= IMAGENUM){
-                        num = pNum;
-                        Log.d("PROGRESSVIDEO", "DETECT FACE: " + num + "/"+ IMAGENUM);
-                    }
-                    if (p2){
-                        Log.d("PROGRESSVIDEO", "DETECT FACE : FINISH");
-                        break;
-                    }
-
-                }
-                Log.d("PROGRESSVIDEO", "MERGE VIDEO : START..");
-
-                while (true) {
-                    if (p3){
-                        Log.d("PROGRESSVIDEO", "MERGE VIDEO : FINISH");
-                        break;
-                    }
-                }
-                Log.d("PROGRESSVIDEO", "EXTRACT AUDIO : START..");
-
-                while (true){
-                    if (p4){
-                        Log.d("PROGRESSVIDEO", "EXTRACT AUDIO : FINISH");
-                        break;
-                    }
-                }
-                Log.d("PROGRESSVIDEO", "MERGE AUDIO : START..");
-
-                while (true){
-                    if (p4){
-                        Log.d("PROGRESSVIDEO", "MERGE AUDIO : FINISH");
-                        break;
-                    }
-                }
-                Log.d("PROGRESSVIDEO", "RENDER COMPLETE!!");
-            }
-        });
-        progressThread.start();
-    }
 
     void deleteFolder(String path){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File f = new File(path);
-                for (File child : f.listFiles()){
-                    child.delete();
-                }
-                f.delete();
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                File f = new File(path);
+//                for (File child : f.listFiles()){
+//                    child.delete();
+//                }
+//                f.delete();
+//            }
+//        }).start();
 
     }
 
     void deleteFiles(String path){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File f = new File(path);
-                f.delete();
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                File f = new File(path);
+//                f.delete();
+//            }
+//        }).start();
     }
 
-    public void canvasPainOption(int option){
-        switch (option){
-            case 1 :
-                paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                paint.setStyle(Paint.Style.STROKE);
-                paint.setColor(Color.parseColor("#FFC733"));
-                paint.setStrokeWidth(5);
+//    public void canvasPainOption(int option){
+//        switch (option){
+//            case 1 :
+//                paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+//                paint.setStyle(Paint.Style.STROKE);
+//                paint.setColor(Color.parseColor("#FFC733"));
+//                paint.setStrokeWidth(5);
+//                break;
+//
+//            case 2 : //PAINT_OPTION_RECTANGLE
+//                paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+//                paint.setStyle(Paint.Style.FILL);
+//                paint.setColor(Color.parseColor("#000000"));
+//                paint.setMaskFilter(new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL));
+//                break;
+//        }
+//    }
+
+    Paint getPaint(){
+        //Paint Default
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(Color.parseColor("#000000"));
+        paint.setMaskFilter(new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL));
+        return paint;
+    }
+
+    private void renderOptionSelect(String option, int size){
+        CENSOR_SIZE = size;
+
+        if("SHAPE".equals(option)){
+            makeText(this, "Censor Option : SHAPE", LENGTH_SHORT).show();
+            CENSOR_TPYE = 2;
+
+        }else if("STICKER".equals(option)){
+            makeText(this, "Censor Option : STICKER", LENGTH_SHORT).show();
+            CENSOR_TPYE = 1;
+
+        }else {
+            makeText(this, "Censor Option : BLUR", LENGTH_SHORT).show();
+            CENSOR_TPYE = 0;
+
+        }
+    }
+
+    public void disableButton(View v){
+
+        View vOptionBlur = findViewById(R.id.button_option_blur);
+        View vOptionSticker = findViewById(R.id.button_option_sticker);
+        View vOptionShape = findViewById(R.id.button_option_shape);
+
+        float alpha = 0.35F;
+
+        switch(v.getId()) {
+            case R.id.button_option_blur:
+                vOptionBlur.setAlpha(1);
+                vOptionSticker.setAlpha(alpha);
+                vOptionShape.setAlpha(alpha);
                 break;
 
-            case 2 : //PAINT_OPTION_RECTANGLE
-                paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                paint.setStyle(Paint.Style.FILL);
-                paint.setColor(Color.parseColor("#000000"));
-                paint.setMaskFilter(new BlurMaskFilter(8, BlurMaskFilter.Blur.NORMAL));
+            case R.id.button_option_sticker:
+                vOptionBlur.setAlpha(alpha);
+                vOptionSticker.setAlpha(1);
+                vOptionShape.setAlpha(alpha);
+                break;
+
+            case R.id.button_option_shape:
+                vOptionBlur.setAlpha(alpha);
+                vOptionSticker.setAlpha(alpha);
+                vOptionShape.setAlpha(1);
                 break;
         }
     }

@@ -2,6 +2,7 @@ package com.cekmitl.pdpacameracensor.ViewAdapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.R;
@@ -24,6 +24,7 @@ public class GridViewPersonListSelectorAdapter extends BaseAdapter {
     private final String[] gridViewString;
     private final Bitmap[] gridViewImageId;
     private int fullView = 0;
+    private ArrayList<String> selectedFace;
 
     public PersonDatabase db = null;
 
@@ -41,11 +42,12 @@ public class GridViewPersonListSelectorAdapter extends BaseAdapter {
 
     LayoutInflater inflater;
 
-    public GridViewPersonListSelectorAdapter(Context context, String[] gridViewString, Bitmap[] gridViewImageId, int fullView) {
+    public GridViewPersonListSelectorAdapter(Context context, String[] gridViewString, Bitmap[] gridViewImageId, int fullView,ArrayList<String> selectedF) {
         mContext = context;
         this.gridViewImageId = Arrays.copyOfRange(gridViewImageId, 0, gridViewImageId.length - 1);
         this.gridViewString = Arrays.copyOfRange(gridViewString, 0, gridViewString.length - 1);
         this.fullView = fullView;
+        this.selectedFace = selectedF;
     }
 
     @Override
@@ -82,10 +84,17 @@ public class GridViewPersonListSelectorAdapter extends BaseAdapter {
                 imageViewAndroid.setImageBitmap(gridViewImageId[i]);
                 textViewAndroid.setText(gridViewString[i]);
                 gridViewAndroid.setTag(gridViewString[i]);
-            }else {
-                gridViewAndroid.setTag("add_face");
-                textViewAndroid.setText("");
+
+                if(selectedFace.contains(gridViewString[i])){
+                    gridViewAndroid.setBackgroundResource(R.drawable.bg_round_list_selector);
+                }
+
             }
+//            else {
+//                gridViewAndroid.setTag(gridViewString[i]);
+//                textViewAndroid.setText("");
+//            }
+
         } else {
             gridViewAndroid = (View) convertView;
         }
@@ -95,14 +104,29 @@ public class GridViewPersonListSelectorAdapter extends BaseAdapter {
         gridViewAndroid.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String p = v.getTag().toString();
 
-                Toast.makeText(mContext, "Hello", Toast.LENGTH_SHORT).show();
-                v.setBackgroundResource(R.drawable.bg_round_list_selector);
+                if (!isSelected(p)){
+                    selectedFace.add(p);
+                    v.setBackgroundResource(R.drawable.bg_round_list_selector);
+                }else{
+                    selectedFace.remove(p);
+                    v.setBackgroundColor(Color.parseColor("#00000000"));
+                }
 
             }
         });
 
         return gridViewAndroid;
+    }
+
+    boolean isSelected(String select){
+        for (String s : selectedFace){
+            if (s == select){
+                return true;
+            }
+        }
+        return false;
     }
 
 }

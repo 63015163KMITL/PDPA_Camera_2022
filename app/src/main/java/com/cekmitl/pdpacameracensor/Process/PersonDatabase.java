@@ -22,6 +22,7 @@ public class PersonDatabase {
     private String restricName = "temp";
     private int MIN_MATCH = 1;
     private float CONF = 0.65f;
+    public ArrayList<String> selectedFace;
 
     public PersonDatabase() throws IOException {
 
@@ -171,13 +172,14 @@ public class PersonDatabase {
     }
 
     // คัดแยกเฉพาะใบหน้าที่เลือก
-    public Score recognize(float[] array,String[] filter){
+    public Score recognize(float[] array,ArrayList<String> filter){
         ArrayList<Score> scores = new ArrayList<>();
 
         for (Person p: persons) {
+            double minSim = 1.00;
+            int i = 0;
             if (isSelectedPerson(filter,p.getName())){
-                double minSim = 1.00;
-                int i = 0;
+
                 for (float[] vector: p.getfeatures()) {
                     double r = EuclideanDistance.run(vector,array);
 
@@ -195,9 +197,10 @@ public class PersonDatabase {
         return bestScore(scores);
     }
 
-    boolean isSelectedPerson(String[] filterPerson,String person){
+    boolean isSelectedPerson(ArrayList<String> filterPerson,String person){
         for (String p : filterPerson){
-            if (p == person){
+//            Log.d("COMPAREPERSON", p + " AND " + person + (p.equals(person)));
+            if (p.equals(person)){
                 return true;
             }
         }

@@ -85,6 +85,7 @@ public class GridViewFaceSelectorAdapter extends BaseAdapter {
                     Log.e("GridSelecter"," contains  = false");
                     v.setBackgroundResource(R.drawable.bg_gridview_image_focus);
                     faceSelected.add(gridViewImageId.get(v.getId()));
+
                 }
 
                 Log.e("GridSelecter"," faceSelected ALL = " + faceSelected.toString());

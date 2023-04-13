@@ -225,6 +225,7 @@
                 <TextView
                     android:layout_marginTop="5dp"
                     android:text="FACE"
+                    android:textSize="12dp"
                     android:textColor="@color/white"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
@@ -308,6 +309,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:visibility="gone"
                 android:id="@+id/button_option_cut"
                 android:layout_weight="1"
                 android:gravity="center"

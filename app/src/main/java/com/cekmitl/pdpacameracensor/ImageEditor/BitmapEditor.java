@@ -301,5 +301,33 @@ public class BitmapEditor {
         return ArrayBitmap;
     }
 
+    public static Bitmap stickerOverlay(Bitmap bitmap, Bitmap sticker, float left, float top, float right, float bottom,int size) {
+
+        int newWidth = Math.round((right - size) - (left + size));
+        int newHeight = Math.round((bottom - size) - (top + size));
+
+        sticker = getResizedBitmap(sticker, newWidth, newHeight);
+
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+        canvas.drawBitmap(sticker, left, top, paint);
+        return bitmap;
+    }
+
+    public static Bitmap blurOverlay(Bitmap bitmap, Bitmap bBlur, float left, float top, float right, float bottom,int size) {
+
+        int newWidth = Math.round((right - size) - (left + size));
+        int newHeight = Math.round((bottom - size) - (top + size));
+
+        bBlur = getResizedBitmap(bBlur, newWidth, newHeight);
+
+        bBlur = getMosaicsBitmap(bBlur, 0.05);
+
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+        canvas.drawBitmap(bBlur, left, top, paint);
+        return bitmap;
+    }
+
 
 }

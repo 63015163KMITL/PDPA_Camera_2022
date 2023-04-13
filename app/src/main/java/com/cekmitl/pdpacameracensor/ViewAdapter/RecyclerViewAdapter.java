@@ -6,10 +6,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.cekmitl.pdpacameracensor.FFmpegProcessActivity;
 import com.cekmitl.pdpacameracensor.PreviewActivity;
 import com.cekmitl.pdpacameracensor.R;
 import com.squareup.picasso.Picasso;
@@ -44,10 +46,28 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    String[] str = (imagePathArrayList.get(position) + "").split("\\.");
+
+                   // Toast.makeText(context, "str : " + Arrays.toString(str), Toast.LENGTH_SHORT).show();
+                    if(str[1].equals("mp4")){
+//                        Toast.makeText(context, "MP4\nClick : " + imagePathArrayList.get(position), Toast.LENGTH_SHORT).show();
+
+                        Intent i = new Intent(context, FFmpegProcessActivity.class);
+                        i.putExtra("key", imagePathArrayList.get(position));
+                        context.startActivity(i);
+                    }else {
+//                        Toast.makeText(context, "Image\nClick : " + imagePathArrayList.get(position), Toast.LENGTH_SHORT).show();
+
+                        Intent i = new Intent(context, PreviewActivity.class);
+                        i.putExtra("key", imagePathArrayList.get(position));
+                        context.startActivity(i);
+                    }
+
+                    //Toast.makeText(context, "Click : " + imagePathArrayList.get(position), Toast.LENGTH_SHORT).show();
+
                     // inside on click listener we are creating a new intent
-                    Intent i = new Intent(context, PreviewActivity.class);
-                    i.putExtra("key", imagePathArrayList.get(position));
-                    context.startActivity(i);
+
                 }
             });
         }
