@@ -17,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -175,28 +176,30 @@ public class GalleryFragment extends Fragment {
             holder.imageview.setOnClickListener(new View.OnClickListener() {
 
                 public void onClick(View v) {
-
-                    if(typeMedia[position] == 1){
+                    try {
+                        if(typeMedia[position] == 1){
 //                        Toast.makeText(getActivity(), "IMAGE PATH : " + arrPath[position], Toast.LENGTH_SHORT).show();
-                        Intent i = new Intent(getActivity(), PreviewActivity.class);
-                        i.putExtra("key", arrPath[position]);
-                        getActivity().startActivity(i);
+                            Intent i = new Intent(getActivity(), PreviewActivity.class);
+                            i.putExtra("key", arrPath[position]);
+                            getActivity().startActivity(i);
 
-                    }else if(typeMedia[position] == 3){
-                        holder.videoICON.setVisibility(View.VISIBLE);
+                        }else if(typeMedia[position] == 3){
+                            holder.videoICON.setVisibility(View.VISIBLE);
 //                        Toast.makeText(getActivity(), "VIDEO PATH : " + arrPath[position], Toast.LENGTH_SHORT).show();
 
-                        Intent i = new Intent(getActivity(), FFmpegProcessActivity.class);
+                            Intent i = new Intent(getActivity(), FFmpegProcessActivity.class);
 
-                        String path = arrPath[position];
-                        String filename = path.substring(path.lastIndexOf("/")+1);
+                            String path = arrPath[position];
+                            String filename = path.substring(path.lastIndexOf("/")+1);
 
-                        i.putExtra("video_name", filename);
-                        i.putExtra("path", arrPath[position]);
+                            i.putExtra("video_name", filename);
+                            i.putExtra("path", arrPath[position]);
 
-                        getActivity().startActivity(i);
+                            getActivity().startActivity(i);
+                        }
+                    }catch (Exception e){
+                        Toast.makeText(getActivity(), "Video not found", Toast.LENGTH_SHORT).show();
                     }
-
                 }
             });
             holder.imageview.setImageBitmap(thumbnails[position]);

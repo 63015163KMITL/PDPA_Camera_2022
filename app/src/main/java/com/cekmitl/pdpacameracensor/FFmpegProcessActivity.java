@@ -160,6 +160,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     String audio = "out2/audio.mp3";
     String finalVideoResulte = "final_output.mp4";
     String VIDEO_NAME = "";
+    boolean isSelected = false;
 
     //Seekbar
     public SeekBar sk;
@@ -231,9 +232,15 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         if(path_name != null && video_name != null){
             uri = Uri.parse(path_name);
             inputVideo = path_name;
+            isSelected = true;
+        }else{
+            inputVideo = video_name + ".mp4";
+            isSelected = false;
         }
+        Log.d("PATHVIDEO", "onCreate: "+path);
+        Log.d("PATHVIDEO", "onCreate: "+inputVideo);
 
-        inputVideo = video_name + ".mp4";
+
         tempeFramePool = video_name + "/";
         tempeVideo = video_name +"_temp.mp4";
         audio = video_name + "/audio.mp3";
@@ -244,7 +251,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
 
         retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(String.valueOf(uri));
+        try{
+            retriever.setDataSource(String.valueOf(uri));
+        }catch (Exception e){
+            makeText(this, "Video not found", LENGTH_SHORT).show();
+            finish();
+        }
+
 
         videoView = findViewById(R.id.videoView);
         videoView.setVideoURI(uri);
@@ -375,7 +388,12 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+                    if (isSelected){
+                        ExtractVideoAudio("-i "+ inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+
+                    }else{
+                        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+                    }
                 }
             }).start();
 
@@ -396,6 +414,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+
                     deleteFolder(INPUT_PATH);
                 }
             }).start();
@@ -818,7 +837,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
+                                if (isSelected){
+                                    ExtractVideoFrame("-i " + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
+
+                                }else{
+                                    ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
+
+                                }
                                 //progress();
                                 while (true) {
                                     if (p1) {
