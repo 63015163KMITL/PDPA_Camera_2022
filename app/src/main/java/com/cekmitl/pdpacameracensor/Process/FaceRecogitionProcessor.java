@@ -9,24 +9,17 @@ import org.tensorflow.lite.support.image.ImageProcessor;
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.image.ops.ResizeOp;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class FaceRecogitionProcessor {
-    private Interpreter faceNetModelInterpreter;
-    private ImageProcessor faceNetImageProcessor;
-    private int INPUT_SIZE = 112;
-    private PersonDatabase fileUtils;
+    private final Interpreter faceNetModelInterpreter;
+    private final ImageProcessor faceNetImageProcessor;
 
     public FaceRecogitionProcessor(Interpreter faceNetModelInterpreter){
-        try {
-            this.fileUtils = new PersonDatabase();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         this.faceNetModelInterpreter = faceNetModelInterpreter;
+        int INPUT_SIZE = 112;
         this.faceNetImageProcessor = new ImageProcessor.Builder()
-                .add(new ResizeOp(INPUT_SIZE,INPUT_SIZE, ResizeOp.ResizeMethod.BILINEAR))
+                .add(new ResizeOp(INPUT_SIZE, INPUT_SIZE, ResizeOp.ResizeMethod.BILINEAR))
                 .add(new NormalizeOp(0f,255f))
                 .build();
     }
@@ -37,9 +30,6 @@ public class FaceRecogitionProcessor {
         ByteBuffer faceNetByteBuffer = faceNetImageProcessor.process(tensorImage).getBuffer();
         float[][] faceOutputArray = new float[1][192];
         faceNetModelInterpreter.run(faceNetByteBuffer, faceOutputArray);
-//        Log.e("FACERECOG", "faceOutputArray[0] : " +faceOutputArray[0][2]);
-//        INDArray arr = Nd4j.create(faceOutputArray[0]);
-
         return faceOutputArray[0].clone();
     }
 

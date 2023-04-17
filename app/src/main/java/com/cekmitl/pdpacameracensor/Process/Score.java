@@ -1,5 +1,7 @@
 package com.cekmitl.pdpacameracensor.Process;
 
+import androidx.annotation.NonNull;
+
 public class Score {
     public String name;
     public double score;
@@ -9,6 +11,7 @@ public class Score {
         this.score = score;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "Score{" +

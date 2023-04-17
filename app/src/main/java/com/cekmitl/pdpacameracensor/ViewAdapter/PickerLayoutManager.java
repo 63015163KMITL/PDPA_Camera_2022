@@ -6,17 +6,7 @@ import android.view.View;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-/**
- * Created by adityagohad on 06/06/17.
- */
-
 public class PickerLayoutManager extends LinearLayoutManager {
-
-    //private float scaleDownBy = 0.66f;
-    //private float scaleDownDistance = 0.9f;
-
-    private float scaleDownBy = 0.5f;
-    private float scaleDownDistance = 0.7f;
 
     private boolean changeAlpha = true;
 
@@ -44,6 +34,7 @@ public class PickerLayoutManager extends LinearLayoutManager {
 
     private void scaleDownView() {
         float mid = getWidth() / 2.0f;
+        float scaleDownDistance = 0.7f;
         float unitScaleDownDist = scaleDownDistance * mid;
         for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
@@ -51,6 +42,7 @@ public class PickerLayoutManager extends LinearLayoutManager {
                 continue;
             }
             float childMid = (getDecoratedLeft(child) + getDecoratedRight(child)) / 2.0f;
+            float scaleDownBy = 0.5f;
             float scale = 1.0f + (-1 * scaleDownBy) * (Math.min(unitScaleDownDist, Math.abs(mid - childMid))) / unitScaleDownDist;
             child.setScaleX(scale);
             child.setScaleY(scale);
@@ -80,26 +72,6 @@ public class PickerLayoutManager extends LinearLayoutManager {
                 onScrollStopListener.selectedView(getChildAt(selected));
             }
         }
-    }
-
-    public float getScaleDownBy() {
-        return scaleDownBy;
-    }
-
-    public void setScaleDownBy(float scaleDownBy) {
-        this.scaleDownBy = scaleDownBy;
-    }
-
-    public float getScaleDownDistance() {
-        return scaleDownDistance;
-    }
-
-    public void setScaleDownDistance(float scaleDownDistance) {
-        this.scaleDownDistance = scaleDownDistance;
-    }
-
-    public boolean isChangeAlpha() {
-        return changeAlpha;
     }
 
     public void setChangeAlpha(boolean changeAlpha) {

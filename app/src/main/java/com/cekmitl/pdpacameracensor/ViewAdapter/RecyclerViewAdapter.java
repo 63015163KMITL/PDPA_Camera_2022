@@ -2,11 +2,13 @@ package com.cekmitl.pdpacameracensor.ViewAdapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,6 +33,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.imagePathArrayList = imagePathArrayList;
     }
 
+
     @NonNull
     @Override
     public RecyclerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -48,25 +51,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 public void onClick(View v) {
 
                     String[] str = (imagePathArrayList.get(position) + "").split("\\.");
-
-                   // Toast.makeText(context, "str : " + Arrays.toString(str), Toast.LENGTH_SHORT).show();
                     if(str[1].equals("mp4")){
-//                        Toast.makeText(context, "MP4\nClick : " + imagePathArrayList.get(position), Toast.LENGTH_SHORT).show();
-
                         Intent i = new Intent(context, FFmpegProcessActivity.class);
                         i.putExtra("key", imagePathArrayList.get(position));
                         context.startActivity(i);
                     }else {
-//                        Toast.makeText(context, "Image\nClick : " + imagePathArrayList.get(position), Toast.LENGTH_SHORT).show();
-
                         Intent i = new Intent(context, PreviewActivity.class);
                         i.putExtra("key", imagePathArrayList.get(position));
                         context.startActivity(i);
                     }
-
-                    //Toast.makeText(context, "Click : " + imagePathArrayList.get(position), Toast.LENGTH_SHORT).show();
-
-                    // inside on click listener we are creating a new intent
 
                 }
             });

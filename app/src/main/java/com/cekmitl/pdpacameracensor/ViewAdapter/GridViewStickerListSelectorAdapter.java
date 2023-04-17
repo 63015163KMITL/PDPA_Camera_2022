@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 
+import com.cekmitl.pdpacameracensor.PreviewActivity;
 import com.cekmitl.pdpacameracensor.R;
 
 import java.io.IOException;
@@ -17,22 +18,24 @@ import java.io.InputStream;
 
 public class GridViewStickerListSelectorAdapter extends BaseAdapter {
 
-    private Context mContext;
-    private Bitmap[] sticker;
-    private Bitmap[] selectedSticker;
-    private int[] id;
+    private final Context mContext;
+    private final Bitmap[] sticker;
+    private final Bitmap[] selectedSticker;
+    private final int[] id;
+    private PreviewActivity previewActivity;
 
     LayoutInflater inflater;
 
-    public GridViewStickerListSelectorAdapter(Context context, Bitmap[] selectedSticker, int [] id) {
+    public GridViewStickerListSelectorAdapter(Context context, Bitmap[] selectedSticker, int [] id, PreviewActivity _previewActivity) {
         mContext = context;
         this.selectedSticker = selectedSticker;
         sticker = getBitmapFromAsset(mContext);
         this.id = id;
-//        Log.e("sticker", "sticker : " + sticker.toString());
-//        this.sticker = sticker;
+        this.previewActivity = _previewActivity;
+    }
 
-
+    public Bitmap getSelectedSticker(){
+        return selectedSticker[0];
     }
 
     @Override
@@ -66,35 +69,20 @@ public class GridViewStickerListSelectorAdapter extends BaseAdapter {
         }else {
             gridViewAndroid = (View) convertView;
         }
-
-        gridViewAndroid.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-//                Toast.makeText(mContext, "Hello", Toast.LENGTH_SHORT).show();
-                v.setBackgroundResource(R.drawable.bg_round_list_selector);
-                selectedSticker[0] = sticker[i];
-                id[0] = (int) v.getTag();
-//                Toast.makeText(mContext, v.getTag().toString(), Toast.LENGTH_SHORT).show();
-            }
+        gridViewAndroid.setOnClickListener(v -> {
+            v.setBackgroundResource(R.drawable.bg_round_list_selector);
+            selectedSticker[0] = sticker[i];
+            id[0] = (int) v.getTag();
+            previewActivity.onClickStickerItem();
         });
-
         return gridViewAndroid;
     }
 
-    //file:///android_asset/
     public static Bitmap[] getBitmapFromAsset(Context context) {
-        String path = "file:///android_asset/sticker/";
         AssetManager assetManager = context.getAssets();
-
-        //context, Uri.parse(path + "stricker" + i + ".png")
-
-        InputStream istr;
         Bitmap[] bitmap = new Bitmap[107];
 
         for (int i = 0; i < 107; i++) {
-//            bitmap[i] = BitmapFactory.decodeStream(assets.open(String.valueOf(Uri.parse(path + "stricker" + (i + 1) + ".png"))));
-            // Read a Bitmap from Assets
             try {
                 InputStream open = assetManager.open("sticker/stricker" + i+1 + ".png");
                 bitmap[i] = BitmapFactory.decodeStream(open);
@@ -102,8 +90,6 @@ public class GridViewStickerListSelectorAdapter extends BaseAdapter {
                 e.printStackTrace();
             }
         }
-
-
         return bitmap;
     }
 

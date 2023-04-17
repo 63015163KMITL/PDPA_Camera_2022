@@ -5,9 +5,8 @@ import static android.view.ViewGroup.OnLongClickListener;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
 import static com.cekmitl.pdpacameracensor.MainCameraActivity.slideView2;
-import static java.lang.Integer.parseInt;
+import static com.cekmitl.pdpacameracensor.Process.AIProperties.FACE_NET_MODEL;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -15,20 +14,18 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -42,16 +39,16 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.content.ContextCompat;
 
 import com.cekmitl.pdpacameracensor.ImageEditor.BitmapEditor;
 import com.cekmitl.pdpacameracensor.ImageEditor.DrawingView;
+import com.cekmitl.pdpacameracensor.Process.AIProperties;
 import com.cekmitl.pdpacameracensor.Process.Classifier;
-import com.cekmitl.pdpacameracensor.Process.EuclideanDistance;
 import com.cekmitl.pdpacameracensor.Process.FaceRecogitionProcessor;
 import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.Process.Score;
 import com.cekmitl.pdpacameracensor.Process.YoloV5Classifier;
+import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewStickerListSelectorAdapter;
 import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
 
 import org.tensorflow.lite.Interpreter;
@@ -68,10 +65,13 @@ import java.util.UUID;
 public class PreviewActivity extends AppCompatActivity implements View.OnClickListener, Runnable {
 
     public LinearLayout layout_face_detect, layout_blur_radius, layout_stricker_option, layout_paint_option, button_blur_layout, button_stricker_layout, button_paint_layout;
-    public ImageButton button_hide_face_detect, button_face_detect, button_blur, button_stricker, button_paint, button_save_image;
+    public ImageButton button_hide_face_detect;
+    public ImageButton button_face_detect;
+    public ImageButton button_blur;
+    public ImageButton button_stricker;
+    public ImageButton button_paint;
     public RelativeLayout option_layout, fram_focus_layout, FrameImagePreview, FrameImagePreview_TOP, button_bar, HeadLayout, HeadLayout2, main_layout;
     public LinearLayout listView, bottom_layout, menu_bar;
-    float CONFIDENT = 0.65f;
     //RelativLayout Button Menu Bar
     public RelativeLayout button_edit, button_info, button_delete;
 
@@ -85,23 +85,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     private Classifier detector;
 
     //DETECT FACE
-    public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.3f;
-    private Bitmap largeIcon;
-    private ImageView imageView, ImagePreview, imgPreView;
-    public static final int TF_OD_API_INPUT_SIZE = 320;
-    private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
+    public static final float MINIMUM_CONFIDENCE_TF_OD_API = AIProperties.OBJ_DETECT_CONFIDENT;
+    private ImageView imgPreView;
+    public final int TF_OD_API_INPUT_SIZE = AIProperties.TF_OD_API_INPUT_SIZE;
 
     //Face Recog
     private FaceRecogitionProcessor faceRecognitionProcesser;
     private Interpreter faceNetInterpreter;
-
-    EuclideanDistance distance;
-
-    public Bitmap tempBitmap = null;
-    public List<Classifier.Recognition> results = null;
-
-    //public String state_serol = "16:9";
 
     //PersonDatabase
     PersonDatabase db = null;
@@ -113,11 +103,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public int old_width_header_layout = 0;
     public int old_height_bottom_layout = 0;
     public int old_width_bottom_layout = 0;
-
-    //Global Value /////////////////////////////////////////////////////////////////////////////////
-    public int global_preview_height = 0;           //ขนาดของพื้นที่แสดงภาพตัวอย่าง ณ ปัจจุบัน
-    public int global_preview_width = 0;
-    public int global_screen_width = 0;             //ขนาดความกว้างสูงสุดของหน้าจอ
 
     public static Bitmap nowPhotoPreview;                  //Now Photo Preview
     public int nowPhoto_Height, nowPhoto_Width;     //Now size of photo
@@ -133,52 +118,57 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public Animation animFadeIn2, animFadeOu2, animFadeIn, animFadeOu;
 
     public int global_img_width, global_img_height;
-    public ArrayList<Bitmap> bmp_images = new ArrayList<Bitmap>();
-    public ArrayList<String> facePosition = new ArrayList<String>();   //LEFT / TOP / RIGHT / BOTTOM / X / Y / ID
+    public ArrayList<Bitmap> bmp_images = new ArrayList<>();
+
+    public ArrayList<String> facePosition = new ArrayList<>();   //LEFT / TOP / RIGHT / BOTTOM / X / Y / ID
+    public int[] faceCensorState = new int[20];
 
     public TextView textview_blur_radius_value;
     public SeekBar seekbar_blur_radius;
 
-
-    //STRICKER
-    int stricker[] = new int[15];
-    GridView simpleGrid;
-
     //PAINT  /////////////////////////////////
     private DrawingView drawView;
-    private ImageButton currPaint, drawBtn, eraseBtn, newBtn, saveBtn;
+    private ImageButton currPaint;
     private float smallBrush, mediumBrush, largeBrush;
 
+    //STICKER
+    private GridViewStickerListSelectorAdapter adapterViewAndroid;
+    Bitmap[] selectedSticker = new Bitmap[1];
+    int[] idSticker = new int[1];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-        //requestWindowFeature(Window.FEATURE_NO_TITLE);
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        //ลบ Action Bar ออก
 
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.hide();
         setContentView(R.layout.activity_preview);
 
+        //Reteive data
+        Intent intent = getIntent();
+
+        db = (PersonDatabase) intent.getSerializableExtra("person");
         //Personal Data
-        try {
-            db = new PersonDatabase();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (db == null){
+            new Thread(() -> {
+                try {
+                    db = new PersonDatabase();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
 
         //Face Recog
         try {
-            faceNetInterpreter = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
+            faceNetInterpreter = new Interpreter(FileUtil.loadMappedFile(this, FACE_NET_MODEL), new Interpreter.Options());
         } catch (IOException e) {
             e.printStackTrace();
         }
         faceRecognitionProcesser = new FaceRecogitionProcessor(faceNetInterpreter);
 
-        distance = new EuclideanDistance();
         // END --- Face Recog ---------------------------------------------
 
         display = getWindowManager().getDefaultDisplay();
@@ -197,7 +187,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         button_blur = (ImageButton) findViewById(R.id.button_blur);
         button_stricker = (ImageButton) findViewById(R.id.button_stricker);
         button_paint = (ImageButton) findViewById(R.id.button_paint);
-
 
 
         button_hide_face_detect = (ImageButton) findViewById(R.id.button_hide_face_detect);
@@ -220,7 +209,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         fram_focus_layout = findViewById(R.id.fram_focus_layout);
 
 
-        ImagePreview = (ImageView) findViewById(R.id.ImagePreview);
+        ImageView imagePreview = (ImageView) findViewById(R.id.ImagePreview);
 
         button_bar = (RelativeLayout) findViewById(R.id.button_bar);
         HeadLayout = (RelativeLayout) findViewById(R.id.HeadLayout);
@@ -246,7 +235,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         button_back = (ImageButton) findViewById(R.id.button_back);
         button_back.setOnClickListener(this);
 
-        ImagePreview.setOnClickListener(this);
+        imagePreview.setOnClickListener(this);
+
 
         // SET GONE Layout
         bottom_layout.setVisibility(View.GONE);
@@ -270,47 +260,29 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         textview_blur_radius_value = findViewById(R.id.textview_blur_radius_value);
         seekbar_blur_radius = (SeekBar) findViewById(R.id.seekbar_blur_radius);
 
-        //STRICKER /////////////////////////////////////////////////////////////////////////////////
+        //STICKER /////////////////////////////////////////////////////////////////////////////////
+        adapterViewAndroid = new GridViewStickerListSelectorAdapter(PreviewActivity.this, selectedSticker,idSticker,this);
+        GridView androidGridView = findViewById(R.id.GridView_stricker);
+        androidGridView.setAdapter(adapterViewAndroid);
 
-        //for (int i = 0; i < stricker.length; i++){
-        //    stricker[i] = Integer.parseInt("R.drawable.stricker" + (i+1));
-        //}
+        androidGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                makeText(PreviewActivity.this, "androidGridView.setOnItemClickListener", LENGTH_SHORT).show();
+            }
+        });
 
-//        simpleGrid = (GridView) findViewById(R.id.GridView_stricker); // init GridView
-//        // Create an object of CustomAdapter and set Adapter to GirdView
-//        StrickerGridViewAdapter customAdapter = new StrickerGridViewAdapter(getApplicationContext(), getBitmapFromAsset(PreviewActivity.this));
-//        simpleGrid.setAdapter(customAdapter);
-//        // implement setOnItemClickListener event on GridView
-//        simpleGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                // set an Intent to Another Activity
-//                //Intent intent = new Intent(MainCameraActivity.this, SecondActivity.class);
-//                //intent.putExtra("image", logos[position]); // put image data in Intent
-//                //startActivity(intent); // start Intent
-//                //makeText(PreviewActivity.this, "STRICKER = " + stricker[position], LENGTH_SHORT).show();
-//
-//                clearFocus();
-//                for (int i = 0; i < facePosition.size(); i++){
-//                    String[] a = facePosition.get(i).split("/");
-//                    //setFocusView2(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), stricker[position]);
-//                    Log.e("TAG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-//
-//                    LinearLayout layoutInner = fram_focus_layout.findViewWithTag(i + "");
-//                    Log.e("TAG","stricker[position] = " + stricker[position]);
-//                    Log.e("TAG","layoutInner TAG = " + layoutInner.getTag());
-//
-//                    //layoutInner.setBackground(ContextCompat.getDrawable(PreviewActivity.this, R.drawable.stricker15));
-//
-//
-//                }
-//            }
-//        });
+//        androidGridView.setOnClickListener(this);
 
-        //END STRICKER /////////////////////////////////////////////////////////////////////////////
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //TODO
+            }
+        }).start();
+        //STICKER /////////////////////////////////////////////////////////////////////////////////
 
 
-        //PAINT  ///////////////////////////////////////////////
 
         drawView = (DrawingView)findViewById(R.id.drawing);
         drawView.setBrushSize(mediumBrush);
@@ -319,153 +291,71 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         currPaint = (ImageButton)paintLayout.getChildAt(0);
         currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
 
-        smallBrush = getResources().getInteger(R.integer.small_size);
-        mediumBrush = getResources().getInteger(R.integer.medium_size);
-        largeBrush = getResources().getInteger(R.integer.large_size);
 
-        drawBtn = (ImageButton)findViewById(R.id.draw_btn);
+        ImageButton drawBtn = (ImageButton) findViewById(R.id.draw_btn);
         drawBtn.setOnClickListener(this);
 
-        eraseBtn = (ImageButton)findViewById(R.id.erase_btn);
+        ImageButton eraseBtn = (ImageButton) findViewById(R.id.erase_btn);
         eraseBtn.setOnClickListener(this);
 
-        newBtn = (ImageButton)findViewById(R.id.new_btn);
+        ImageButton newBtn = (ImageButton) findViewById(R.id.new_btn);
         newBtn.setOnClickListener(this);
 
-        saveBtn = (ImageButton)findViewById(R.id.save_btn);
+        ImageButton saveBtn = (ImageButton) findViewById(R.id.save_btn);
         saveBtn.setOnClickListener(this);
 
 
-        // END PAINT  /////////////////////////////////////////
-
-        // Get intent form MainCameraActivity
-        Intent intent = getIntent();
         String intenPath = intent.getStringExtra("key");
-//        String intentFrom = intent.getStringExtra("intentFrom");
-//        String intentPath = intent.getStringExtra("intenPath");
-        String value_resolution = "";
-        value_resolution = intent.getStringExtra("resolution");
-        //String value_orientation = intent.getStringExtra("orientation");
-        //String value_main_camera = intent.getStringExtra("main_camera");
 
         Bitmap inputBitma = BitmapFactory.decodeFile(new File(intenPath).getAbsolutePath());
-//        if(intentFrom.equals("gallery")){
-//            inputBitma = BitmapFactory.decodeFile(new File(intentPath).getAbsolutePath());
-//        }else if (intentFrom.equals("camera")){
-//            inputBitma = BitmapFactory.decodeFile(new File(value).getAbsolutePath());
-//        }
 
-        //set real size of photo
         heightPhoto = inputBitma.getHeight();
         widthPhoto = inputBitma.getWidth();
 
-        int img_height = 0;
-        int img_width = 0;
-        int y = 0;
-        int x = 0;
-
-//        if (value_resolution.equals("4:3")) {
-//            img_height = inputBitma.getWidth();
-//            img_width = (inputBitma.getWidth() / 4) * 3;
-//            y = (inputBitma.getHeight() - img_width) / 2;
-//            x = (img_width - inputBitma.getHeight()) / 2;
-//
-//        } else if (value_resolution.equals("16:9")) {
-//            img_height = inputBitma.getWidth();
-//            img_width = (inputBitma.getWidth() / 16) * 9;
-//            y = (inputBitma.getHeight() - img_width) / 2;
-//            x = 0;//(img_width - inputBitma.getHeight()) / 2;
-//
-//        } else if (value_resolution.equals("1:1")) {
-//            img_height = inputBitma.getHeight();
-//            img_width = inputBitma.getHeight();
-//            y = (inputBitma.getHeight() - img_width) / 2;
-//            x = (inputBitma.getWidth() - inputBitma.getHeight()) / 2;
-//        }
-
-        //ภาพถ่ายที่ผ่านการหมุนตามเข้มนาฬิกาแล้ว = Rotate
-        //set photo rotate
-        Matrix matrix = new Matrix();
-        //matrix.postRotate(Integer.parseInt(value_orientation));
-        //matrix.postRotate(Integer.parseInt("0"));
-        //Bitmap rotated = Bitmap.createBitmap(inputBitma, x, y, img_height, img_width, matrix, true);
-
         ImageButton btnSave = (ImageButton) findViewById(R.id.button_save_image);
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        btnSave.setOnClickListener(view -> {
 
-                TextView okay_text, cancel_text;
-                Dialog dialog = new Dialog(PreviewActivity.this);
+            TextView okay_text, cancel_text;
+            Dialog dialog = new Dialog(PreviewActivity.this);
 
-                dialog.setContentView(R.layout.dialog_layout);
-                dialog.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            dialog.setContentView(R.layout.dialog_layout);
+            dialog.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
 
-                okay_text = dialog.findViewById(R.id.button_dialog_ok);
-                cancel_text = dialog.findViewById(R.id.button_dialog_cancel);
+            okay_text = dialog.findViewById(R.id.button_dialog_ok);
+            cancel_text = dialog.findViewById(R.id.button_dialog_cancel);
 
-                okay_text.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Bitmap bm = BitmapEditor.loadBitmapFromView(FrameImagePreview);
+            okay_text.setOnClickListener(v -> {
+                Bitmap bm = BitmapEditor.loadBitmapFromView(FrameImagePreview);
+                SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
+                Date date = new Date();
+                BitmapEditor.saveImage(bm, formatter.format(date) + "");
+                dialog.dismiss();
+                finish();
+                makeText(PreviewActivity.this, "Save Complete", LENGTH_SHORT).show();
+            });
 
-                        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
-                        Date date = new Date();
+            cancel_text.setOnClickListener(v -> dialog.dismiss());
 
-                        BitmapEditor.saveImage(bm, formatter.format(date) + "");
+            dialog.show();
 
-                        makeText(PreviewActivity.this, "SAVEING", LENGTH_SHORT).show();
-                        dialog.dismiss();
-                        //Toast.makeText(PreviewActivity.this, "okay clicked", Toast.LENGTH_SHORT).show();
-                        //file.delete();
-                        finish();
-                    }
-                });
-
-                cancel_text.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialog.dismiss();
-                        //Toast.makeText(PreviewActivity.this, "Cancel clicked", Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-                dialog.show();
-                ///getImageUri((PreviewActivity.this), rotated);
-
-                //String savedImageURL = MediaStore.Images.Media.insertImage((PreviewActivity.this).getContentResolver(), inputBitma, "filename", null);
-                //บันทึกรูปลง Grallery
-                //Uri savedImageURI = Uri.parse(savedImageURL);
-                //Toast.makeText(PreviewActivity.this, "savedImageURL = " + contentValues, Toast.LENGTH_SHORT).show();
-
-
-            }
         });
         ImageButton btnCancel = findViewById(R.id.button_cancel);
-        btnCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //file.delete();
-                finish();
-            }
+        btnCancel.setOnClickListener(view -> {
+            //file.delete();
+            finish();
         });
 
-
         try {
-            Log.e("TEST", "detector OK");
-            //makeText(this, "detector OK", LENGTH_SHORT).show();
+            String TF_OD_API_MODEL_FILE = AIProperties.TF_OD_API_MODEL_FILE;
+            String TF_OD_API_LABELS_FILE = AIProperties.TF_OD_API_LABELS_FILE;
             detector = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
         } catch (IOException e) {
-            Log.e("TEST", "detector ERROR");
-            //makeText(this, "detector ERROR", LENGTH_SHORT).show();
             e.printStackTrace();
         }
 
-
-        //nowPhotoPreview = BitmapFactory.decodeResource(getResources(), R.drawable.pe);
         nowPhotoPreview = inputBitma;
-        //nowPhotoPreview = rotated;
+        //nowPhotoPreview = BitmapFactory.decodeResource(this.getResources(),  R.drawable.mmm);
 
         imgPreView = findViewById(R.id.ImagePreview);
         imgPreView.setImageBitmap(nowPhotoPreview);
@@ -478,19 +368,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         old_height_bottom_layout = BitmapEditor.getHeightOfView(bottom_layout);
         old_width_bottom_layout = 1080;
 
-
-        Log.e("IMG","OnCreate Image  Width ///////////////////////////////////////////////////////");
-
-        Log.e("IMG","   Real Photo Height = " + heightPhoto);
-        Log.e("IMG","   Real Photo Width = " + widthPhoto);
-
         if(max_fram_focus_layout_height < fram_focus_layout.getLayoutParams().height){
             max_fram_focus_layout_height = fram_focus_layout.getLayoutParams().height;
-            Log.e("IMG","   max_fram_focus_layout_height = " + max_fram_focus_layout_height);
         }
 
-
-        resetSizeOfPhotoPreview();
 
         xMAX_HEIGHT_PREVIEW = fram_focus_layout.getLayoutParams().height;
         xMAX_WIDTH_PREVIEW = fram_focus_layout.getLayoutParams().width;
@@ -512,78 +393,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 // TODO Auto-generated method stub
 
                 textview_blur_radius_value.setText(progress + "");
-                //progress * Math.pow(10,-3)
-
-                //Toast.makeText(getApplicationContext(), String.valueOf(progress),Toast.LENGTH_LONG).show();
-                //Seek bar 0 - 100 Level
-                //Blur Radius = 0.9-0
-                double n = (100 - progress ) * Math.pow(10,-3);
-                //n = (1.0 - (progress / 100.0));
-                Log.e("IMG"," N = " + n);
-
-                //Log.e("IMG","LOG FACE //////////////////////////////////////////////////////////");
-                for (int i = 0; i < facePosition.size(); i++){
-                    //Log.e("IMG","   - " + facePosition.get(i));
-                    String[] a = facePosition.get(i).split("/");
-                    //Log.e("IMG","   a = " + Arrays.toString(a));
-                    Log.e("IMG","   Radius 0.1 = x" + (n + "x"));
-                    if((n + "").equals("0.1")){
-
-                        try {
-                            setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), i + "", Float.parseFloat(a[4]), Float.parseFloat(a[5]), 1, 0.9);
-                            Log.e("setFocusView","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        Log.e("IMG","   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-
-                    }
-                    //setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), Double.parseDouble(a[4]), Double.parseDouble(a[5]), n,i + "");
-                    //setFocusView(Double.parseDouble(a[0]), Double.parseDouble(a[1]), Double.parseDouble(a[2]), Double.parseDouble(a[3]), i + "", Float.parseFloat(a[4]), Float.parseFloat(a[5]), 1, n);
-
-
-
-                    height2 = xMAX_HEIGHT_PREVIEW;
-                    width2 = xMAX_WIDTH_PREVIEW;
-
-                    //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-                    int h = (int) Math.round((float) ((2 * (Double.parseDouble(a[3]) - Float.parseFloat(a[5]))) * height2));
-                    int w = (int) Math.round((float) ((2 * (Double.parseDouble(a[2]) - Float.parseFloat(a[4]))) * width2));
-                    int x = (int) Math.round((float) (Double.parseDouble(a[0]) * width2));
-                    int y = (int) Math.round((float) (Double.parseDouble(a[1]) * height2));
-
-                    Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
-                    Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
-
-                    ImageView imgBlur = new ImageView(PreviewActivity.this);
-                    imgBlur.setTag(n);
-
-                    LinearLayout layoutInner = fram_focus_layout.findViewWithTag(i + "");
-
-
-                    //Drawable d = new BitmapDrawable(getResources(), bitmap);
-
-                    if (n == 0.1){
-                        //imgBlur.setImageBitmap(b);
-                        Drawable d = new BitmapDrawable(getResources(), b);
-                        layoutInner.setBackground(d);
-                    }else {
-                        //imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, n));
-
-                        Drawable d = new BitmapDrawable(getResources(), BitmapEditor.getMosaicsBitmap(b, n));
-                        layoutInner.setBackground(d);
-                    }
-
-
-                    //Log.e("IMG","   Radius = " + n);
-                }
-                //fram_focus_layout.addView(imgBlur, params1);
-
+                blurFaceX(progress);
             }
         });
+
+        handleResult();
+        blurFaceX(50);
     }
-
-
 
     //สถานะการเลือกเมนู หรือการกดปุ่ม
     boolean state_face_detect_button = true;
@@ -600,7 +416,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     int xMAX_HEIGHT_PREVIEW = 0;
     int xMAX_WIDTH_PREVIEW = 0;
 
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -616,6 +431,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
         switch (view.getId()) {
+            case R.id.GridView_stricker:
+                makeText(this, "GridView_stricker CLICK", LENGTH_SHORT).show();
+                onClickStickerItem();
+                break;
             case R.id.button_hide_face_detect:
                 slideView2(layout_face_detect, layout_face_detect.getLayoutParams().height, layout_face_detect.getLayoutParams().height,  layout_face_detect.getWidth(), layout_face_detect.getHeight() + 50);
                 state_face_detect_button = true;
@@ -788,74 +607,55 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             brushDialog.setContentView(R.layout.brush_chooser);
 
             ImageButton smallBtn = (ImageButton)brushDialog.findViewById(R.id.small_brush);
-            smallBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    drawView.setBrushSize(smallBrush);
-                    drawView.setLastBrushSize(smallBrush);
-                    drawView.setErase(false);
-                    brushDialog.dismiss();
-                }
+            smallBtn.setOnClickListener(v -> {
+                drawView.setBrushSize(smallBrush);
+                drawView.setLastBrushSize(smallBrush);
+                drawView.setErase(false);
+                brushDialog.dismiss();
             });
 
             ImageButton mediumBtn = (ImageButton)brushDialog.findViewById(R.id.medium_brush);
-            mediumBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    drawView.setBrushSize(mediumBrush);
-                    drawView.setLastBrushSize(mediumBrush);
-                    drawView.setErase(false);
-                    brushDialog.dismiss();
-                }
+            mediumBtn.setOnClickListener(v -> {
+                drawView.setBrushSize(mediumBrush);
+                drawView.setLastBrushSize(mediumBrush);
+                drawView.setErase(false);
+                brushDialog.dismiss();
             });
 
             ImageButton largeBtn = (ImageButton)brushDialog.findViewById(R.id.large_brush);
-            largeBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    drawView.setBrushSize(largeBrush);
-                    drawView.setLastBrushSize(largeBrush);
-                    drawView.setErase(false);
-                    brushDialog.dismiss();
-                }
+            largeBtn.setOnClickListener(v -> {
+                drawView.setBrushSize(largeBrush);
+                drawView.setLastBrushSize(largeBrush);
+                drawView.setErase(false);
+                brushDialog.dismiss();
             });
 
             brushDialog.show();
-        }else if(view.getId() == R.id.erase_btn)
-        {
+        }else if(view.getId() == R.id.erase_btn) {
             //switch to erase - choose size
             final Dialog brushDialog = new Dialog(this);
             brushDialog.setTitle("Eraser size:");
             brushDialog.setContentView(R.layout.brush_chooser);
 
             ImageButton smallBtn = (ImageButton)brushDialog.findViewById(R.id.small_brush);
-            smallBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    drawView.setErase(true);
-                    drawView.setBrushSize(smallBrush);
-                    brushDialog.dismiss();
-                }
+            smallBtn.setOnClickListener(v -> {
+                drawView.setErase(true);
+                drawView.setBrushSize(smallBrush);
+                brushDialog.dismiss();
             });
 
             ImageButton mediumBtn = (ImageButton)brushDialog.findViewById(R.id.medium_brush);
-            mediumBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    drawView.setErase(true);
-                    drawView.setBrushSize(mediumBrush);
-                    brushDialog.dismiss();
-                }
+            mediumBtn.setOnClickListener(v -> {
+                drawView.setErase(true);
+                drawView.setBrushSize(mediumBrush);
+                brushDialog.dismiss();
             });
 
             ImageButton largeBtn = (ImageButton)brushDialog.findViewById(R.id.large_brush);
-            largeBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    drawView.setErase(true);
-                    drawView.setBrushSize(largeBrush);
-                    brushDialog.dismiss();
-                }
+            largeBtn.setOnClickListener(v -> {
+                drawView.setErase(true);
+                drawView.setBrushSize(largeBrush);
+                brushDialog.dismiss();
             });
 
             brushDialog.show();
@@ -865,19 +665,11 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             AlertDialog.Builder newDialog = new AlertDialog.Builder(this);
             newDialog.setTitle("new Drawing");
             newDialog.setMessage("Start new drawing (you will lose the current drawing)?");
-            newDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    drawView.startNew();
-                    dialog.dismiss();
-                }
+            newDialog.setPositiveButton("Yes", (dialog, which) -> {
+                drawView.startNew();
+                dialog.dismiss();
             });
-            newDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
+            newDialog.setNegativeButton("No", (dialog, which) -> dialog.cancel());
             newDialog.show();
 
         }else if(view.getId() == R.id.save_btn)
@@ -885,47 +677,38 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             AlertDialog.Builder saveDialog = new AlertDialog.Builder(this);
             saveDialog.setTitle("Save Drawing");
             saveDialog.setMessage("Save drawing to device Gallery?");
-            saveDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    //save drawing
-                    //save drawing
-                    drawView.setDrawingCacheEnabled(true);
-                    String imageSaved = MediaStore.Images.Media.insertImage(
-                            getContentResolver(), drawView.getDrawingCache(),
-                            UUID.randomUUID().toString()+".png", "drawing");
-                    if(imageSaved != null)
-                    {
-                        Toast savedToast = Toast.makeText(getApplicationContext(),
-                                "Drawing saved to Gallery!", Toast.LENGTH_SHORT);
-                        savedToast.show();
-                    }else
-                    {
-                        Toast unsavedToast = Toast.makeText(getApplicationContext(),
-                                "Oops! Image could not saved.", Toast.LENGTH_SHORT);
-                        unsavedToast.show();
-                    }
-                    drawView.destroyDrawingCache();
+            saveDialog.setPositiveButton("Yes", (dialog, which) -> {
+                //save drawing
+                //save drawing
+                drawView.setDrawingCacheEnabled(true);
+                String imageSaved = MediaStore.Images.Media.insertImage(
+                        getContentResolver(), drawView.getDrawingCache(),
+                        UUID.randomUUID().toString()+".png", "drawing");
+                if(imageSaved != null)
+                {
+                    Toast savedToast = Toast.makeText(getApplicationContext(),
+                            "Drawing saved to Gallery!", Toast.LENGTH_SHORT);
+                    savedToast.show();
+                }else
+                {
+                    Toast unsavedToast = Toast.makeText(getApplicationContext(),
+                            "Oops! Image could not saved.", Toast.LENGTH_SHORT);
+                    unsavedToast.show();
                 }
+                drawView.destroyDrawingCache();
             });
-            saveDialog.setNegativeButton("No", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
+            saveDialog.setNegativeButton("No", (dialog, which) -> dialog.cancel());
             saveDialog.show();
         }
     }
-
-    String faceID[][] = new String[20][1];
-
 
     public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius) throws IOException {
 
         height2 = xMAX_HEIGHT_PREVIEW;
         width2 = xMAX_WIDTH_PREVIEW;
-
+        if (db == null){
+            db = new PersonDatabase();
+        }
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
         h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
         w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
@@ -935,106 +718,37 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
         Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
 
-
         bmp_images.add(b);
-        /*
-        if (w > h){
-            Bitmap b = crop(bb, x, y, w + 15, w + 15);
-            bmp_images.add(b);
-        }else {
-            Bitmap b = crop(bb, x, y, h + 15, h + 15);
-            bmp_images.add(b);
-        }
-
-         */
-        Bitmap face = BitmapFactory.decodeResource(PreviewActivity.this.getResources(),R.drawable.test_img);
-
-        LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
-        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
-
-//        if (r < 0.85){
-//            focus_frame = inflater.inflate(R.layout.focus_frame, null);
-//        }else{
-//            focus_frame = inflater.inflate(R.layout.focus_frame_white, null);
-//        }
-//        Log.e("FACERECOG", "resulte : " + r);
 
         float[] array1 = faceRecognitionProcesser.recognize(b);
-        float[]  array2;
-//        try {
-//            faceRecognitionProcesser.save2file(array2);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        float[][] person = db.getVectorList("Tu");
-//        array2 = faceRecognitionProcesser.getArray();
-        db.save_image(face,"Tu");
-
         TextView txt = new TextView(this);
         txt.setTextSize(12);
         txt.setTextColor(Color.WHITE);
         txt.setSingleLine(true);
-        //txt.setText("Unknow");
         txt.setPadding(30, 10, 10, 10);
         txt.setGravity(Gravity.CENTER_VERTICAL|Gravity.BOTTOM);
 
+        RelativeLayout layoutTOP = new RelativeLayout(PreviewActivity.this);
+        layoutTOP.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
+        LinearLayout layoutInner = new LinearLayout(PreviewActivity.this);
+        layoutInner.setBackgroundResource(R.drawable.bg_face_frame);
+        layoutInner.setTag("focus_frame" + id);
+        layoutInner.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        LinearLayout censor_layout = new LinearLayout(PreviewActivity.this);
+        censor_layout.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        censor_layout.setTag("" + id);
 
         Score score = db.recognize(array1);
         if (!(score == null)){
-            Log.d("RECOG_RESULT", score.toString());
             txt.setTextColor(Color.parseColor("#fbb040"));
-            //SpannableString str = new SpannableString(score.name);
-            //str.setSpan(new BackgroundColorSpan(Color.parseColor("#fbb040")), 0, score.name.length(), 0);
             txt.setText(score.name);
-            focus_frame = inflater.inflate(R.layout.focus_frame, null);
-            //txt.setText("" + score.name);
+            layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
+            faceCensorState[Integer.parseInt(id)] = 0;
         }
 
-
-        /*
-
-        if ((h > 70 || w > 70) && ((h < 130 || w < 130))) {
-            focus_frame = inflater.inflate(R.layout.focus_frame_m, null);
-        } else if ((h > 0 || w > 0) && ((h < 70 || w < 70))) {
-            focus_frame = inflater.inflate(R.layout.focus_frame_s, null);
-        }
-
-        if(type == 1){
-            focus_frame = inflater.inflate(R.layout.focus_frame, null);
-        }else if(type == 0){
-            focus_frame = inflater.inflate(R.layout.emoji_layout, null);
-        }
-
-         */
-
-        //focus_frame.setId(parseInt(id));
-        //int strId = focus_frame.getId();
-        //Log.e("Arrary2D","ID = " + strId);
-        //faceID[focus_frame.getId()][0] = "T";
-
-        //----Blur Face-------------------------------------------------------------------------------------------
-        //ImageView imgBlur = new ImageView(this);
-/*
-
-        imgBlur.setTag(id);
-
-        if (blurRadius == 0.1){
-            imgBlur.setImageBitmap(b);
-        }else {
-            imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, blurRadius));
-        }
-
- */
-
-        ImageView imgBlur = new ImageView(PreviewActivity.this);
-        imgBlur.setTag(blurRadius);
-
-        if (blurRadius == 0.1){
-            imgBlur.setImageBitmap(b);
-        }else {
-            imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, blurRadius));
-        }
+        faceCensorState[Integer.parseInt(id)] = 1;
         //------------------------------------------------------------------------------------------------------
 
         //focus_frame.setOnClickListener(view -> frameFocusOnClickListener(id));
@@ -1050,55 +764,52 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
 
-        LinearLayout layoutTOP = new LinearLayout(PreviewActivity.this);
-        layoutTOP.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-        //layoutTOP.setOrientation(LinearLayout.HORIZONTAL);
-        layoutTOP.setId(parseInt(id));
-        faceID[layoutTOP.getId()][0] = "T";
-        layoutTOP.setOnClickListener(view -> frameFocusOnClickListener(id));
+        layoutTOP.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(faceCensorState[Integer.parseInt(id)] == 1){
+                    faceCensorState[Integer.parseInt(id)] = 0;
+                    layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
+                    censor_layout.setAlpha(.0f);
+                }else {
+                    faceCensorState[Integer.parseInt(id)] = 1;
+//                    layoutInner.setVisibility(View.VISIBLE);
+                    layoutInner.setBackgroundResource(R.drawable.bg_face_frame);
+                    censor_layout.setAlpha(1f);
+                }
+            }
+        });
+
         layoutTOP.setOnLongClickListener(new OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
                 frameFocusOnLongClickListener(id, b);
+
+                //Reteive data
+                Intent intent = getIntent();
+                db = (PersonDatabase) intent.getSerializableExtra("person");
+                //Personal Data
+                if (db == null){
+                    new Thread(() -> {
+                        try {
+                            db = new PersonDatabase();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                }
                 return false;
             }
         });
 
-        LinearLayout layoutInner = new LinearLayout(PreviewActivity.this);
-        layoutTOP.setTag(id);
-        Log.e("TAG", "layoutTOP TAG = " + layoutTOP.getTag());
-
-        layoutInner.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-        //layoutInner.setOrientation(LinearLayout.HORIZONTAL);
-        //-------------------------------------------------------------------
-
-
-        //fram_focus_layout.addView(focus_frame, params);
-
-
-        //frameFocusLayout.addView(txt, params1);
-
-        //Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
-        //focus_frame.startAnimation(animFadeIn2);
-        //frameFocusLayout.addView(txt, params1);
-        //layoutInner.addView(imgBlur);
-
-        layoutInner.addView(focus_frame);
+        layoutTOP.addView(censor_layout);
         layoutTOP.addView(layoutInner);
-
 
         fram_focus_layout.addView(layoutTOP, params1);
         fram_focus_layout.addView(txt, params1);
-
-
     }
 
     public void frameFocusOnLongClickListener(String id, Bitmap bitmap){
-        //showAlertDialogButtonClicked(bitmap);
-        //makeText(this, "frameFocusOnLongClickListener ID : " + id, LENGTH_SHORT).show();
-
-
-
         String[] strName = (String[]) HomeFragment.getPersonData().get(0);
 
         // setup the alert builder
@@ -1106,20 +817,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         builder.setTitle("Choose an person");
 
         // add a list
-
         builder.setItems(strName, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
                 int num = strName.length;
-                Log.d("NUMIMAGESELECT", "showAlertDialogButtonClicked: " + num);
                 String ps = String.valueOf(strName[which]);
                 db.add_newPerson_folder(ps);
-
-                Log.e("GridSelecter","");
-                Log.e("GridSelecter","faceSelect = adapterViewAndroid.getFaceSelected() ");
-
-                Log.e("SAVINGIMAGE","TO SAVE = " + num);
                 float[] arr = faceRecognitionProcesser.recognize(bitmap);
 
                 try {
@@ -1127,7 +831,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
                 makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
                 handleResult();
             }
@@ -1150,7 +853,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             }
         });
 
-// create and show the alert dialog
         AlertDialog dialog = builder.create();
         dialog.show();
     }
@@ -1169,11 +871,14 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         String ps = editText.getText().toString();
         ps = "TEST";
-        try {
-            db = new PersonDatabase();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (db == null){
+            try {
+                db = new PersonDatabase();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
         db.add_newPerson_folder(ps);
         float[] arr = faceRecognitionProcesser.recognize(bitmap);
 
@@ -1186,144 +891,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         handleResult();
     }
 
-    public void frameFocusOnClickListener(String id){
-        //makeText(this, "CLICK = " + id, LENGTH_SHORT).show();
-
-        //v = findViewById((Integer.parseInt(str+"")));
-
-        //LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
-        //v = inflater.inflate(R.layout.focus_frame_white, null);
-
-        Log.e("Arrary2D", "faceID.length + " + faceID.length);
-
-        int strID = Integer.parseInt(id);
-        LinearLayout layoutInner = fram_focus_layout.findViewWithTag(id);
-        Log.e("TAG", "frameFocusOnClickListener layoutInner TAG = " + layoutInner.getTag());
-
-            if ("F".equals(faceID[Integer.parseInt(id)][0])){
-                faceID[strID][0] = "T";
-                layoutInner.setAlpha(1f);
-                //layoutInner.setVisibility(View.VISIBLE);
-            }else {
-                faceID[Integer.parseInt(id)][0] = "F";
-                layoutInner.setAlpha(.0f);
-                //layoutInner.setVisibility(View.INVISIBLE);
-            }
-
-        for (int i = 0; i < faceID.length; i++){
-            //Log.e("Arrary2D", "str == faceID[" + i + "]");
-            Log.e("Arrary2D", "Arrary2D[" + i +"][0] = " + faceID[i][0]);
-        }
-    }
-
-    public void frameFocusOnClickListener2(View v){
-            v.setAlpha(.5f);
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
         com.cekmitl.pdpacameracensor.MainCameraActivity.pauseThread();
     }
-
-    public void setFocusViewBlur(double X, double Y, double width, double height, double xPos, double yPos, double blurRadius, String id) {
-
-        height2 = xMAX_HEIGHT_PREVIEW;
-        width2 = xMAX_WIDTH_PREVIEW;
-
-        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
-        w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
-        x = (int) Math.round((float) (X * width2));
-        y = (int) Math.round((float) (Y * height2));
-
-        Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
-        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
-        ImageView imgBlur = new ImageView(this);
-
-        if (blurRadius == 0.1){
-            imgBlur.setImageBitmap(b);
-        }else {
-            imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, blurRadius));
-        }
-
-        View noMiembros = new View(PreviewActivity.this);
-        LinearLayout layoutInner = (LinearLayout) noMiembros.findViewWithTag(id);
-
-        layoutInner.addView(imgBlur);
-
-    }
-
-    public void setFocusViewBlurXXX(double X, double Y, double width, double height, double xPos, double yPos, double blurRadius) {
-
-        height2 = xMAX_HEIGHT_PREVIEW;
-        width2 = xMAX_WIDTH_PREVIEW;
-
-        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
-        w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
-        x = (int) Math.round((float) (X * width2));
-        y = (int) Math.round((float) (Y * height2));
-
-        Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
-        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
-
-        ImageView imgBlur = new ImageView(this);
-
-        if (blurRadius == 0.1){
-            imgBlur.setImageBitmap(b);
-        }else {
-            imgBlur.setImageBitmap(BitmapEditor.getMosaicsBitmap(b, blurRadius));
-        }
-
-        //makeText(this, "SEEK = " + seekbar_blur_radius.getProgress(), LENGTH_SHORT).show();
-        //imgBlur.setImageBitmap(getMosaicsBitmap(getCroppedBitmap(b), 1));
-
-        //fram_focus_layout.addView(imgBlur, params);
-    }
-
-    public void setFocusView2(double X, double Y, double width, double height, double xPos, double yPos, int stricker) {
-
-        height2 = xMAX_HEIGHT_PREVIEW;
-        width2 = xMAX_WIDTH_PREVIEW;
-
-        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-        h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
-        w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
-        x = (int) Math.round((float) (X * width2));
-        y = (int) Math.round((float) (Y * height2));
-
-        Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
-        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
-
-        LayoutInflater inflater = LayoutInflater.from(PreviewActivity.this);
-        @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.layut_empty, null);
-
-        //focus_frame = inflater.inflate(stricker, null);
-        focus_frame.setBackground(ContextCompat.getDrawable(PreviewActivity.this, stricker));
-        //if(type == 1){
-        //    focus_frame = inflater.inflate(stricker, null);
-        //}else if(type == 0){
-        //    focus_frame = inflater.inflate(R.layout.emoji_layout, null);
-        //}
-
-        //focus_frame.setId(Integer.parseInt(str));
-        //int strId = focus_frame.getId();
-        //focus_frame.setOnClickListener(view -> makeText(PreviewActivity.this, "CLICK = " + strId, LENGTH_SHORT).show());
-        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        params1.height = h;
-        params1.width = w;
-        params1.setMargins(x, y, 0, 0);
-
-        fram_focus_layout.addView(focus_frame, params1);
-        //frameFocusLayout.addView(txt, params1);
-
-        Animation animFadeIn2 = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fade_in2);
-        focus_frame.startAnimation(animFadeIn2);
-        //frameFocusLayout.addView(txt, params1);
-    }
-
-
 
     @Override
     public void run() {
@@ -1334,7 +907,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             params1.height = 100;
             params1.width = 100;
             params1.setMargins(0, 0, 10, 0);
-
             ImageView imageView = new ImageView(PreviewActivity.this);
             imageView.setImageBitmap(bmp_images.get(i));
 
@@ -1345,12 +917,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     //ลบ Focus Frame View ออกทั้งหมด
     //Remove All setFocusView()
     public void clearFocus() {
-
         if (null != fram_focus_layout && fram_focus_layout.getChildCount() > 0) {
             fram_focus_layout.removeViews(0, fram_focus_layout.getChildCount());
         }
     }
-
 
     //จัดการกับ Label คำตอบ
     private void handleResult() {
@@ -1365,13 +935,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         } else {
             List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(nowPhotoPreview, 320, 320));
             int i = 0;
+            facePosition = new ArrayList<String>();
 
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
                 //                           X - Y - Width - Height
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                     try {
-                        Log.e("IMG","      - location = " + location);
                         setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -1380,28 +950,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 }
                 i++;
             }
-
-            Log.e("IMG","   setFocusView ////////////////////////////////////////////////////////////////////////////");
-            Log.e("IMG","      - Number of faces detected = " + (bmp_images.size()));
-            Log.e("IMG","      - xMAX_HEIGHT_PREVIEW = " + xMAX_HEIGHT_PREVIEW);
-            Log.e("IMG","      - xMAX_WIDTH_PREVIEW = " + xMAX_WIDTH_PREVIEW);
-
-
-
             run();
         }
-    }
-
-    public void resetSizeOfPhotoPreview(){
-        Log.e("IMG","   Reset Size Of PhotoPreview /////////////////////////////////////////////////");
-
-        //Log.e("IMG","      - global_screen_width = " + display.getWidth() + "px");
-        Log.e("IMG","      - max_fram_focus_layout_height = " + max_fram_focus_layout_height + "px");
-        //Log.e("IMG","      - global_preview_height = " + global_preview_height + "px");
-        //Log.e("IMG","      - global_preview_width = " + global_preview_width + "px");
-
-        Log.e("IMG","      - nowPhoto_Height = " + nowPhoto_Height + "px");
-        Log.e("IMG","      - nowPhoto_Width = " + nowPhoto_Width + "px");
     }
 
     public void adjustImageDisplay(Bitmap bitmap){
@@ -1444,9 +994,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         if (layout_face_detect_width_MAX < layout_face_detect.getWidth()){
             layout_face_detect_width_MAX = layout_face_detect.getWidth();
         }
-        if (b){
-            Log.e("IMG","> Enter Edit Mode /////////////////////////////////////////////////////////////////////");
 
+        if (b){
             menu_bar.setVisibility(View.GONE);
             HeadLayout2.setVisibility(View.GONE);
             Touch_ImagePreview.setVisibility(View.GONE);
@@ -1458,9 +1007,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
             fram_focus_layout.startAnimation(animFadeIn);
 
-            ///////////////////////////////////////////////////////////////////////////////////////
-
-
             int head_layout_height = BitmapEditor.getHeightOfView(HeadLayout);
             int bottom_layout_height = BitmapEditor.getHeightOfView(bottom_layout);
             int main_layout_height = main_layout.getHeight();
@@ -1470,43 +1016,20 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             int free_height = main_layout_height - head_layout_height - bottom_layout_height;
             slideView2(FrameImagePreview_TOP, FrameImagePreview_TOP.getHeight(), free_height, FrameImagePreview_TOP.getWidth(), FrameImagePreview_TOP.getWidth());
 
-            //int newWidthFocusFrame = (free_height * display.getWidth() / ImagePreview.getHeight());
-
-            Log.e("IMG","   CALCULATE________________________________________");
-            //Log.e("IMG","   - head_layout_height = " + head_layout_height);
-            //Log.e("IMG","   - bottom_layout_height = " + bottom_layout_height);
-            //Log.e("IMG","   - main_layout_height = " + main_layout_height);
-            Log.e("IMG","   - imgPreView.getHeight() = " + imgPreView.getHeight());
-            Log.e("IMG","   - free_height = " + free_height);
-            Log.e("IMG","   - free_width = " +  display.getWidth());
-
-            //slideView2(fram_focus_layout, fram_focus_layout.getHeight(), x, fram_focus_layout.getWidth(), newWidthFocusFrame);
-
-            Log.e("IMG","   - ImagePreview.getHeight() = " + imgPreView.getHeight());
-            Log.e("IMG", "   - fram_focus_layout.getHeight() = " + fram_focus_layout.getHeight());
-
             if(FrameImagePreview.getHeight() > MAX_HEIGHT_PREVIEW){
                 MAX_HEIGHT_PREVIEW = FrameImagePreview.getHeight();
-                Log.e("IMG", "   - MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW);
             }
 
             if(FrameImagePreview.getWidth() > MAX_WIDTH_PREVIEW){
                 MAX_WIDTH_PREVIEW = FrameImagePreview.getWidth();
-                Log.e("IMG", "   - MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW);
             }
 
             nowPhoto_Width = nowPhotoPreview.getWidth();
             nowPhoto_Height = nowPhotoPreview.getHeight();
 
-            Log.e("IMG", "   CHECK Orientation ______________________________________________");
-            Log.e("IMG", "      - nowPhotoPreview.getHeight() = " + nowPhotoPreview.getHeight());
-            Log.e("IMG", "      - nowPhotoPreview.getWidth() = " + nowPhotoPreview.getWidth());
-
-            int match_width = display.getWidth();
             int match_height = (nowPhotoPreview.getHeight() / nowPhotoPreview.getWidth() ) * display.getWidth();
 
             if (imgPreView.getHeight() > free_height) {                                                       //Landscape
-                Log.e("IMG", "      imgPreView.getHeight > free_height________________________________________________________________");
                 int newHeight = free_height;
                 int newWidth = free_height * 1080 / imgPreView.getHeight();
 
@@ -1516,12 +1039,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
                 xMAX_HEIGHT_PREVIEW = newHeight;
                 xMAX_WIDTH_PREVIEW = newWidth;
-
-                Log.e("IMG", "      - FrameImagePreview Height = " + FrameImagePreview.getHeight());
-                Log.e("IMG", "      - FrameImagePreview Width = " + FrameImagePreview.getWidth());
             }else if (match_height < free_height){                                                                                 //Portaite
-                Log.e("IMG", "      imgPreView.getHeight < free_height________________________________________________________________");
-
                 slideView2(FrameImagePreview, FrameImagePreview.getHeight(), imgPreView.getHeight(), FrameImagePreview.getWidth(), display.getWidth());
                 slideView2(drawView, FrameImagePreview.getHeight(), imgPreView.getHeight(), FrameImagePreview.getWidth(), display.getWidth());
                 //drawView
@@ -1529,39 +1047,32 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
                 xMAX_HEIGHT_PREVIEW = imgPreView.getHeight();
                 xMAX_WIDTH_PREVIEW = display.getWidth();
-
-                Log.e("IMG", "      - FrameImagePreview Height = " + FrameImagePreview.getHeight());
-                Log.e("IMG", "      - FrameImagePreview Width = " + FrameImagePreview.getWidth());
             }
-
-            Log.e("IMG", "      - match_height = " + match_height);
-            Log.e("IMG", "      - match_width = " + match_width);
 
             slideView2(bottom_layout, 0, old_height_bottom_layout, old_width_bottom_layout, old_width_bottom_layout);
             slideView2(HeadLayout, 0, old_height_header_layout, old_width_bottom_layout, old_width_header_layout);
 
-            resetSizeOfPhotoPreview();
-            handleResult();
+//            handleResult();
 
             state_Edite_Mode = false;
             menu_bar.setVisibility(View.GONE);
             state_ImagePreview = true;
 
-            //nowPhotoPreview = getResizedBitmap(nowPhotoPreview, xMAX_WIDTH_PREVIEW,xMAX_HEIGHT_PREVIEW);
-            //nowPhotoPreview = getResizedBitmap(nowPhotoPreview, old_width_header_layout,x);
-            Log.e("IMG", "   NOW PHOTO PREVIEW /////////////////////////////////////////////////////////////////////////////");
-            Log.e("IMG", "   - Height = " + nowPhotoPreview.getHeight());
-            Log.e("IMG", "   - Width = " + nowPhotoPreview.getWidth());
+            //Show frame focus
+            for (int i = 0; i < facePosition.size(); i++){
+                LinearLayout layoutinner = fram_focus_layout.findViewWithTag("focus_frame" + i);
+                layoutinner.setVisibility(View.VISIBLE);
+            }
 
         }else {
-            Log.e("IMG","< Exit Edit Mode /////////////////////////////////////////////////////////////////////");
+            //Exit Edit mode
 
-            Log.e("IMG","   ImagePreview.getHeight() = " + imgPreView.getHeight());
-            Log.e("IMG", "   fram_focus_layout.getHeight() = " + fram_focus_layout.getHeight());
+            //Hide frame focus
+            for (int i = 0; i < facePosition.size(); i++){
+                LinearLayout layoutinner = fram_focus_layout.findViewWithTag("focus_frame" + i);
+                layoutinner.setVisibility(View.GONE);
+            }
 
-            Log.e("IMG", "   CHECK Orientation ______________________________________________");
-            Log.e("IMG", "      - nowPhotoPreview.getWidth() = " + nowPhotoPreview.getWidth());
-            Log.e("IMG", "      - nowPhotoPreview.getHeight() = " + nowPhotoPreview.getHeight());
 
             //Recall MenuBar + Header + FliterPreview
             menu_bar.setVisibility(View.GONE);
@@ -1574,8 +1085,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             slideView2(HeadLayout, HeadLayout.getLayoutParams().height, 0, HeadLayout.getLayoutParams().width, HeadLayout.getLayoutParams().width);
 
 
-
-
             ////////////////////////////////////////////////////////////////////////////////////////
             //int x2 = FrameImagePreview2.getLayoutParams().height;
             Display display2 = getWindowManager().getDefaultDisplay();
@@ -1583,53 +1092,32 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
             if(fram_focus_layout.getHeight() > MAX_HEIGHT_PREVIEW){
                 MAX_HEIGHT_PREVIEW = fram_focus_layout.getHeight();
-                Log.e("IMG", "   MAX_HEIGHT_PREVIEW = " + MAX_HEIGHT_PREVIEW);
             }
 
             if(fram_focus_layout.getWidth() > MAX_WIDTH_PREVIEW){
                 MAX_WIDTH_PREVIEW = fram_focus_layout.getWidth();
-                Log.e("IMG", "   MAX_WIDTH_PREVIEW = " + MAX_WIDTH_PREVIEW);
             }
 
             nowPhoto_Width = nowPhotoPreview.getWidth();
             nowPhoto_Height = nowPhotoPreview.getHeight();
 
-            //nowPhoto_Width = display2.getWidth();
-            //nowPhoto_Height = max_fram_focus_layout_height;
-            //nowPhoto_Height = FrameImagePreview.getLayoutParams().height;
-
             slideView2(FrameImagePreview_TOP, FrameImagePreview_TOP.getHeight(), MAX_HEIGHT_PREVIEW, FrameImagePreview_TOP.getWidth(), MAX_WIDTH_PREVIEW);
 
             slideView2(FrameImagePreview, FrameImagePreview.getLayoutParams().height, MAX_HEIGHT_PREVIEW, FrameImagePreview.getWidth(), MAX_WIDTH_PREVIEW);
 
-
             slideView2(drawView, FrameImagePreview.getLayoutParams().height, MAX_HEIGHT_PREVIEW, FrameImagePreview.getWidth(), MAX_WIDTH_PREVIEW);
-            //drawView
-            //slideView2(fram_focus_layout, FrameImagePreview.getLayoutParams().height, max_fram_focus_layout_height, FrameImagePreview.getLayoutParams().width, display2.getWidth());
-
             button_bar.setVisibility(View.GONE);
 
             xMAX_HEIGHT_PREVIEW = max_fram_focus_layout_height;
             xMAX_WIDTH_PREVIEW = display.getWidth();
 
-            resetSizeOfPhotoPreview();
-
-            handleResult();
+            //handleResult();
 
             state_Edite_Mode = true;
 
             nowPhotoPreview = BitmapEditor.getResizedBitmap(nowPhotoPreview, xMAX_WIDTH_PREVIEW, xMAX_HEIGHT_PREVIEW);
-            //nowPhotoPreview = getResizedBitmap(nowPhotoPreview,display.getWidth(),FrameImagePreview.getLayoutParams().height);
-            Log.e("IMG", "   NOW PHOTO PREVIEW /////////////////////////////////////////////////////////////////////////////");
-            Log.e("IMG", "   - Height = " + nowPhotoPreview.getHeight());
-            Log.e("IMG", "   - Width = " + nowPhotoPreview.getWidth());
-
-            //adjustImageDisplay(nowPhotoPreview);
-            //ImagePreview.setImageBitmap(getResizedBitmap(getMosaicsBitmap(nowPhotoPreview, 0.05), nowPhotoPreview.getWidth(), nowPhotoPreview.getHeight()));
         }
-
     }
-
 
     // PAINT ////////////////////
     public void paintClicked(View view) {
@@ -1641,17 +1129,55 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             ImageButton imgView = (ImageButton)view;
             String color = view.getTag().toString();
             drawView.setColor(color);
-
             //reflect in the UI
             imgView.setImageDrawable(getResources().getDrawable(R.drawable.paint_pressed));
             currPaint.setImageDrawable(getResources().getDrawable(R.drawable.paint));
             currPaint = (ImageButton)view;
         }
-
-
     }
 
+    public void blurFaceX(int progress){
+        double blurRadius = (100 - progress ) * Math.pow(10,-3);
 
+        for (int i = 0; i < facePosition.size(); i++){
 
+            String[] a = facePosition.get(i).split("/");
+
+            height2 = xMAX_HEIGHT_PREVIEW;
+            width2 = xMAX_WIDTH_PREVIEW;
+
+            //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
+            int h = (int) Math.round((float) ((2 * (Double.parseDouble(a[3]) - Float.parseFloat(a[5]))) * height2));
+            int w = (int) Math.round((float) ((2 * (Double.parseDouble(a[2]) - Float.parseFloat(a[4]))) * width2));
+            int x = (int) Math.round((float) (Double.parseDouble(a[0]) * width2));
+            int y = (int) Math.round((float) (Double.parseDouble(a[1]) * height2));
+
+            Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
+            Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
+
+            LinearLayout censor_layout = fram_focus_layout.findViewWithTag("" + i);
+
+            int intID = Integer.parseInt((String) censor_layout.getTag());
+
+                if (blurRadius == 0.1){
+                    censor_layout.setBackground(new BitmapDrawable(getResources(), b));
+                }else if(faceCensorState[intID] == 1){
+                    censor_layout.setBackground(new BitmapDrawable(getResources(), BitmapEditor.getMosaicsBitmap(b, blurRadius)));
+
+                }
+
+        }
+    }
+
+    public void onClickStickerItem(){
+        selectedSticker[0] = adapterViewAndroid.getSelectedSticker();
+        Drawable sticker = new BitmapDrawable(selectedSticker[0]);
+
+        for (int i = 0; i < facePosition.size(); i++){
+            LinearLayout censor_layout = fram_focus_layout.findViewWithTag("" + i);
+            censor_layout.setBackgroundDrawable(sticker);
+        }
+
+    }
 
 }

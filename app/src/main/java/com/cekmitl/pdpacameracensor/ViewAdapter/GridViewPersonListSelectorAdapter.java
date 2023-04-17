@@ -3,7 +3,6 @@ package com.cekmitl.pdpacameracensor.ViewAdapter;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,34 +10,18 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.R;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Objects;
 
 public class GridViewPersonListSelectorAdapter extends BaseAdapter {
 
-    private Context mContext;
+    private final Context mContext;
     private final String[] gridViewString;
     private final Bitmap[] gridViewImageId;
-    private int fullView = 0;
-    private ArrayList<String> selectedFace;
-
-    public PersonDatabase db = null;
-
-
-
-    private static final String[] CLUBS =
-            {"open camera", "choose from gallery"};
-
-    int PICK_IMAGE_MULTIPLE = 1;
-    String imageEncoded;
-    TextView total;
-    ArrayList<Uri> mArrayUri;
-    int position = 0;
-    List<String> imagesEncodedList;
+    private final ArrayList<String> selectedFace;
 
     LayoutInflater inflater;
 
@@ -46,7 +29,6 @@ public class GridViewPersonListSelectorAdapter extends BaseAdapter {
         mContext = context;
         this.gridViewImageId = Arrays.copyOfRange(gridViewImageId, 0, gridViewImageId.length - 1);
         this.gridViewString = Arrays.copyOfRange(gridViewString, 0, gridViewString.length - 1);
-        this.fullView = fullView;
         this.selectedFace = selectedF;
     }
 
@@ -90,39 +72,27 @@ public class GridViewPersonListSelectorAdapter extends BaseAdapter {
                 }
 
             }
-//            else {
-//                gridViewAndroid.setTag(gridViewString[i]);
-//                textViewAndroid.setText("");
-//            }
-
         } else {
             gridViewAndroid = (View) convertView;
         }
 
-
-
-        gridViewAndroid.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String p = v.getTag().toString();
-
-                if (!isSelected(p)){
-                    selectedFace.add(p);
-                    v.setBackgroundResource(R.drawable.bg_round_list_selector);
-                }else{
-                    selectedFace.remove(p);
-                    v.setBackgroundColor(Color.parseColor("#00000000"));
-                }
-
+        gridViewAndroid.setOnClickListener(v -> {
+            String p = v.getTag().toString();
+            if (!isSelected(p)){
+                selectedFace.add(p);
+                v.setBackgroundResource(R.drawable.bg_round_list_selector);
+            }else{
+                selectedFace.remove(p);
+                v.setBackgroundColor(Color.parseColor("#00000000"));
             }
-        });
 
+        });
         return gridViewAndroid;
     }
 
     boolean isSelected(String select){
         for (String s : selectedFace){
-            if (s == select){
+            if (Objects.equals(s, select)){
                 return true;
             }
         }

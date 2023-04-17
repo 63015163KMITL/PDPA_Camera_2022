@@ -83,6 +83,7 @@
                     android:background="#55000000">
 
                     <ImageButton
+                        android:visibility="gone"
                         android:layout_width="25dp"
                         android:layout_height="25dp"
                         android:layout_alignParentRight="true"
@@ -149,16 +150,17 @@
 
     <RelativeLayout
         android:id="@+id/HeadLayout"
+        android:gravity="center_horizontal"
         android:layout_width="match_parent"
         android:layout_height="55dp"
         android:layout_centerHorizontal="true"
         android:background="@drawable/gb_fade_black_top"
-        android:gravity="center_vertical"
         android:visibility="visible">
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
             android:layout_alignParentLeft="true"
             android:gravity="left">
 
@@ -175,6 +177,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -207,6 +210,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
             android:layout_marginRight="20dp"
             android:gravity="right">
@@ -399,6 +403,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
@@ -608,7 +613,7 @@
                             android:id="@+id/GridView_stricker"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
-                            android:numColumns="5"
+                            android:numColumns="4"
                             android:columnWidth="0dp"
                             android:listSelector="#AAA"/>
 

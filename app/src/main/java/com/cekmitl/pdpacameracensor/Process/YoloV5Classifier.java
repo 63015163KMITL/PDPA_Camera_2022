@@ -21,23 +21,12 @@ import java.util.PriorityQueue;
 import java.util.Vector;
 
 
-/**
- * Wrapper for frozen detection models trained using the Tensorflow Object Detection API:
- * - https://github.com/tensorflow/models/tree/master/research/object_detection
- * where you can find the training code.
- * <p>
- * To use pretrained models in the API or convert to TF Lite models, please see docs for details:
- * - https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md
- * - https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/running_on_mobile_tensorflowlite.md#running-our-model-on-android
- */
 public class YoloV5Classifier implements Classifier {
 
-    // Float model
+
     private int INPUT_SIZE = -1;
     private  int output_box;
 
-    // Number of threads in the java app
-    // Pre-allocated buffers.
     private final Vector<String> labels = new Vector<>();
     private int[] intValues;
 
@@ -58,12 +47,9 @@ public class YoloV5Classifier implements Classifier {
         }
         br.close();
         Interpreter.Options options = (new Interpreter.Options());
-//        options.setNumThreads(NUM_THREADS);
-//        options.addDelegate(new NnApiDelegate());
         options.setNumThreads(4); //7 thread = 280 - 300 ms
-
         options.setUseXNNPACK(true);
-//        options.setCancellable(true);
+
         options.setAllowBufferHandleOutput(true);
         d.tfLite = new Interpreter(Utils.loadModelFile(assetManager, modelFilename), options);
         int numBytesPerChannel;
@@ -177,7 +163,7 @@ public class YoloV5Classifier implements Classifier {
                         Math.min(bitmap.getWidth() - 1, xPos + w / 2),
                         Math.min(bitmap.getHeight() - 1, yPos+h/2));
 
-                detections.add(new Recognition("" + offset, labels.get(detectedClass), confidenceInClass, rect, detectedClass,xPos,yPos));
+                detections.add(new Recognition("" + offset, confidenceInClass, rect, detectedClass,xPos,yPos));
             }
         }
         return nms(detections);

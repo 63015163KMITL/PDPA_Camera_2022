@@ -1,6 +1,9 @@
 package com.cekmitl.pdpacameracensor;
 
 import static android.widget.Toast.makeText;
+import static com.cekmitl.pdpacameracensor.Process.AIProperties.TF_OD_API_INPUT_SIZE;
+import static com.cekmitl.pdpacameracensor.Process.AIProperties.TF_OD_API_LABELS_FILE;
+import static com.cekmitl.pdpacameracensor.Process.AIProperties.TF_OD_API_MODEL_FILE;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -13,7 +16,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -26,6 +28,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.cekmitl.pdpacameracensor.ImageEditor.BitmapEditor;
+import com.cekmitl.pdpacameracensor.Process.AIProperties;
 import com.cekmitl.pdpacameracensor.Process.Classifier;
 import com.cekmitl.pdpacameracensor.Process.FaceRecogitionProcessor;
 import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
@@ -51,11 +54,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
     //DETECT FACE
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
-    private Bitmap largeIcon;
-    private ImageView imageView, ImagePreview, imgPreView;
-    public static final int TF_OD_API_INPUT_SIZE = 320;
-    private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
+
 
     //Grid View
     public String[] str = new String[20];
@@ -69,23 +68,10 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
     public String psName = null;
 
 
-    //component
-    private Button saveBT;
-    private EditText nameTxt;
-
     PersonDatabase db;
 
     private FaceRecogitionProcessor faceRecognitionProcesser;
     private Interpreter faceNetInterpreter;
-
-    private int temp_num = 0;
-
-    //-----------------
-    String[] gridViewString = {
-            "Alram", "Android", "Mobile", "Website", "Profile", "WordPress",
-            "Alram", "Android", "Mobile", "Website", "Profile", "WordPress",
-            "Alram", "Android", "Mobile", "Website", "Profile", "WordPress",
-    } ;
 
     //Grid View
     GridViewFaceSelectorAdapter adapterViewAndroid;
@@ -101,77 +87,44 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         actionBar.hide();
 
         ll = findViewById(R.id.ll);
-        saveBT = findViewById(R.id.button_save);
-        nameTxt = findViewById(R.id.edit_user_name);
-
+        //component
 
         try {
-            Log.e("TEST", "detector OK");
-            //makeText(this, "detector OK", LENGTH_SHORT).show();
             detector = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
         } catch (IOException e) {
-            Log.e("TEST", "detector ERROR");
-            //makeText(this, "detector ERROR", LENGTH_SHORT).show();
             e.printStackTrace();
         }
 
         Intent intent = getIntent();
         String str = intent.getStringExtra("key");
         psName = intent.getStringExtra("psName");
-        Log.e("INTENT", "Intent psName = " + psName);
-        //makeText(this, "Intent psName = " + psName, Toast.LENGTH_SHORT).show();
-
 
         if (str != null){
             makeText(this, "Intent STR != NULL", Toast.LENGTH_SHORT).show();
             int num_pic = Integer.parseInt(intent.getStringExtra("temp_num"));
-            //temp_num = Integer.parseInt(intent.getStringExtra("temp_num"));
             ArrayList<Bitmap> recive_bitmap = new ArrayList<Bitmap>();
             File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
             String path = DOC_PATH + "/temp/";
             for(int i = 0; i < num_pic; i++){
-
                 File imgFile = new  File(path + i + ".png");
                 if(imgFile.exists()){
-                    //recive_bitmap.add(BitmapFactory.decodeFile(imgFile.getAbsolutePath()));
                     cropFaceProcess(BitmapFactory.decodeFile(imgFile.getAbsolutePath()));
                 }
-
             }
-//            ArrayList<Bitmap> iBitmap = (ArrayList<Bitmap>) getIntent().getSerializableExtra("bitmap");
-//            Log.e("intent", "iBitmap = " + iBitmap.toString());
-//            cropFaceProcess(iBitmap.get(0));
 
         }else {
             openGalley();
         }
 
-
         try {
-            db = new PersonDatabase();
-            faceNetInterpreter = new Interpreter(FileUtil.loadMappedFile(this, "mobile_face_net.tflite"), new Interpreter.Options());
+            if (db == null){
+                db = new PersonDatabase(1);
+            }
+            faceNetInterpreter = new Interpreter(FileUtil.loadMappedFile(this, AIProperties.FACE_NET_MODEL), new Interpreter.Options());
         } catch (IOException e) {
             e.printStackTrace();
         }
         faceRecognitionProcesser = new FaceRecogitionProcessor(faceNetInterpreter);
-
-//        saveBT.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//
-////
-//            }
-//        });
-/*
-        TextView add_new_face = root.findViewById(R.id.add_new_face_button);
-        add_new_face.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getActivity(), FaceRecognitionCamera.class);
-                startActivity(intent);
-            }
-        });
-        return rootView; */
 
         TextView save_button = findViewById(R.id.button_ok);
         save_button.setOnClickListener(new View.OnClickListener() {
@@ -185,9 +138,6 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                     faceSelect = adapterViewAndroid.getFaceSelected();
 
                     int num = faceSelect.size();
-                    Log.e("SAVINGIMAGE","faceSelect NUM = " + faceSelect.size());
-                    Log.e("SAVINGIMAGE","faceSelect = " + faceSelect.toString());
-
                     for (int i = 0; i < num; i++) {
                         float[] arr = faceRecognitionProcesser.recognize(faceSelect.get(i));
 
@@ -344,14 +294,13 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                 //list.add(Uri.parse(imgurl));
             }
 
-            adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this,gridViewString, insertFaceSelect);
+            adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this, insertFaceSelect);
             androidGridView = findViewById(R.id.grid_view);
             androidGridView.setAdapter(adapterViewAndroid);
 
         }else {
             finish();
         }
-
     }
 
 
@@ -380,46 +329,13 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                 }
             }
 
-            adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this,gridViewString, insertFaceSelect);
+            adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this, insertFaceSelect);
             androidGridView = findViewById(R.id.grid_view);
             androidGridView.setAdapter(adapterViewAndroid);
         }
 
     }
 
-
-    public Bitmap cropFace(double X, double Y, double width, double height, Bitmap b) throws IOException {
-        Log.d("CROPFACE", "width: "+String.valueOf(width) + " H :" + String.valueOf(height) + " X" + X + "  Y" + Y);
-        if (!(b == null)){
-            double newSize = 320;
-            int newX = (int)Math.round(X * newSize);
-            int newY = (int)Math.round(X * newSize);
-            int newH = (int)Math.round(X * newSize);
-            int newW = (int)Math.round(X * newSize);
-
-            Log.d("IMAGESIZE", " cropFace ////////////////////////////////////");
-            Log.d("IMAGESIZE", "   newSize = " + newSize);
-            Log.d("IMAGESIZE", "   x = " + newX);
-            Log.d("IMAGESIZE", "   y = " + newY);
-            Log.d("IMAGESIZE", "   h = " + newH);
-            Log.d("IMAGESIZE", "   w = " + newW);
-
-            Bitmap bb = Bitmap.createScaledBitmap(b, newW, newH, false);
-
-            //Bitmap bb = BitmapEditor.getResizedBitmapBig(b, (float) newW, (float) newH);
-
-            Log.d("IMAGESIZE", "   bitmap h = " + bb.getHeight());
-            Log.d("IMAGESIZE", "   bitmap w = " + bb.getWidth());
-
-            //Bitmap bb = BitmapEditor.getResizedBitmapBig(b, (float) width, (float) height);
-            Log.d("IMAGESIZE", "BB h "+ bb.getHeight() + " w "+bb.getWidth());
-            //return bb;
-            return BitmapEditor.crop2(bb, (float) X, (float) Y, (float) width, (float) height);
-        }
-        return null;
-
-
-    }
 
     public static Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm, Bitmap realBitmap, int persen){
         int width2 = realBitmap.getWidth();
@@ -443,6 +359,5 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
         return b;
     }
-
 
 }

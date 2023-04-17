@@ -3,10 +3,8 @@ package com.cekmitl.pdpacameracensor;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Size;
 import android.view.View;
@@ -50,18 +48,11 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
     private Classifier detector;
 
-    public static Bitmap tempBitmap = null;
-    List<Classifier.Recognition> results = null;
-
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private ProcessCameraProvider cameraProvider;
     private int lensFacing = CameraSelector.LENS_FACING_FRONT;
     public PreviewView previewView;
     private ImageCapture imageCapture;
-
-    private TextView txt_new;
-
-    ArrayList<Bitmap> b = new ArrayList<Bitmap>(10);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,9 +76,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
             //makeText(this, "detector ERROR", LENGTH_SHORT).show();
             e.printStackTrace();
         }
-
-
-        txt_new = findViewById(R.id.percent_complete);
 
         setContentView(R.layout.activity_face_recognition_camera);
 
@@ -120,28 +108,10 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         return ContextCompat.getMainExecutor(this);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-//        detectThread.interrupt();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-//        detectThread.interrupt();
-    }
     private int NUM_SAVED = 0;
     private int NUM_IMAGE = 20;
     private boolean isCamOn = false;
     private Thread detectThread;
-//    private static final Object mPauseLock = new Object();
-//    private static boolean mPaused = false;
     private int counting = 0;
     private int count_to_capture = 2; //wait 4
     private int round = 0;
@@ -154,32 +124,8 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                     try {
 
                         Log.e("TIMER_CAM","Number of picutre" + face_crop_bitmap.size());
-//                        handleResult();
-
 
                         detectThread.join(200);
-//                        Log.e("PROCESSCAPTURE", "");
-//                        Log.e("PROCESSCAPTURE", "btn X : " + btn_X);
-//                        Log.e("PROCESSCAPTURE", "btn Y : " + btn_Y);
-//                        Log.e("PROCESSCAPTURE", "btn W : " + btn_W);
-//                        Log.e("PROCESSCAPTURE", "btn H : " + btn_H);
-//
-//                        Log.e("PROCESSCAPTURE", "");
-
-//                        Log.e("PROCESSCAPTURE", "btn_X - btn_W >= focusViewX = " + (btn_X - btn_W ));
-//                        Log.e("PROCESSCAPTURE", "btn_Y + btn_H >= focusViewY = " + (btn_X + btn_H));
-
-//                        Log.e("PROCESSCAPTURE", "WIDTH : " + (focusViewX - (focusViewW / 2)) + " < " + ( (btn_X - btn_W / 2) + btn_W ) + " > " + ((focusViewX + (focusViewW / 2))));
-//                        Log.e("PROCESSCAPTURE", "HEIGHT : " + (focusViewY - (focusViewH / 2)) + " < " + ( (btn_Y - btn_H / 2) + btn_H ) + " > " + ((focusViewY + (focusViewH / 2))));
-                        //Log.e("PROCESSCAPTURE", ( (focusViewY - btn_H / 2) ) + " > " + ( (btn_X + btn_W / 2) + btn_W )+ " < " + ( (focusViewY + btn_H / 2) ));
-//                        Log.e("PROCESSCAPTURE", "IF btn_Y + btn_H >= focusViewY = " + (btn_X + btn_H <= focusViewX));
-
-//                        if((btn_X - btn_W >= focusViewX) && (btn_Y - btn_H >= focusViewY)){
-//                            Log.e("PROCESSCAPTURE", "BTN X+-W : OK");
-//                        }
-
-
-                        //checkFaceInCircle(btn_x, progressBar_ring);
 
 
                         Bitmap imageInput = null;
@@ -191,7 +137,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                             if (captureState){
                                 face_crop_bitmap.add(imageInput);
                                 round += 1;
-                                Log.d("PROCESSCAPTURE", "number image: " + round);
                                 TextView txt_new = findViewById(R.id.percent_complete);
                                 txt_new.setText((round * 100 / NUM_IMAGE) + "%");
 
@@ -201,22 +146,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
                                 Button btn_x = findViewById(R.id.x_button);
 
-                                float focusViewX = progressBar_ring.getX() + progressBar_ring.getWidth() / 2;
-                                float focusViewY = progressBar_ring.getY() + progressBar_ring.getHeight() / 2;
-                                float focusViewW = progressBar_ring.getWidth();
-                                float focusViewH = progressBar_ring.getHeight();
-
-                                Log.e("PROCESSCAPTURE", "");
-                                Log.e("PROCESSCAPTURE", "////////////////////////////////////");
-                                Log.e("PROCESSCAPTURE", "focusView X : " + focusViewX);
-                                Log.e("PROCESSCAPTURE", "focusView Y : " + focusViewY);
-                                Log.e("PROCESSCAPTURE", "focusView W : " + focusViewW);
-                                Log.e("PROCESSCAPTURE", "focusView H : " + focusViewH);
-
-                                float btn_X = btn_x.getX() + btn_x.getWidth() / 2;
-                                float btn_Y = btn_x.getY() + btn_x.getHeight() / 2;
-                                float btn_W = btn_x.getWidth();
-                                float btn_H = btn_x.getHeight();
                             }else{
                                 if (counting < count_to_capture){
                                     ++counting;
@@ -227,10 +156,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                                     captureState = true;
                                 }
                             }
-
-
-
-//                            checkFaceInCircle
 
                         }else{
                             counting = 0;
@@ -255,15 +180,8 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         detectThread.start();
     }
 
-    Bitmap myBitmap;
-
-//    public void displayNum(){
-//        //txt_new.setText(NUM_IMAGE + "/" + i);
-//        Toast.makeText(this, "i = " + NUM_SAVED, Toast.LENGTH_SHORT).show();
-//    }
 
     public void saveTemp(ArrayList<Bitmap> bitmap){
-        File file_temp2 = null;
         NUM_SAVED = 0;
         File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
 
@@ -282,15 +200,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            String path = DOC_PATH + "/temp/";
-            //File checkFile = new File(path+"/"+String.valueOf(i)+".txt");
-
-            //ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            //myBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-
-           // Log.e("saveTemp","PATH = " + file_temp2.getAbsolutePath());
-
         }
 
     }
@@ -333,8 +242,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
             @SuppressLint("UnsafeOptInUsageError")
             Bitmap bm = Utils.toBitmap(Objects.requireNonNull(image.getImage()));
             bm = BitmapEditor.getResizedBitmap(bm, 320, 320);
-            //b.remove(0);
-            //b.add(bm);
             bb = bm;
             Log.e("scanface","wait 1000; = ");
             Log.e("scanface","FACE = " + bb.toString());
@@ -344,12 +251,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
     }
 
     public void SelectFace() throws IOException {
-//        Bitmap icon = BitmapFactory.decodeResource(this.getResources(), R.drawable.test);
-
-//        icon = BitmapEditor.getResizedBitmap(icon, 50, 50);
-        //b.add(icon);
-//        detectThread.interrupt();
-
         saveTemp(face_crop_bitmap);
 
         Intent intent = new Intent(getApplicationContext(), AddNewFaceActivity.class);
@@ -359,12 +260,8 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         Log.d("PASSINGROUND", String.valueOf(round));
 
         startActivity(intent);
-//        isCamOn = false;
         finish();
-//        detectThread.interrupt();
-
     }
-
 
     public boolean isFoundFace(Bitmap bitmap) {
         if (bitmap != null) {
@@ -381,82 +278,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
         }
         Log.d("FOUNDFACE", "isFoundFace: False");
-        return false;
-    }
-
-//    public Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm){
-//        int width2 = 640;
-//        int height2 = 480;
-//
-//        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
-//        int h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
-//        int w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
-//        int x = (int) Math.round((float) (X * width2));
-//        int y = (int) Math.round((float) (Y * height2));
-//
-//        Bitmap bb = BitmapEditor.getResizedBitmap(bm, width2, height2);
-//        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
-//
-//        return b;
-//    }
-
-
-    //DETECT FACE FUNCTION
-    public void handleResult() {
-        if(tempBitmap != null){
-            results = detector.recognizeImage(tempBitmap); //ส่งภาพไป คืนคำตอบกลับมาในรูปแบบ List
-        }
-    }
-
-    public void setBox() {
-        if (results != null) {
-
-            //canvasView.setImageBitmap(bitmap);
-            for (final Classifier.Recognition result : results) {
-                final RectF location = result.getLocation();
-                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                    //setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY());
-                    Log.e("AAA","setFocusView OK");
-                    //}else if (result.getDetectedClass() == 1){
-                    //    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 1);
-                    //}else{
-                    //setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 2);
-
-                }
-            }
-        }
-    }
-
-    public boolean checkFaceInCircle(View focusView, View circleFrame){
-
-        float focusViewX = focusView.getX() + focusView.getWidth() / 2;
-        float focusViewY = focusView.getY() + focusView.getHeight() / 2;
-        float focusViewW = focusView.getWidth();
-        float focusViewH = focusView.getHeight();
-
-        float circleFrameX = focusView.getX() + circleFrame.getWidth() / 2;
-        float circleFrameY = focusView.getY() + circleFrame.getHeight() / 2;
-        float circleFrameW = circleFrame.getWidth();
-        float circleFrameH = circleFrame.getHeight();
-
-        float MAX_WIDTH_circleFrameX = circleFrameX - (circleFrameW / 2);
-        float MIN_WIDTH_circleFrameX = circleFrameX + (circleFrameW / 2);
-
-        float MAX_HIGHT_circleFrameY = circleFrameY - (circleFrameH / 2);
-        float MIN_HIGHT_circleFrameY = circleFrameY + (circleFrameH / 2);
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int screenHeight = displayMetrics.heightPixels;
-        int screenWidth = displayMetrics.widthPixels;
-
-//        Log.d("VIEWPOSITION", "X : " + centreX + " | Y : " + centreY);
-//        Log.d("VIEWPOSITION", "height : " + height + " | width : " + width);
-//
-        //X±(W/2) <= W.MAX && X±(W/2) >= W.MIN
-
-        boolean checkWidth_focusView = (focusViewX + (focusViewW/2)) <= (circleFrameX / 2 - circleFrameW);
-
         return false;
     }
 

@@ -1,11 +1,9 @@
 package com.cekmitl.pdpacameracensor.Process;
 
-
 public class EuclideanDistance {
     public static double run(float[] array1, float[] array2) {
         double distance = 0;
         for (int i = 0;i<array1.length;i++){
-
             double diff = array1[i] - array2[i];
             distance += diff*diff;
         }

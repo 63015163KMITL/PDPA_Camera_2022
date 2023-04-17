@@ -86,6 +86,8 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
 
+    private boolean cameraMode = true;
+
     public PreviewView previewView;
     private ImageCapture imageCapture;
     private VideoCapture videoCapture;
@@ -94,6 +96,7 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
     private boolean statRecord;
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
     private ProcessCameraProvider cameraProvider;
+
 
     private TextView txtDebug;
     private LinearLayout top_center;
@@ -141,7 +144,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
         }else {
             frame_grid.setVisibility(View.INVISIBLE);
         }
-
 
         /////////////////////////////////////////////////////////////////
 
@@ -199,35 +201,36 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
             }
         }, getExecutor());
 
+
         try {
             detector = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        detectThread = new Thread(new Runnable() {
-            public void run() {
-                while (true) {
-
-                    try {
-                        detectThread.join(20);
-                        Log.e("A","HandleResult"+String.valueOf(mPaused));
-                        handleResult();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    synchronized (mPauseLock){
-                        while (mPaused){
-                            try {
-                                mPauseLock.wait();
-                            } catch (InterruptedException e) {
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        detectThread.start();
+//        detectThread = new Thread(new Runnable() {
+//            public void run() {
+//                while (true) {
+//
+//                    try {
+//                        detectThread.join(20);
+//                        Log.e("A","HandleResult"+String.valueOf(mPaused));
+//                        handleResult();
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                    synchronized (mPauseLock){
+//                        while (mPaused){
+//                            try {
+//                                mPauseLock.wait();
+//                            } catch (InterruptedException e) {
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        });
+//        detectThread.start();
 
         //Timer
         chronometer = findViewById(R.id.idCMmeter);
@@ -263,12 +266,17 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                 ((TextView) view).setTextColor(Color.parseColor("#FBB040"));
 
                 if("VIDEO".equals(((TextView) view).getText().toString())){
+                    cameraMode = false;
+//                    Toast.makeText(MainCameraActivity.this, "cameraMode : " + cameraMode, LENGTH_SHORT).show();
+
+                    clearFocus();
+
                     startCameraXVideo(cameraProvider);
 
                     head_layout.setVisibility(View.GONE);
                     head_layout_video.setVisibility(View.VISIBLE);
 
-                    bCapture.setImageResource(R.drawable.ic_recording);
+                    bCapture.setImageResource(R.drawable.ic_record);
                     //makeText(MainCameraActivity.this, "VIDEO MODE", LENGTH_SHORT).show();
 
                     //เริ่มการทำงานของ Camera X
@@ -284,6 +292,8 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                 }
 
                 if("PHOTO".equals(((TextView) view).getText().toString())){
+//                    Toast.makeText(MainCameraActivity.this, "cameraMode : " + cameraMode, LENGTH_SHORT).show();
+                    cameraMode = true;
                     clearFocus();
                     startCameraX(cameraProvider);
 
@@ -352,28 +362,40 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
 
     }
 
-
     @SuppressLint({"RestrictedApi", "NonConstantResourceId"})
     @Override
     public void onClick(View view) {
 
         switch (view.getId()) {
             case R.id.bCapture:
-                if (!statRecord) {
+                if (cameraMode) {
+                    //Take a photo
                     capturePhoto();
+                }else if(statRecord){
 
-                } else {
-                    bCapture.setImageResource(R.drawable.ic_camera);
+                    //Stop Video Recoding
+                    bCapture.setImageResource(R.drawable.ic_record);
 
                     //Timer
                     chronometer.setBase(SystemClock.elapsedRealtime());
                     stopTime = 0;
                     chronometer.stop();
+
                     isWorking = false;
                     pauseThread();
 
                     videoCapture.stopRecording();
                     statRecord = false;
+                } else if(cameraMode == false){
+                    //Start Video Recoding
+                    bCapture.setImageResource(R.drawable.ic_recording);
+
+                    //Timer
+                    chronometer.setBase(SystemClock.elapsedRealtime() + stopTime);
+                    chronometer.start();
+
+                    statRecord = true;
+                    recordVideo();
                 }
                 break;
             case R.id.reverse_camera_button:
@@ -564,7 +586,7 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
-        imageAnalysis.setAnalyzer(getExecutor(), this);
+//        imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Image capture use case
         imageCapture = new ImageCapture.Builder()
@@ -666,8 +688,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                                 Intent myIntent = new Intent(MainCameraActivity.this, FFmpegProcessActivity.class);
                                 myIntent.putExtra("video_name", "" + contentValues.get("_display_name")); //Optional parameters
                                 MainCameraActivity.this.startActivity(myIntent);
-
-
                             }
 
                             @Override
@@ -898,4 +918,5 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
+
 }

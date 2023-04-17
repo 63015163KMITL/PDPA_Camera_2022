@@ -1,24 +1,22 @@
 package com.cekmitl.pdpacameracensor;
 
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Switch;
+import android.widget.TextView;
+
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 
-import android.content.SharedPreferences;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
+import java.util.Set;
 
 public class SettingActivity extends AppCompatActivity implements View.OnClickListener {
 
     public SharedPreferences sharedPreferences;
     public Switch switch_grid_line, switch_location_tag, switch_mirror_font_camera, switch_preview_after_shutter, switch_volume_kaye_shutter;
-
+    Set<String> person_selected;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,20 +30,11 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
 
         setContentView(R.layout.activity_setting2);
 
-        /*
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Window w = getWindow();
-            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-        }
-
-         */
-
         switch_grid_line = findViewById(R.id.switch_grid_line);
         switch_location_tag = findViewById(R.id.switch_location_tag);
         switch_mirror_font_camera = findViewById(R.id.switch_mirroi_font_camera);
         switch_preview_after_shutter = findViewById(R.id.switch_preview_after_shutter);
         switch_volume_kaye_shutter = findViewById(R.id.switch_volume_kaye_shutter);
-
 
         SharedPreferences sh = getSharedPreferences("Setting", MODE_PRIVATE);
 
@@ -54,7 +43,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         switch_mirror_font_camera.setChecked(sh.getBoolean("switch_mirror_font_camera", true));
         switch_preview_after_shutter.setChecked(sh.getBoolean("switch_preview_after_shutter", true));
         switch_volume_kaye_shutter.setChecked(sh.getBoolean("switch_volume_kaye_shutter", true));
-
+//        Toast.makeText(this, sh.getStringSet("Person_Selected",null).toArray().toString(), Toast.LENGTH_SHORT).show();
         switch_grid_line.setOnClickListener(this);
         switch_location_tag.setOnClickListener(this);
         switch_mirror_font_camera.setOnClickListener(this);
@@ -68,21 +57,20 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
                 setContentView(R.layout.activity_main);
             }
         });
-
     }
 
     @Override
     public void onClick(View view) {
-
         sharedPreferences = getSharedPreferences("Setting",MODE_PRIVATE);
         SharedPreferences.Editor setting = sharedPreferences.edit();
-
         setting.putBoolean("switch_grid_line", switch_grid_line.isChecked());
         setting.putBoolean("switch_location_tag", switch_location_tag.isChecked());
         setting.putBoolean("switch_mirror_font_camera", switch_mirror_font_camera.isChecked());
         setting.putBoolean("switch_preview_after_shutter", switch_preview_after_shutter.isChecked());
         setting.putBoolean("switch_volume_kaye_shutter", switch_volume_kaye_shutter.isChecked());
-        setting.commit();
+        setting.apply();
+
 
     }
+
 }

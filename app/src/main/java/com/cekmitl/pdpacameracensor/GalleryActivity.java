@@ -4,6 +4,9 @@ import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.widget.Toast;
@@ -94,7 +97,8 @@ public class GalleryActivity extends AppCompatActivity {
         imagesRV.setAdapter(imageRVAdapter);
     }
 
-    private void getImagePath() {
+    public void getImagePath() {
+
         // in this method we are adding all our image paths
         // in our arraylist which we have created.
         // on below line we are checking if the device is having an sd card or not.
@@ -109,6 +113,7 @@ public class GalleryActivity extends AppCompatActivity {
             // on below line we are creating a new
             // string to order our images by string.
             final String orderBy = MediaStore.Images.Media._ID;
+            final  String orderByDate = MediaStore.Images.Media.DATE_ADDED;
 
             // this method will stores all the images
             // from the gallery in Cursor
@@ -116,6 +121,7 @@ public class GalleryActivity extends AppCompatActivity {
 
             Cursor cursor_photo = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
             Cursor cursor_video = getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
+
 
             // below line is to get total number of images
             int count_photo = cursor_photo.getCount();
@@ -134,6 +140,11 @@ public class GalleryActivity extends AppCompatActivity {
 
                 // after that we are getting the image file path
                 // and adding that path in our array list.
+                final int THUMBSIZE = 64;
+
+                Bitmap ThumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(cursor_video.getString(dataColumnIndex)),
+                        THUMBSIZE, THUMBSIZE);
+
                 imagePaths.add(cursor_video.getString(dataColumnIndex));
             }
             

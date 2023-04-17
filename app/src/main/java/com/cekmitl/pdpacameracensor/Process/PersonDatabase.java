@@ -1,8 +1,6 @@
 package com.cekmitl.pdpacameracensor.Process;
 
 import android.graphics.Bitmap;
-import android.os.Environment;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -14,136 +12,128 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class PersonDatabase {
 
-    private File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
     public Person[] persons;
-    private String restricName = "temp";
-    private int MIN_MATCH = 1;
-    private float CONF = 0.65f;
-    public ArrayList<String> selectedFace;
+
+    private final int MIN_MATCH = AIProperties.MIN_MATCH;
+    private final float CONF = AIProperties.DIFF_RATIO;
 
     public PersonDatabase() throws IOException {
-
         create_ParentFolder("/Features");
-
         File[] person_list = getPersonList();
         persons = new Person[person_list.length];
-
         for (int i =0;i<persons.length;i++){
+            persons[i] = new Person(person_list[i].getName(),getVectorList(person_list[i].getName()),AIProperties.DOC_PATH  + "/Features/"+person_list[i].getName()+"/display.png",isOn(person_list[i].getName()));
+        }
+    }
 
-            persons[i] = new Person(person_list[i].getName(),getVectorList(person_list[i].getName()),DOC_PATH + "/Features/"+person_list[i].getName()+"/display.png");
-            Log.d("PERSONIMAGE", DOC_PATH + "/Features/"+person_list[i].getName()+"/display.png");
+    //Only Init case
+    public PersonDatabase(int code) throws IOException {
 
+        if (code == -1){
+            createCheckingFile();
+            create_ParentFolder("/Features");
+            File[] person_list = getPersonList();
+            persons = new Person[person_list.length];
+            for (int i =0;i<persons.length;i++){
+
+                persons[i] = new Person(person_list[i].getName(),null,AIProperties.DOC_PATH  + "/Features/"+person_list[i].getName()+"/display.png",isOn(person_list[i].getName()));
+            }
         }
     }
 
     public void create_ParentFolder(String name){
-
-        File newF = new File(DOC_PATH,name);
+        File newF = new File(AIProperties.DOC_PATH ,name);
         if (!newF.exists()){
             newF.mkdirs();
         }
     }
 
     public void add_newPerson_folder(String person){
-        File newF = new File(DOC_PATH+"/Features/",person);
+        File newF = new File(AIProperties.DOC_PATH +"/Features/",person);
         if (!newF.exists()){
             newF.mkdirs();
         }
     }
 
-    public void save2file(float[] vec,String person) throws IOException {
-//        File f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-//        String newFeaturePath = person+"txt";
+    public void save2file(float[] vec, String person) throws IOException {
+
         int i = 0;
         File file = getValidPath(person,i);
 
-        while (file.exists() == true){
-            Log.d("SAVING", "save file name : "+ file.exists());
+        while (file.exists()){
             i = i + 1;
             file = getValidPath(person,i);
         }
 
-
-
-
         FileWriter writer = new FileWriter(file);
 
-        String s = "";
+        String s;
         s = Arrays.toString(vec);
         s = s.substring(1,s.length()-1);
         writer.append(s);
         writer.flush();
         writer.close();
+
+
+        createCheckingFile(person);
     }
 
     public void save_image(Bitmap bmp,String person){
-        try (FileOutputStream out = new FileOutputStream(DOC_PATH + "/Features/" +person+"/"+"display.png")) {
+        try (FileOutputStream out = new FileOutputStream(AIProperties.DOC_PATH  + "/Features/" +person+"/"+"display.png")) {
             bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-            // PNG is a lossless format, the compression factor (100) is ignored
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private File getValidPath(String person,int i){
-        String path = DOC_PATH + "/Features/" + person;
-//
-//        for (int i = 0;i<999;i++){
-        File checkFile = new File(path+"/"+String.valueOf(i)+".txt");
-//            if (!checkFile.exists() ){
-//                return checkFile;
-//            }
-//        }
-        return checkFile;
+        String path = AIProperties.DOC_PATH  + "/Features/" + person;
+        return new File(path+"/"+ i +".txt");
     }
 
     public float[] getArray(File f) throws IOException {
-
-        File file = f;
-        String myData = "";
-        FileInputStream fs = new FileInputStream(file);
+        StringBuilder myData = new StringBuilder();
+        FileInputStream fs = new FileInputStream(f);
 
         DataInputStream in = new DataInputStream(fs);
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
         float[] v = new float[192];
         String strLine;
-        int a = 0;
         while ((strLine = br.readLine()) != null) {
-            myData = myData + strLine;
+            myData.append(strLine);
         }
         in.close();
 
-        String[] s = myData.split(",");
+        String[] s = myData.toString().split(",");
         for (int i=0;i<s.length;i++){
             v[i] = Float.parseFloat(s[i]);
         }
-
         return v;
     }
 
     public File[] getPersonList(){
-        File f = new File(DOC_PATH +"/Features");
+        File f = new File(AIProperties.DOC_PATH  +"/Features");
         return f.listFiles();
     }
 
     public float[][] getVectorList(String person) throws IOException {
-        File f = new File(DOC_PATH + "/Features/" +person);
-
+        File f = new File(AIProperties.DOC_PATH  + "/Features/" +person);
         File[] files = f.listFiles();
+        assert files != null;
         float[][] vectors = new float[files.length][192];
         int i = 0;
         for (File file: files) {
             String filename = file.getName();
 
-            if (filename.substring(filename.length() - 3).equals("txt") ){
+            if (filename.endsWith("txt") && !filename.startsWith("detail")){
                 float[] v = getArray(file);
                 vectors[i]=v;
                 i++;
             }
-
         }
         return vectors;
     }
@@ -151,38 +141,12 @@ public class PersonDatabase {
     // คัดแยกทุกใบหน้า
     public Score recognize(float[] array){
         ArrayList<Score> scores = new ArrayList<>();
-
         for (Person p: persons) {
-            double minSim = 1.00;
-            int i = 0;
-            for (float[] vector: p.getfeatures()) {
-                double r = EuclideanDistance.run(vector,array);
-
-                if (r < CONF){
-                    minSim = r;
-                    i += 1;
-                }
-            }
-
-            if (i >= MIN_MATCH){
-                scores.add(new Score(p.getName(),minSim));
-            }
-        }
-        return bestScore(scores);
-    }
-
-    // คัดแยกเฉพาะใบหน้าที่เลือก
-    public Score recognize(float[] array,ArrayList<String> filter){
-        ArrayList<Score> scores = new ArrayList<>();
-
-        for (Person p: persons) {
-            double minSim = 1.00;
-            int i = 0;
-            if (isSelectedPerson(filter,p.getName())){
-
+            if (p.isOn){
+                double minSim = 1.00;
+                int i = 0;
                 for (float[] vector: p.getfeatures()) {
                     double r = EuclideanDistance.run(vector,array);
-
                     if (r < CONF){
                         minSim = r;
                         i += 1;
@@ -197,9 +161,31 @@ public class PersonDatabase {
         return bestScore(scores);
     }
 
+    // คัดแยกเฉพาะใบหน้าที่เลือก
+    public Score recognize(float[] array,ArrayList<String> filter){
+        ArrayList<Score> scores = new ArrayList<>();
+        for (Person p: persons) {
+            double minSim = 1.00;
+            int i = 0;
+            if (isSelectedPerson(filter,p.getName())){
+                for (float[] vector: p.getfeatures()) {
+                    double r = EuclideanDistance.run(vector,array);
+                    if (r < CONF){
+                        minSim = r;
+                        i += 1;
+                    }
+                }
+                if (i >= MIN_MATCH){
+                    scores.add(new Score(p.getName(),minSim));
+                }
+            }
+
+        }
+        return bestScore(scores);
+    }
+
     boolean isSelectedPerson(ArrayList<String> filterPerson,String person){
         for (String p : filterPerson){
-//            Log.d("COMPAREPERSON", p + " AND " + person + (p.equals(person)));
             if (p.equals(person)){
                 return true;
             }
@@ -210,7 +196,7 @@ public class PersonDatabase {
     private Score bestScore(ArrayList<Score> scores){
         Score bestScore = null;
         for (Score s: scores) {
-            if (bestScore==null){
+            if (bestScore == null){
                 bestScore = s;
             }else{
                 if (s.score < bestScore.score){
@@ -219,6 +205,68 @@ public class PersonDatabase {
             }
         }
         return bestScore;
+    }
+
+
+    public void createCheckingFile() throws IOException {
+        for (File f : getPersonList()){
+            File checkFile = new File(AIProperties.DOC_PATH  + "/Features/" +f.getName()+"/"+"detail.txt");
+            if (!checkFile.exists()){
+                FileWriter writer = new FileWriter(checkFile);
+                String s = "1";
+                writer.append(s);
+                writer.flush();
+                writer.close();
+            }
+        }
+    }
+
+    public void createCheckingFile(String person) throws IOException {
+        File checkFile = new File(AIProperties.DOC_PATH  + "/Features/" +person+"/"+"detail.txt");
+        if (!checkFile.exists()){
+            FileWriter writer = new FileWriter(checkFile);
+            String s = "1";
+            writer.append(s);
+            writer.flush();
+            writer.close();
+        }
+    }
+
+    public boolean isOn(String person) throws IOException {
+        File checkFile = new File(AIProperties.DOC_PATH  + "/Features/" +person+"/"+"detail.txt");
+        if (checkFile.exists()){
+            FileInputStream fs = new FileInputStream(checkFile);
+
+            DataInputStream in = new DataInputStream(fs);
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+
+            if (Objects.equals(br.readLine(), "1")){
+                return true;
+            }
+            in.close();
+
+        }
+        return false;
+    }
+
+    public void changState(String person,boolean isOn) throws IOException {
+        File checkFile = new File(AIProperties.DOC_PATH  + "/Features/" +person+"/"+"detail.txt");
+        if (checkFile.exists()){
+            FileWriter writer = new FileWriter(checkFile);
+            String s = "1";
+            if (!isOn){
+                s="0";
+            }
+            writer.append(s);
+            writer.flush();
+            writer.close();
+        }else{
+            FileWriter writer = new FileWriter(checkFile);
+            String s = "1";
+            writer.append(s);
+            writer.flush();
+            writer.close();
+        }
     }
 
 

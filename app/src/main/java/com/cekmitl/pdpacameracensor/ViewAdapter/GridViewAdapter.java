@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,9 +24,6 @@ import com.cekmitl.pdpacameracensor.FaceRecognitionCamera;
 import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.R;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class GridViewAdapter extends BaseAdapter {
 
     private Context mContext;
@@ -39,13 +35,6 @@ public class GridViewAdapter extends BaseAdapter {
 
     private static final String[] CLUBS =
             {"open camera", "choose from gallery"};
-
-    int PICK_IMAGE_MULTIPLE = 1;
-    String imageEncoded;
-    TextView total;
-    ArrayList<Uri> mArrayUri;
-    int position = 0;
-    List<String> imagesEncodedList;
 
     LayoutInflater inflater;
 
@@ -102,8 +91,6 @@ public class GridViewAdapter extends BaseAdapter {
             gridViewAndroid = (View) convertView;
         }
 
-
-
         gridViewAndroid.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -122,13 +109,8 @@ public class GridViewAdapter extends BaseAdapter {
                             if(which == 0){
                                 //open camera
                                 mContext.startActivity(new Intent(mContext, FaceRecognitionCamera.class));
-                            }else if(which == 1){
+                            }else {
                                 mContext.startActivity(new Intent(mContext, AddNewFaceActivity.class));
-                                /*
-                                Intent intent = new Intent(mContext, AddNewFaceActivity.class);
-                                //mContext.startActivityForResult(intent, 1001);
-                                mContext.startActivityForResult(new Intent(mContext, AddNewFaceActivity.class), 1001);
-                                mContext.startActivityForResult(Intent.createChooser(intent,"Selcet Picture"),123);*/
                             }
 
                         }

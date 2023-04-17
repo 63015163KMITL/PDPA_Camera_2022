@@ -13,9 +13,6 @@ import com.cekmitl.pdpacameracensor.R;
 
 import java.util.List;
 
-/**
- * Created by adityagohad on 06/06/17.
- */
 
 public class PickerAdapter extends RecyclerView.Adapter<PickerAdapter.TextVH> {
 

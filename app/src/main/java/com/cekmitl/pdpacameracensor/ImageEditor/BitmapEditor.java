@@ -264,8 +264,8 @@ public class BitmapEditor {
     public static void saveImage(Bitmap finalBitmap, String image_name) {
 
         String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File("/storage/emulated/0/DCIM/PDPA");
-        myDir.mkdirs();
+        File myDir = new File("/storage/emulated/0/DCIM/Camera");
+//        myDir.mkdirs();
         String fname = "Image-" + image_name+ ".jpg";
         File file = new File(myDir, fname);
         if (file.exists()) file.delete();
@@ -303,8 +303,8 @@ public class BitmapEditor {
 
     public static Bitmap stickerOverlay(Bitmap bitmap, Bitmap sticker, float left, float top, float right, float bottom,int size) {
 
-        int newWidth = Math.round((right - size) - (left + size));
-        int newHeight = Math.round((bottom - size) - (top + size));
+        int newWidth = Math.round((right) - (left));
+        int newHeight = Math.round((bottom) - (top));
 
         sticker = getResizedBitmap(sticker, newWidth, newHeight);
 
@@ -316,8 +316,8 @@ public class BitmapEditor {
 
     public static Bitmap blurOverlay(Bitmap bitmap, Bitmap bBlur, float left, float top, float right, float bottom,int size) {
 
-        int newWidth = Math.round((right - size) - (left + size));
-        int newHeight = Math.round((bottom - size) - (top + size));
+        int newWidth = Math.round((right) - (left));
+        int newHeight = Math.round((bottom) - (top));
 
         bBlur = getResizedBitmap(bBlur, newWidth, newHeight);
 

@@ -3,7 +3,6 @@ package com.cekmitl.pdpacameracensor.ui.home;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +28,6 @@ public class HomeFragment extends Fragment {
     private FragmentHomeBinding binding;
     static Person[] persons;
      static PersonDatabase db;
-
     GridView androidGridView;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -38,13 +36,15 @@ public class HomeFragment extends Fragment {
         getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(getActivity(), R.color.main_color));
         View decorView = getActivity().getWindow().getDecorView(); //set status background black
         decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        try {
-            db = new PersonDatabase();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (db == null){
+            try {
+                db = new PersonDatabase(-1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
+
+        HomeViewModel homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
 
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
@@ -79,7 +79,6 @@ public class HomeFragment extends Fragment {
             e.printStackTrace();
         }
         persons = db.persons;
-        Log.e("fr", "getPersonData Hello");
 
         //Name----------------------------------------------------
         String[] strName = new String[persons.length + 1];
@@ -90,7 +89,6 @@ public class HomeFragment extends Fragment {
         }
         strName[persons.length] = "NEW";
 
-        //Thumnail Image------------------------------------------
         Bitmap[] bitmapProfile = new Bitmap[persons.length + 1];
         int j = 0;
         for (Person p : persons) {

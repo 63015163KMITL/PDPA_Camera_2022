@@ -22,6 +22,7 @@
             android:clickable="false"
             android:focusable="false"
             android:focusableInTouchMode="false"
+            android:elevation="0dp"
             app:cardCornerRadius="@dimen/gridview_image_round">
 
             <ImageView

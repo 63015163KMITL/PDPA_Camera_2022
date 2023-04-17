@@ -309,7 +309,6 @@
             </LinearLayout>
 
             <LinearLayout
-                android:visibility="gone"
                 android:id="@+id/button_option_cut"
                 android:layout_weight="1"
                 android:gravity="center"
@@ -321,11 +320,11 @@
                 <ImageView
                     android:layout_width="45dp"
                     android:layout_height="47dp"
-                    android:background="@android:drawable/ic_menu_upload_you_tube" />
+                    android:background="@android:drawable/ic_menu_delete" />
 
                 <TextView
                     android:layout_marginTop="5dp"
-                    android:text="CROP"
+                    android:text="CLEAR"
                     android:textColor="@color/white"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
