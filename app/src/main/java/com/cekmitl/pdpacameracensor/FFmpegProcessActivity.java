@@ -196,6 +196,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         Button next_btt = findViewById(R.id.nextBtt);
         button_video_play = findViewById(R.id.button_video_play);
 
+        fram_focus_layout = findViewById(R.id.fram_focus_layout);
+
         LinearLayout button_option_face = findViewById(R.id.button_option_face);
         button_option_blur = findViewById(R.id.button_option_blur);
         button_option_sticker = findViewById(R.id.button_option_sticker);
@@ -219,25 +221,27 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 e.printStackTrace();
             }
         }
+
         Intent intent = getIntent();
         String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
-
-        fram_focus_layout = findViewById(R.id.fram_focus_layout);
-        if (video_name == null){
-            video_name = "input";
-            VIDEO_NAME = "input";
-        }else{
-            inputVideo = video_name + ".mp4";
-            tempeFramePool = video_name + "/";
-            tempeVideo = video_name +"_temp.mp4";
-            audio = video_name + "/audio.mp3";
-            finalVideoResulte = video_name + "_output.mp4";
-            INPUT_PATH = DOC_PATH + "/" + video_name;
-            OUTPUT_PATH = DOC_PATH + "/" + video_name;
-            VIDEO_NAME = video_name;
-        }
+        String path_name = intent.getStringExtra("path");
 
         Uri uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
+
+        if(path_name != null && video_name != null){
+            uri = Uri.parse(path_name);
+            inputVideo = path_name;
+        }
+
+        inputVideo = video_name + ".mp4";
+        tempeFramePool = video_name + "/";
+        tempeVideo = video_name +"_temp.mp4";
+        audio = video_name + "/audio.mp3";
+        finalVideoResulte = video_name + "_output.mp4";
+        INPUT_PATH = DOC_PATH + "/" + video_name;
+        OUTPUT_PATH = DOC_PATH + "/" + video_name;
+        VIDEO_NAME = video_name;
+
 
         retriever = new MediaMetadataRetriever();
         retriever.setDataSource(String.valueOf(uri));

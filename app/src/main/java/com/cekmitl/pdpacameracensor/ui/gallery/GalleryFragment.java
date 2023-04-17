@@ -2,6 +2,7 @@ package com.cekmitl.pdpacameracensor.ui.gallery;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,13 +17,14 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.cekmitl.pdpacameracensor.FFmpegProcessActivity;
+import com.cekmitl.pdpacameracensor.PreviewActivity;
 import com.cekmitl.pdpacameracensor.R;
 
 public class GalleryFragment extends Fragment {
@@ -34,9 +36,16 @@ public class GalleryFragment extends Fragment {
     private int[] typeMedia;
     private ImageAdapter imageAdapter;
 
+    Cursor imagecursor;
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        getActivity().getWindow().setStatusBarColor(getActivity().getColor(R.color.main_gray));
+
+
         final View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
 
         String[] columns = new String[]{MediaStore.Files.FileColumns._ID,
@@ -55,8 +64,7 @@ public class GalleryFragment extends Fragment {
         final String orderBy = MediaStore.Files.FileColumns.DATE_ADDED;
         Uri queryUri = MediaStore.Files.getContentUri("external");
 
-        @SuppressWarnings("deprecation")
-        Cursor imagecursor = getActivity().managedQuery(queryUri,
+        imagecursor = getActivity().managedQuery(queryUri,
                 columns,
                 selection,
                 null, // Selection args (none).
@@ -97,9 +105,15 @@ public class GalleryFragment extends Fragment {
 
         imageAdapter = new ImageAdapter();
         imagegrid.setAdapter(imageAdapter);
-        imagecursor.close();
+
 
         return rootView;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        imagecursor.close();
     }
 
     @Override
@@ -163,10 +177,24 @@ public class GalleryFragment extends Fragment {
                 public void onClick(View v) {
 
                     if(typeMedia[position] == 1){
-                        Toast.makeText(getActivity(), "IMAGE PATH : " + arrPath[position], Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(getActivity(), "IMAGE PATH : " + arrPath[position], Toast.LENGTH_SHORT).show();
+                        Intent i = new Intent(getActivity(), PreviewActivity.class);
+                        i.putExtra("key", arrPath[position]);
+                        getActivity().startActivity(i);
+
                     }else if(typeMedia[position] == 3){
                         holder.videoICON.setVisibility(View.VISIBLE);
-                        Toast.makeText(getActivity(), "VIDEO PATH : " + arrPath[position], Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(getActivity(), "VIDEO PATH : " + arrPath[position], Toast.LENGTH_SHORT).show();
+
+                        Intent i = new Intent(getActivity(), FFmpegProcessActivity.class);
+
+                        String path = arrPath[position];
+                        String filename = path.substring(path.lastIndexOf("/")+1);
+
+                        i.putExtra("video_name", filename);
+                        i.putExtra("path", arrPath[position]);
+
+                        getActivity().startActivity(i);
                     }
 
                 }

@@ -1,19 +1,24 @@
 package com.cekmitl.pdpacameracensor.ViewAdapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.cekmitl.pdpacameracensor.MainCameraActivity;
 
 public class PickerLayoutManager extends LinearLayoutManager {
 
     private boolean changeAlpha = true;
 
     private onScrollStopListener onScrollStopListener;
+    private MainCameraActivity mainCameraActivity;
 
-    public PickerLayoutManager(Context context, int orientation, boolean reverseLayout) {
+    public PickerLayoutManager(Context context, int orientation, boolean reverseLayout, MainCameraActivity _mainCameraActivity) {
         super(context, orientation, reverseLayout);
+        this.mainCameraActivity = _mainCameraActivity;
     }
 
     @Override
@@ -55,6 +60,7 @@ public class PickerLayoutManager extends LinearLayoutManager {
     @Override
     public void onScrollStateChanged(int state) {
         super.onScrollStateChanged(state);
+        Log.e("onScrollStateChanged", "onScrollStateChanged");
         if (state == 0) {
             if (onScrollStopListener != null) {
                 int selected = 0;
@@ -69,7 +75,7 @@ public class PickerLayoutManager extends LinearLayoutManager {
                         selected = i;
                     }
                 }
-                onScrollStopListener.selectedView(getChildAt(selected));
+                onScrollStopListener.selectedView(getChildAt(selected),selected);
             }
         }
     }
@@ -82,7 +88,9 @@ public class PickerLayoutManager extends LinearLayoutManager {
         this.onScrollStopListener = onScrollStopListener;
     }
 
+
     public interface onScrollStopListener {
-        void selectedView(View view);
+        void selectedView(View view, int position);
+
     }
 }

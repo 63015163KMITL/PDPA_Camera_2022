@@ -20,6 +20,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.View;
@@ -58,6 +59,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -167,6 +169,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         faceRecognitionProcesser = new FaceRecogitionProcessor(faceNetInterpreter);
 
         // END --- Face Recog ---------------------------------------------
@@ -397,8 +400,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             }
         });
 
-        handleResult();
+        handleResult(true);
         blurFaceX(50);
+
     }
 
     //สถานะการเลือกเมนู หรือการกดปุ่ม
@@ -702,7 +706,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
-    public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius) throws IOException {
+    public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius, boolean first) throws IOException {
 
         height2 = xMAX_HEIGHT_PREVIEW;
         width2 = xMAX_WIDTH_PREVIEW;
@@ -740,15 +744,19 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         censor_layout.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         censor_layout.setTag("" + id);
 
-        Score score = db.recognize(array1);
-        if (!(score == null)){
-            txt.setTextColor(Color.parseColor("#fbb040"));
-            txt.setText(score.name);
-            layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
-            faceCensorState[Integer.parseInt(id)] = 0;
+        if(first){
+            Score score = db.recognize(array1);
+            if (!(score == null)){
+                txt.setTextColor(Color.parseColor("#fbb040"));
+                txt.setText(score.name);
+                txt.setTag("name_label" + id);
+                layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
+                faceCensorState[Integer.parseInt(id)] = 0;
+            }else {
+                faceCensorState[Integer.parseInt(id)] = 1;
+            }
         }
 
-        faceCensorState[Integer.parseInt(id)] = 1;
         //------------------------------------------------------------------------------------------------------
 
         //focus_frame.setOnClickListener(view -> frameFocusOnClickListener(id));
@@ -770,11 +778,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 if(faceCensorState[Integer.parseInt(id)] == 1){
                     faceCensorState[Integer.parseInt(id)] = 0;
                     layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
+                    txt.setTextColor(Color.parseColor("#fbb040"));
                     censor_layout.setAlpha(.0f);
                 }else {
                     faceCensorState[Integer.parseInt(id)] = 1;
 //                    layoutInner.setVisibility(View.VISIBLE);
                     layoutInner.setBackgroundResource(R.drawable.bg_face_frame);
+                    txt.setTextColor(Color.parseColor("#FFFFFF"));
                     censor_layout.setAlpha(1f);
                 }
             }
@@ -832,7 +842,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     e.printStackTrace();
                 }
                 makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
-                handleResult();
+                handleResult(false);
             }
         });
 
@@ -888,7 +898,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             e.printStackTrace();
         }
 
-        handleResult();
+        handleResult(false);
     }
 
 
@@ -923,7 +933,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     //จัดการกับ Label คำตอบ
-    private void handleResult() {
+    private void handleResult(boolean initStart) {
         clearFocus();
         bmp_images.removeAll(bmp_images);
         if (null != listView && listView.getChildCount() > 0) {
@@ -942,7 +952,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 //                           X - Y - Width - Height
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                     try {
-                        setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d);
+                        setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d, initStart);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -950,6 +960,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 }
                 i++;
             }
+            showHide_FocusView(false);
             run();
         }
     }
@@ -1058,21 +1069,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             menu_bar.setVisibility(View.GONE);
             state_ImagePreview = true;
 
-            //Show frame focus
-            for (int i = 0; i < facePosition.size(); i++){
-                LinearLayout layoutinner = fram_focus_layout.findViewWithTag("focus_frame" + i);
-                layoutinner.setVisibility(View.VISIBLE);
-            }
+            showHide_FocusView(true);
 
         }else {
             //Exit Edit mode
 
-            //Hide frame focus
-            for (int i = 0; i < facePosition.size(); i++){
-                LinearLayout layoutinner = fram_focus_layout.findViewWithTag("focus_frame" + i);
-                layoutinner.setVisibility(View.GONE);
-            }
-
+            showHide_FocusView(false);
 
             //Recall MenuBar + Header + FliterPreview
             menu_bar.setVisibility(View.GONE);
@@ -1159,14 +1161,14 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
             int intID = Integer.parseInt((String) censor_layout.getTag());
 
-                if (blurRadius == 0.1){
+                if (blurRadius == 0.1 || faceCensorState[i] == 0){
                     censor_layout.setBackground(new BitmapDrawable(getResources(), b));
-                }else if(faceCensorState[intID] == 1){
+                }else if(faceCensorState[i] == 1){
                     censor_layout.setBackground(new BitmapDrawable(getResources(), BitmapEditor.getMosaicsBitmap(b, blurRadius)));
-
                 }
-
         }
+
+        Log.e("faceCensorState","faceCensorState : " + Arrays.toString(faceCensorState));
     }
 
     public void onClickStickerItem(){
@@ -1178,6 +1180,38 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             censor_layout.setBackgroundDrawable(sticker);
         }
 
+    }
+
+    public void showHide_FocusView(boolean b){
+        if(b){
+            //Show frame focus
+            for (int i = 0; i < facePosition.size(); i++){
+                try {
+                    LinearLayout layoutinner = fram_focus_layout.findViewWithTag("focus_frame" + i);
+                    TextView name_label = fram_focus_layout.findViewWithTag("name_label" + i);
+
+                    layoutinner.setVisibility(View.VISIBLE);
+                    name_label.setVisibility(View.VISIBLE);
+                }catch (NullPointerException e){
+
+                }
+            }
+        }else {
+            //Hide frame focus
+            for (int i = 0; i < facePosition.size(); i++){
+
+                try {
+                    LinearLayout layoutinner = fram_focus_layout.findViewWithTag("focus_frame" + i);
+                    TextView name_label = fram_focus_layout.findViewWithTag("name_label" + i);
+
+                    layoutinner.setVisibility(View.GONE);
+                    name_label.setVisibility(View.GONE);
+                }catch (NullPointerException e){
+
+                }
+
+            }
+        }
     }
 
 }

@@ -73,13 +73,12 @@
             android:padding="15dp">
 
             <GridView
-                android:id="@+id/grid_view_gallery"
+                android:id="@+id/idRVImages"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:columnWidth="110dp"
-                android:gravity="center"
-                android:clickable="true"
-                android:numColumns="4" />
+                android:layout_height="245dp"
+                android:numColumns="4"
+                android:scrollbars="vertical"
+                android:gravity="center"/>
 
         </LinearLayout>
 

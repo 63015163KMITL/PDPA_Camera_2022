@@ -110,19 +110,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                changColorNavebar(R.id.setting_button);
                 break;
             case R.id.face_recog_button :
-                //replaceFragment(new DashboardFragment());
                 navController.navigate(R.id.navigation_facerecognition);
                 changColorNavebar(R.id.face_recog_button);
                 break;
             case R.id.gallery_button :
-
-//                Intent pickIntent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
-//                pickIntent.setType("image/* video/*");
-//                startActivityForResult(pickIntent, 1);
-
-//                Intent _myIntent = new Intent(MainActivity.this, GalleryActivity.class);
-//                MainActivity.this.startActivity(_myIntent);
-                //replaceFragment(new HomeFragment());
                 navController.navigate(R.id.navigation_gallery);
                 changColorNavebar(R.id.gallery_button);
                 break;
@@ -175,9 +166,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     home_button.setClickable(false);
                     break;
                 case R.id.gallery_button:
-                    //         Intent myIntent = new Intent(MainActivity.this, TestVideo.class);
-//                    Intent myIntent = new Intent(MainActivity.this, GalleryActivity.class);
-//                MainActivity.this.startActivity(myIntent);
                     icon_gallery.setImageResource(R.drawable.ic_gallery_focus);
                     title_gallery.setTextColor(ContextCompat.getColor(MainActivity.this, R.color.main_color));
                     gallery_button.setClickable(false);

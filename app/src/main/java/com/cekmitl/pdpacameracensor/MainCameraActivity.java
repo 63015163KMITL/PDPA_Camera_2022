@@ -14,7 +14,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.hardware.Sensor;
@@ -128,6 +127,9 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
     //Header layout
     public RelativeLayout head_layout, head_layout_video;
 
+    PickerAdapter adapter;
+    PickerLayoutManager manager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -237,10 +239,12 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
 
         // HorizontalPicker ////////////////////////////////////////////////////////////////////////
         RecyclerView rv = null;
-        PickerAdapter adapter;
+
+
         rv = (RecyclerView) findViewById(R.id.rv);
-        PickerLayoutManager pickerLayoutManager = new PickerLayoutManager(this, PickerLayoutManager.HORIZONTAL, false);
-        pickerLayoutManager.setChangeAlpha(true);
+
+        manager = new PickerLayoutManager(this, PickerLayoutManager.HORIZONTAL, false,this);
+        manager.setChangeAlpha(true);
 
         //pickerLayoutManager.setScaleDownBy(0.99f);
         //pickerLayoutManager.setScaleDownDistance(0.8f);
@@ -250,25 +254,24 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
         menu_mode.add("PHOTO");
         //menu_mode.add("LIVE");
 
-        adapter = new PickerAdapter(this, menu_mode, rv);
+        adapter = new PickerAdapter(this, menu_mode, rv,this);
         SnapHelper snapHelper = new LinearSnapHelper();
         snapHelper.attachToRecyclerView(rv);
-        rv.setLayoutManager(pickerLayoutManager);
+        rv.setLayoutManager(manager);
         rv.setAdapter(adapter);
 
-        pickerLayoutManager.setOnScrollStopListener(new PickerLayoutManager.onScrollStopListener() {
+        manager.setOnScrollStopListener(new PickerLayoutManager.onScrollStopListener() {
             @Override
-            public void selectedView(View view) {
+            public void selectedView(View view, int position) {
 
                 //TextView txt = findViewById(R.id.picker_item);
                 //txt.setTextColor(Color.parseColor("#FF0000"));
                // makeText(MainCameraActivity.this, ("Selected value : "+((TextView) view).getText().toString()), LENGTH_SHORT).show();
-                ((TextView) view).setTextColor(Color.parseColor("#FBB040"));
-
+                //((TextView) view).setTextColor(Color.parseColor("#FBB040"));
+                adapter.changeColor(position, (TextView) view);
                 if("VIDEO".equals(((TextView) view).getText().toString())){
                     cameraMode = false;
 //                    Toast.makeText(MainCameraActivity.this, "cameraMode : " + cameraMode, LENGTH_SHORT).show();
-
                     clearFocus();
 
                     startCameraXVideo(cameraProvider);
