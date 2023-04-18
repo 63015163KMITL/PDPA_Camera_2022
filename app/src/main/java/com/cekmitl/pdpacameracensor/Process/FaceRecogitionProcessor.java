@@ -31,6 +31,7 @@ public class FaceRecogitionProcessor {
         float[][] faceOutputArray = new float[1][192];
         faceNetModelInterpreter.run(faceNetByteBuffer, faceOutputArray);
         return faceOutputArray[0].clone();
+
     }
 
 }

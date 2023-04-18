@@ -27,10 +27,12 @@ import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -41,6 +43,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.RadioButton;
@@ -84,6 +87,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     private LinearLayout button_option_blur;
     private LinearLayout button_option_sticker;
     private LinearLayout button_option_shape;
+
+    ImageView video_thumbnail;
     int CENSOR_TPYE = 0;
     int CENSOR_SIZE = 0;
 
@@ -199,6 +204,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
         fram_focus_layout = findViewById(R.id.fram_focus_layout);
 
+        video_thumbnail = findViewById(R.id.video_thumbnail);
+
         LinearLayout button_option_face = findViewById(R.id.button_option_face);
         button_option_blur = findViewById(R.id.button_option_blur);
         button_option_sticker = findViewById(R.id.button_option_sticker);
@@ -227,18 +234,42 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         String video_name = intent.getStringExtra("video_name"); //if it's a string you stored.
         String path_name = intent.getStringExtra("path");
 
+        // Get intent, action and MIME type
+        String action = intent.getAction();
+        String type = intent.getType();
+
+
         Uri uri = Uri.parse(DOC_PATH + "/" + video_name + ".mp4");
 
         if(path_name != null && video_name != null){
             uri = Uri.parse(path_name);
             inputVideo = path_name;
+            video_thumbnail.setImageBitmap(ThumbnailUtils.createVideoThumbnail(String.valueOf(uri), MediaStore.Images.Thumbnails.MINI_KIND));
+
             isSelected = true;
+
+        }else if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if (type.startsWith("video/")) {
+                // Handle single image being sent
+                String media_path = PreviewActivity.getRealPathFromURI(this, PreviewActivity.handleSendImage(intent));
+
+                uri = Uri.parse(media_path);
+                inputVideo = media_path;
+                video_thumbnail.setImageBitmap(ThumbnailUtils.createVideoThumbnail(String.valueOf(uri),
+                        MediaStore.Images.Thumbnails.MINI_KIND));
+
+                isSelected = true;
+
+            }
         }else{
-            inputVideo = video_name + ".mp4";
+            inputVideo = path + video_name + ".mp4";
+            video_thumbnail.setImageBitmap(ThumbnailUtils.createVideoThumbnail(String.valueOf(uri),
+                    MediaStore.Images.Thumbnails.MINI_KIND));
             isSelected = false;
         }
-        Log.d("PATHVIDEO", "onCreate: "+path);
-        Log.d("PATHVIDEO", "onCreate: "+inputVideo);
+
+        Log.d("PATHVIDEO", "onCreate: "+ path);
+        Log.d("PATHVIDEO", "onCreate: "+ inputVideo);
 
 
         tempeFramePool = video_name + "/";
@@ -248,6 +279,8 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         INPUT_PATH = DOC_PATH + "/" + video_name;
         OUTPUT_PATH = DOC_PATH + "/" + video_name;
         VIDEO_NAME = video_name;
+
+
 
 
         retriever = new MediaMetadataRetriever();
@@ -276,6 +309,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 if(b) {
+                    video_thumbnail.setVisibility(View.GONE);
                     videoView.seekTo(seekBar.getProgress());
                     clearFocus();
 
@@ -538,7 +572,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         if (bm == null) {
             makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
-            List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(bm, 320, 320));
+            List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(bm, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE));
             if (results.size() <= 0){
                 return;
             }
@@ -632,7 +666,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     MediaPlayer.OnCompletionListener myVideoViewCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(MediaPlayer arg0) {
-            Toast.makeText(FFmpegProcessActivity.this, "End of Video", Toast.LENGTH_LONG).show();
+//            Toast.makeText(FFmpegProcessActivity.this, "End of Video", Toast.LENGTH_LONG).show();
         }
     };
 
@@ -673,7 +707,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
     public void faceDectecFrame(Bitmap bitmap){
         clearFocus();
-        Bitmap resize = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
+        Bitmap resize = BitmapEditor.getResizedBitmap(bitmap, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
         List<Classifier.Recognition> results = detector.recognizeImage(resize);
 
         for (final Classifier.Recognition result : results) {
@@ -782,6 +816,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     videoView.pause();
                     button_video_play.setImageResource((android.R.drawable.ic_media_play));
                 }else {
+                    video_thumbnail.setVisibility(View.GONE);
                     button_video_play.setImageResource(android.R.drawable.ic_media_pause);
                     videoView.start();
                     clearFocus();

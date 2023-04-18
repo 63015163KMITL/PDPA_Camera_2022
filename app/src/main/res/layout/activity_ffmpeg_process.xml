@@ -53,10 +53,18 @@
                     android:layout_width="1080px"
                     android:layout_height="607px" />
 
+                <ImageView
+                    android:id="@+id/video_thumbnail"
+                    android:src="@drawable/ic_app"
+                    android:layout_width="1080px"
+                    android:layout_height="607px"/>
+
             <RelativeLayout
                 android:id="@+id/fram_focus_layout"
                 android:layout_width="1080px"
                 android:layout_height="607px"/>
+
+
 
 
             </RelativeLayout>
@@ -256,6 +264,7 @@
                 <TextView
                     android:layout_marginTop="5dp"
                     android:text="BLUR"
+                    android:textSize="12dp"
                     android:textColor="@color/white"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
@@ -279,6 +288,7 @@
                 <TextView
                     android:layout_marginTop="5dp"
                     android:text="STICKER"
+                    android:textSize="12dp"
                     android:textColor="@color/white"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
@@ -302,6 +312,7 @@
                 <TextView
                     android:layout_marginTop="5dp"
                     android:text="SHAPE"
+                    android:textSize="12dp"
                     android:textColor="@color/white"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
@@ -325,6 +336,7 @@
                 <TextView
                     android:layout_marginTop="5dp"
                     android:text="CLEAR"
+                    android:textSize="12dp"
                     android:textColor="@color/white"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>

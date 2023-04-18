@@ -12,21 +12,31 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_app"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/ic_app"
         android:supportsRtl="true"
         android:theme="@style/Theme.PDPACameraCensor"
         tools:targetApi="31">
+
         <activity
             android:name=".FFmpegProcessActivity"
+            android:label="Video"
             android:theme="@style/Theme.PDPACameraCenso.Dark"
-            android:exported="false">
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
         <activity
             android:name=".ViewAdapter.GridViewFaceSelectorAdapter"
             android:exported="false">
@@ -76,12 +86,34 @@
             android:exported="false"
             android:theme="@style/Theme.PDPACameraCenso.Dark"
             android:hardwareAccelerated="false" />
+
         <activity
             android:name=".PreviewActivity"
-            android:exported="false"
-            android:label="Preview Pictur"
+            android:exported="true"
+            android:label="Photo"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.PDPACameraCenso.Dark" />
+            android:theme="@style/Theme.PDPACameraCenso.Dark">
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+        </activity>
+
         <activity
             android:name=".SplashScreen"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
@@ -90,10 +122,20 @@
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.anni.shareimage.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/paths" />
+        </provider>
+
     </application>
 
 </manifest>

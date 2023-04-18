@@ -1,5 +1,7 @@
 package com.cekmitl.pdpacameracensor;
 
+import static com.cekmitl.pdpacameracensor.Process.AIProperties.TF_OD_API_INPUT_SIZE;
+
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -27,6 +29,7 @@ import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 
 import com.cekmitl.pdpacameracensor.ImageEditor.BitmapEditor;
+import com.cekmitl.pdpacameracensor.Process.AIProperties;
 import com.cekmitl.pdpacameracensor.Process.Classifier;
 import com.cekmitl.pdpacameracensor.Process.Utils;
 import com.cekmitl.pdpacameracensor.Process.YoloV5Classifier;
@@ -43,9 +46,9 @@ import java.util.concurrent.Executor;
 
 public class FaceRecognitionCamera extends AppCompatActivity implements ImageAnalysis.Analyzer{
     public static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
-    public static final int TF_OD_API_INPUT_SIZE = 320;
-    private static final String TF_OD_API_MODEL_FILE = "ModelN.tflite";
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/customclasses.txt";
+
+    private static final String TF_OD_API_MODEL_FILE = AIProperties.TF_OD_API_MODEL_FILE;
+    private static final String TF_OD_API_LABELS_FILE = AIProperties.TF_OD_API_LABELS_FILE;
     private Classifier detector;
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
@@ -241,7 +244,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 //            face_crop_bitmap.clear();
             @SuppressLint("UnsafeOptInUsageError")
             Bitmap bm = Utils.toBitmap(Objects.requireNonNull(image.getImage()));
-            bm = BitmapEditor.getResizedBitmap(bm, 320, 320);
+            bm = BitmapEditor.getResizedBitmap(bm, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
             bb = bm;
             Log.e("scanface","wait 1000; = ");
             Log.e("scanface","FACE = " + bb.toString());
@@ -265,7 +268,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
     public boolean isFoundFace(Bitmap bitmap) {
         if (bitmap != null) {
-            Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
+            Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
             List<Classifier.Recognition> results = detector.recognizeImage(bitmap1);
             for (final Classifier.Recognition result : results) {
 

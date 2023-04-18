@@ -29,6 +29,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         actionBar.hide();
 
         setContentView(R.layout.activity_setting2);
+        SharedPreferences sh = getSharedPreferences("Setting", MODE_PRIVATE);
 
         switch_grid_line = findViewById(R.id.switch_grid_line);
         switch_location_tag = findViewById(R.id.switch_location_tag);
@@ -36,7 +37,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         switch_preview_after_shutter = findViewById(R.id.switch_preview_after_shutter);
         switch_volume_kaye_shutter = findViewById(R.id.switch_volume_kaye_shutter);
 
-        SharedPreferences sh = getSharedPreferences("Setting", MODE_PRIVATE);
+
 
         switch_grid_line.setChecked(sh.getBoolean("switch_grid_line", true));
         switch_location_tag.setChecked(sh.getBoolean("switch_location_tag", true));
@@ -44,6 +45,7 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         switch_preview_after_shutter.setChecked(sh.getBoolean("switch_preview_after_shutter", true));
         switch_volume_kaye_shutter.setChecked(sh.getBoolean("switch_volume_kaye_shutter", true));
 //        Toast.makeText(this, sh.getStringSet("Person_Selected",null).toArray().toString(), Toast.LENGTH_SHORT).show();
+
         switch_grid_line.setOnClickListener(this);
         switch_location_tag.setOnClickListener(this);
         switch_mirror_font_camera.setOnClickListener(this);
@@ -69,8 +71,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         setting.putBoolean("switch_preview_after_shutter", switch_preview_after_shutter.isChecked());
         setting.putBoolean("switch_volume_kaye_shutter", switch_volume_kaye_shutter.isChecked());
         setting.apply();
-
-
     }
 
 }

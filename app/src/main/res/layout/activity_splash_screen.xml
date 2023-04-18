@@ -4,16 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/main_color"
+    android:background="@color/white"
     android:gravity="center"
     tools:context=".SplashScreen">
 
-    <TextView
-        android:text="PDPA"
-        android:textSize="40dp"
-        android:textColor="@color/white"
-        android:textStyle="bold"
-        android:layout_width="wrap_content"
+    <ImageView
+        android:src="@drawable/bg_splash_screen"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
 </RelativeLayout>

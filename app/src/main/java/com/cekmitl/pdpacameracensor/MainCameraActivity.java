@@ -439,8 +439,7 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                 }
                 break;
             case R.id.setting_button:
-                Intent settingActivityIntent = new Intent(MainCameraActivity.this, MainActivity.class);
-                MainCameraActivity.this.startActivity(settingActivityIntent);
+                finish();
                 break;
         }
     }
@@ -589,7 +588,7 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build();
 
-//        imageAnalysis.setAnalyzer(getExecutor(), this);
+        imageAnalysis.setAnalyzer(getExecutor(), this);
 
         // Image capture use case
         imageCapture = new ImageCapture.Builder()

@@ -9,8 +9,10 @@ import static com.cekmitl.pdpacameracensor.Process.AIProperties.FACE_NET_MODEL;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -18,6 +20,8 @@ import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -40,6 +44,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.FileProvider;
 
 import com.cekmitl.pdpacameracensor.ImageEditor.BitmapEditor;
 import com.cekmitl.pdpacameracensor.ImageEditor.DrawingView;
@@ -56,6 +61,7 @@ import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,6 +71,24 @@ import java.util.List;
 import java.util.UUID;
 
 public class PreviewActivity extends AppCompatActivity implements View.OnClickListener, Runnable {
+
+    Bitmap inputBitmap = null;
+    String intenPath = "";
+
+    //สถานะการเลือกเมนู หรือการกดปุ่ม
+    boolean state_face_detect_button = true;
+    boolean state_blur_button = true;
+    boolean state_stricker_button = true;
+    boolean state_paint_button = true;
+    boolean state_ImagePreview = true;
+    boolean state_Edite_Mode = true;
+    int layout_face_detect_width_MAX = 0;
+
+    int MAX_HEIGHT_PREVIEW = 0;
+    int MAX_WIDTH_PREVIEW = 0;
+
+    int xMAX_HEIGHT_PREVIEW = 0;
+    int xMAX_WIDTH_PREVIEW = 0;
 
     public LinearLayout layout_face_detect, layout_blur_radius, layout_stricker_option, layout_paint_option, button_blur_layout, button_stricker_layout, button_paint_layout;
     public ImageButton button_hide_face_detect;
@@ -307,13 +331,63 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         ImageButton saveBtn = (ImageButton) findViewById(R.id.save_btn);
         saveBtn.setOnClickListener(this);
 
+        // Get intent, action and MIME type
+        String action = intent.getAction();
+        String type = intent.getType();
 
-        String intenPath = intent.getStringExtra("key");
 
-        Bitmap inputBitma = BitmapFactory.decodeFile(new File(intenPath).getAbsolutePath());
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if (type.startsWith("image/")) {
+                // Handle single image being sent
+                String media_path = getRealPathFromURI(this, handleSendImage(intent));
+                inputBitmap = BitmapFactory.decodeFile(new File(media_path).getAbsolutePath());
+                intenPath = media_path;
 
-        heightPhoto = inputBitma.getHeight();
-        widthPhoto = inputBitma.getWidth();
+//                makeText(this, "Recive Intent \npath : " + intenPath, LENGTH_SHORT).show();
+                Log.e("reciveintent","path : " + intenPath);
+            }
+        }else {
+            intenPath = intent.getStringExtra("key");
+            inputBitmap = BitmapFactory.decodeFile(new File(intenPath).getAbsolutePath());
+
+//                makeText(this, "X Intent \npath : " + intenPath, LENGTH_SHORT).show();
+        }
+
+        //Check image rotate
+        ExifInterface ei = null;
+
+        try {
+            ei = new ExifInterface(intenPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_UNDEFINED);
+
+        //Bitmap rotatedBitmap = null;
+        switch(orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                inputBitmap = BitmapEditor.rotateImage(inputBitmap, 90);
+                break;
+
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                inputBitmap = BitmapEditor.rotateImage(inputBitmap, 180);
+                break;
+
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                inputBitmap = BitmapEditor.rotateImage(inputBitmap, 270);
+                break;
+
+//            case ExifInterface.ORIENTATION_NORMAL:
+//            default:
+//                inputBitmap = inputBitmap;
+        }
+
+
+
+        heightPhoto = inputBitmap.getHeight();
+        widthPhoto = inputBitmap.getWidth();
 
         ImageButton btnSave = (ImageButton) findViewById(R.id.button_save_image);
         btnSave.setOnClickListener(view -> {
@@ -329,13 +403,17 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             cancel_text = dialog.findViewById(R.id.button_dialog_cancel);
 
             okay_text.setOnClickListener(v -> {
-                Bitmap bm = BitmapEditor.loadBitmapFromView(FrameImagePreview);
+                showHide_FocusView(false);
+                Bitmap result_photo = BitmapEditor.loadBitmapFromView(FrameImagePreview);
                 SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
                 Date date = new Date();
-                BitmapEditor.saveImage(bm, formatter.format(date) + "");
+                BitmapEditor.saveImage(result_photo, formatter.format(date) + "");
+
+                shareImageandText(result_photo);
+
                 dialog.dismiss();
                 finish();
-                makeText(PreviewActivity.this, "Save Complete", LENGTH_SHORT).show();
+//                makeText(PreviewActivity.this, "Save Complete", LENGTH_SHORT).show();
             });
 
             cancel_text.setOnClickListener(v -> dialog.dismiss());
@@ -357,7 +435,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             e.printStackTrace();
         }
 
-        nowPhotoPreview = inputBitma;
+        nowPhotoPreview = inputBitmap;
         //nowPhotoPreview = BitmapFactory.decodeResource(this.getResources(),  R.drawable.mmm);
 
         imgPreView = findViewById(R.id.ImagePreview);
@@ -405,26 +483,21 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     }
 
-    //สถานะการเลือกเมนู หรือการกดปุ่ม
-    boolean state_face_detect_button = true;
-    boolean state_blur_button = true;
-    boolean state_stricker_button = true;
-    boolean state_paint_button = true;
-    boolean state_ImagePreview = true;
-    boolean state_Edite_Mode = true;
-    int layout_face_detect_width_MAX = 0;
-
-    int MAX_HEIGHT_PREVIEW = 0;
-    int MAX_WIDTH_PREVIEW = 0;
-
-    int xMAX_HEIGHT_PREVIEW = 0;
-    int xMAX_WIDTH_PREVIEW = 0;
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        com.cekmitl.pdpacameracensor.MainCameraActivity.resumeThread();
-        com.cekmitl.pdpacameracensor.MainCameraActivity.isWorking = true;
+//        com.cekmitl.pdpacameracensor.MainCameraActivity.resumeThread();
+//        com.cekmitl.pdpacameracensor.MainCameraActivity.isWorking = true;
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (false) {
+            super.onBackPressed();
+        }
+
     }
 
     @Override
@@ -710,9 +783,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         height2 = xMAX_HEIGHT_PREVIEW;
         width2 = xMAX_WIDTH_PREVIEW;
+
+        Log.e("getResizedBitmap","height2X = " + width2 + "x" + height2);
+
         if (db == null){
             db = new PersonDatabase();
         }
+
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
         h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
         w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
@@ -720,9 +797,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         y = (int) Math.round((float) (Y * height2));
 
         Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
+        Log.e("getResizedBitmap","bb = " + width2 + "x" + height2);
         Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
-
+        Log.e("getResizedBitmap","b = " + b.getWidth() + "x" + b.getHeight());
         bmp_images.add(b);
+
+
 
         float[] array1 = faceRecognitionProcesser.recognize(b);
         TextView txt = new TextView(this);
@@ -943,7 +1023,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         if (nowPhotoPreview == null) {
             makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
-            List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(nowPhotoPreview, 320, 320));
+            List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(nowPhotoPreview, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE));
             int i = 0;
             facePosition = new ArrayList<String>();
 
@@ -983,7 +1063,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 fram_focus_layout.getLayoutParams().width = fW;
 
                 imgPreView.setImageBitmap(BitmapEditor.getResizedBitmap(nowPhotoPreview, fW, fH));
-            }else if (nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight()){                                //Portrait
+            }else {                                                                                             //Portrait
+
+                //if (nowPhotoPreview.getWidth() < nowPhotoPreview.getHeight())
                 float f = ((float) display_width / (float)nowPhotoPreview.getWidth());
 
                 int fW = Math.round( f * (float)nowPhotoPreview.getWidth());
@@ -1213,5 +1295,67 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             }
         }
     }
+
+    private void shareImageandText(Bitmap bitmap) {
+        Uri uri = getmageToShare(bitmap);
+        Intent intent = new Intent(Intent.ACTION_SEND);
+
+        // putting uri of image to be shared
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+//
+//        // adding text to share
+//        intent.putExtra(Intent.EXTRA_TEXT, "Sharing Image");
+//
+//        // Add subject Here
+//        intent.putExtra(Intent.EXTRA_SUBJECT, "Subject Here");
+
+        // setting type to image
+        intent.setType("image/png");
+
+        // calling startactivity() to share
+        startActivity(Intent.createChooser(intent, "Share Via"));
+    }
+
+    private Uri getmageToShare(Bitmap bitmap) {
+        File imagefolder = new File(getCacheDir(), "images");
+        Uri uri = null;
+        try {
+            imagefolder.mkdirs();
+            File file = new File(imagefolder, "shared_image.png");
+            FileOutputStream outputStream = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
+            outputStream.flush();
+            outputStream.close();
+            uri = FileProvider.getUriForFile(this, "com.anni.shareimage.fileprovider", file);
+        } catch (Exception e) {
+            Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+        return uri;
+    }
+
+    public static Uri handleSendImage(Intent intent) {
+        Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (imageUri != null) {
+            // Update UI to reflect image being shared
+        }
+        return imageUri;
+    }
+
+    public static String getRealPathFromURI(Context context, Uri contentUri) {
+        Cursor cursor = null;
+        try {
+            String[] proj = { MediaStore.Images.Media.DATA };
+            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+
 
 }

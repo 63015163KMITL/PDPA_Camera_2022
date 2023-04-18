@@ -264,7 +264,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                         e.printStackTrace();
                     }
 
-                    Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
+                    Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
                     List<Classifier.Recognition> results = detector.recognizeImage(bitmap1);
 
                     for (final Classifier.Recognition result : results) {
@@ -306,7 +306,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
     public void cropFaceProcess(Bitmap bitmap){
         if (bitmap != null){
-            Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, 320, 320);
+            Bitmap bitmap1 = BitmapEditor.getResizedBitmap(bitmap, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE);
             List<Classifier.Recognition> results = detector.recognizeImage(bitmap1);
 
             for (final Classifier.Recognition result : results) {

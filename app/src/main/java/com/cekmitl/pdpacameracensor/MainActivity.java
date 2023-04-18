@@ -4,8 +4,12 @@ import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
@@ -17,14 +21,14 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
 
-import com.cekmitl.pdpacameracensor.databinding.ActivityMain2Binding;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.cekmitl.pdpacameracensor.ui.facerecognition.FaceRecognitionFragment;
+import com.cekmitl.pdpacameracensor.ui.gallery.GalleryFragment;
+import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
+import com.cekmitl.pdpacameracensor.ui.setting.SettingFragment;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -32,6 +36,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LinearLayout setting_button;
     private LinearLayout face_recog_button;
     private LinearLayout gallery_button;
+
+    LinearLayout camera_button;
 
     private ImageView icon_home;
     private ImageView icon_gallery;
@@ -41,9 +47,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private NavController navController;
 
+    public GalleryFragment galleryFragment;
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main2);
+
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.hide();
@@ -52,15 +65,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         View decorView = getWindow().getDecorView(); //set status background black
         decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 
-        com.cekmitl.pdpacameracensor.databinding.ActivityMain2Binding binding = ActivityMain2Binding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+//        com.cekmitl.pdpacameracensor.databinding.ActivityMain2Binding binding = ActivityMain2Binding.inflate(getLayoutInflater());
+//        setContentView(binding.getRoot());
 
-        BottomNavigationView navView = findViewById(R.id.nav_view);
-        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_facerecognition).build();
-        navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main2);
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        NavigationUI.setupWithNavController(binding.navView, navController);
-        LinearLayout camera_button = findViewById(R.id.camera_button);
+
+//
+//        BottomNavigationView navView = findViewById(R.id.nav_view);
+//        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_facerecognition).build();
+//
+//        navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
+//        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+//        NavigationUI.setupWithNavController(binding.navView, navController);
+//
+//        Toast.makeText(this,"Call",Toast.LENGTH_SHORT).show();
+        finish = false;
+        finish2 = false;
+        finish3 = false;
+        finish4 = false;
+
+        getGallery();
+        while (!finish && !finish2 && !finish3 && !finish4){
+
+        }
+
+
+        //Fragment frame
+        FragmentManager fm4 = getSupportFragmentManager();
+        FragmentTransaction ft4 = fm4.beginTransaction();
+        HomeFragment hFrag4 = new HomeFragment(this);
+        ft4.replace(R.id.nav_host_fragment_activity_main, hFrag4);
+        ft4.addToBackStack(null);
+        ft4.commit();
+
+        camera_button = findViewById(R.id.camera_button);
         home_button = findViewById(R.id.home_button);
         setting_button = findViewById(R.id.setting_button);
         face_recog_button = findViewById(R.id.face_recog_button);
@@ -98,26 +135,251 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.home_button :
                 //replaceFragment(new HomeFragment());
-                navController.navigate(R.id.navigation_home);
+//                navController.navigate(R.id.navigation_home);
+
+                FragmentManager fm4 = getSupportFragmentManager();
+                FragmentTransaction ft4 = fm4.beginTransaction();
+                HomeFragment hFrag4 = new HomeFragment(this);
+                ft4.replace(R.id.nav_host_fragment_activity_main, hFrag4);
+                ft4.addToBackStack(null);
+                ft4.commit();
+
                 changColorNavebar(R.id.home_button);
                 break;
             case R.id.setting_button :
 
-                Intent myIntent = new Intent(MainActivity.this, SettingActivity.class);
-                MainActivity.this.startActivity(myIntent);
+//                Intent myIntent = new Intent(MainActivity.this, SettingActivity.class);
+//                MainActivity.this.startActivity(myIntent);
                 //replaceFragment(new NotificationsFragment());
 //                navController.navigate(R.id.navigation_setting);
-//                changColorNavebar(R.id.setting_button);
-                break;
-            case R.id.face_recog_button :
-                navController.navigate(R.id.navigation_facerecognition);
-                changColorNavebar(R.id.face_recog_button);
+                changColorNavebar(R.id.setting_button);
+
+                FragmentManager fm5 = getSupportFragmentManager();
+                FragmentTransaction ft5 = fm5.beginTransaction();
+                ft5.replace(R.id.nav_host_fragment_activity_main, new SettingFragment());
+                ft5.addToBackStack(null);
+                ft5.commit();
                 break;
             case R.id.gallery_button :
-                navController.navigate(R.id.navigation_gallery);
+//                navController.navigate(R.id.navigation_facerecognition);
+                FragmentManager fm2 = getSupportFragmentManager();
+                FragmentTransaction ft2 = fm2.beginTransaction();
+                GalleryFragment gFrag = new GalleryFragment(this);
+                ft2.replace(R.id.nav_host_fragment_activity_main, gFrag);
+                ft2.addToBackStack(null);
+                ft2.commit();
+
                 changColorNavebar(R.id.gallery_button);
                 break;
+            case R.id.face_recog_button :
+
+                FragmentManager fm3 = getSupportFragmentManager();
+                FragmentTransaction ft3 = fm3.beginTransaction();
+                ft3.replace(R.id.nav_host_fragment_activity_main, new FaceRecognitionFragment());
+                ft3.addToBackStack(null);
+                ft3.commit();
+//                navController.navigate(R.id.navigation_gallery);
+                changColorNavebar(R.id.face_recog_button);
+                break;
         }
+    }
+
+    public Bitmap[] thumbnails = null;
+    public String[] arrPath= null;
+    public int[] typeMedia= null;
+    public Cursor imagecursor1,imagecursor2,imagecursor3,imagecursor4;
+    public MainActivity mainActivity = this;
+    public boolean finish = false;
+    public boolean finish2 = false;
+    public boolean finish3 = false;
+    public boolean finish4 = false;
+    void getGallery(){
+        String[] columns = new String[]{MediaStore.Files.FileColumns._ID,
+                MediaStore.Files.FileColumns.DATA,
+                MediaStore.Files.FileColumns.DATE_ADDED,
+                MediaStore.Files.FileColumns.MEDIA_TYPE,
+                MediaStore.Files.FileColumns.MIME_TYPE,
+                MediaStore.Files.FileColumns.TITLE,
+        };
+        String selection = MediaStore.Files.FileColumns.MEDIA_TYPE + "="
+                + MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
+                + " OR "
+                + MediaStore.Files.FileColumns.MEDIA_TYPE + "="
+                + MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
+
+        final String orderBy = MediaStore.Files.FileColumns.DATE_ADDED;
+        Uri queryUri = MediaStore.Files.getContentUri("external");
+        imagecursor1 = this.managedQuery(queryUri,
+                columns,
+                selection,
+                null, // Selection args (none).
+                MediaStore.Files.FileColumns.DATE_ADDED + " DESC" // Sort order.
+        );
+
+        imagecursor2 = this.managedQuery(queryUri,
+                columns,
+                selection,
+                null, // Selection args (none).
+                MediaStore.Files.FileColumns.DATE_ADDED + " DESC" // Sort order.
+        );
+
+        imagecursor3 = this.managedQuery(queryUri,
+                columns,
+                selection,
+                null, // Selection args (none).
+                MediaStore.Files.FileColumns.DATE_ADDED + " DESC" // Sort order.
+        );
+
+        imagecursor4 = this.managedQuery(queryUri,
+                columns,
+                selection,
+                null, // Selection args (none).
+                MediaStore.Files.FileColumns.DATE_ADDED + " DESC" // Sort order.
+        );
+
+        int count = imagecursor1.getCount();
+        int image_column_index = imagecursor1.getColumnIndex(MediaStore.Files.FileColumns._ID);
+        this.thumbnails = new Bitmap[count];
+        this.arrPath = new String[count];
+        this.typeMedia = new int[count];
+
+        int p2 = (int) Math.round(count * 0.25);
+        int p3 = (int) Math.round(count * 0.5);
+        int p4 = (int) Math.round(count * 0.75);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < p2; i++) {
+                    imagecursor1.moveToPosition(i);
+                    int id = imagecursor1.getInt(image_column_index);
+                    int dataColumnIndex = imagecursor1.getColumnIndex(MediaStore.Files.FileColumns.DATA);
+                    BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                    bmOptions.inSampleSize = 4;
+                    bmOptions.inPurgeable = true;
+                    int type = imagecursor1.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE);
+                    int t = imagecursor1.getInt(type);
+
+                    if(t == 1)
+                        thumbnails[i] = MediaStore.Images.Thumbnails.getThumbnail(
+                                mainActivity.getContentResolver(), id,
+                                MediaStore.Images.Thumbnails.MINI_KIND, bmOptions);
+                    else if(t == 3)
+                        thumbnails[i] = MediaStore.Video.Thumbnails.getThumbnail(
+                                mainActivity.getContentResolver(), id,
+                                MediaStore.Video.Thumbnails.MINI_KIND, bmOptions);
+
+                    arrPath[i]= imagecursor1.getString(dataColumnIndex);
+                    typeMedia[i] = imagecursor1.getInt(type);
+                }
+
+//                imagecursor1.close();
+                imagecursor1 = null;
+                finish = true;
+
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = p2; i < p3; i++) {
+                    imagecursor2.moveToPosition(i);
+                    int id = imagecursor2.getInt(image_column_index);
+                    int dataColumnIndex = imagecursor2.getColumnIndex(MediaStore.Files.FileColumns.DATA);
+                    BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                    bmOptions.inSampleSize = 4;
+                    bmOptions.inPurgeable = true;
+                    int type = imagecursor2.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE);
+                    int t = imagecursor2.getInt(type);
+
+                    if(t == 1)
+                        thumbnails[i] = MediaStore.Images.Thumbnails.getThumbnail(
+                                mainActivity.getContentResolver(), id,
+                                MediaStore.Images.Thumbnails.MINI_KIND, bmOptions);
+                    else if(t == 3)
+                        thumbnails[i] = MediaStore.Video.Thumbnails.getThumbnail(
+                                mainActivity.getContentResolver(), id,
+                                MediaStore.Video.Thumbnails.MINI_KIND, bmOptions);
+
+                    arrPath[i]= imagecursor2.getString(dataColumnIndex);
+                    typeMedia[i] = imagecursor2.getInt(type);
+                }
+
+//                imagecursor2.close();
+                imagecursor2 = null;
+                finish2 = true;
+
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = p3; i < p4; i++) {
+                    imagecursor3.moveToPosition(i);
+                    int id = imagecursor3.getInt(image_column_index);
+                    int dataColumnIndex = imagecursor3.getColumnIndex(MediaStore.Files.FileColumns.DATA);
+                    BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                    bmOptions.inSampleSize = 4;
+                    bmOptions.inPurgeable = true;
+                    int type = imagecursor3.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE);
+                    int t = imagecursor3.getInt(type);
+
+                    if(t == 1)
+                        thumbnails[i] = MediaStore.Images.Thumbnails.getThumbnail(
+                                mainActivity.getContentResolver(), id,
+                                MediaStore.Images.Thumbnails.MINI_KIND, bmOptions);
+                    else if(t == 3)
+                        thumbnails[i] = MediaStore.Video.Thumbnails.getThumbnail(
+                                mainActivity.getContentResolver(), id,
+                                MediaStore.Video.Thumbnails.MINI_KIND, bmOptions);
+
+                    arrPath[i]= imagecursor3.getString(dataColumnIndex);
+                    typeMedia[i] = imagecursor3.getInt(type);
+                }
+
+//                imagecursor3.close();
+                imagecursor3 = null;
+                finish3 = true;
+
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = p4; i < count; i++) {
+                    imagecursor4.moveToPosition(i);
+                    int id = imagecursor4.getInt(image_column_index);
+                    int dataColumnIndex = imagecursor4.getColumnIndex(MediaStore.Files.FileColumns.DATA);
+                    BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                    bmOptions.inSampleSize = 4;
+                    bmOptions.inPurgeable = true;
+                    int type = imagecursor4.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE);
+                    int t = imagecursor4.getInt(type);
+
+                    if(t == 1)
+                        thumbnails[i] = MediaStore.Images.Thumbnails.getThumbnail(
+                                mainActivity.getContentResolver(), id,
+                                MediaStore.Images.Thumbnails.MINI_KIND, bmOptions);
+                    else if(t == 3)
+                        thumbnails[i] = MediaStore.Video.Thumbnails.getThumbnail(
+                                mainActivity.getContentResolver(), id,
+                                MediaStore.Video.Thumbnails.MINI_KIND, bmOptions);
+
+                    arrPath[i]= imagecursor4.getString(dataColumnIndex);
+                    typeMedia[i] = imagecursor4.getInt(type);
+                }
+
+//                imagecursor4.close();
+                imagecursor4 = null;
+                finish4 = true;
+
+            }
+        }).start();
+
+
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -138,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void replaceFragment (Fragment fragment){
             FragmentTransaction transaction_setting = getSupportFragmentManager().beginTransaction();
             //transaction_setting.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_in_left);
-            transaction_setting.replace(R.id.nav_host_fragment_activity_main2, fragment);
+            transaction_setting.replace(R.id.nav_host_fragment_activity_main, fragment);
             transaction_setting.commit();
         }
 
@@ -197,6 +459,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 view.getLayoutParams().width = (Integer) animation1.getAnimatedValue();
                 view.requestLayout();
             });
+
             AnimatorSet animationSet = new AnimatorSet();
             animationSet.setInterpolator(new AccelerateDecelerateInterpolator());
             animationSet.play(slideAnimator);
