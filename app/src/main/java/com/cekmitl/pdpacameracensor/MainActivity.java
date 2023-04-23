@@ -25,10 +25,13 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.navigation.NavController;
 
+import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.ui.facerecognition.FaceRecognitionFragment;
 import com.cekmitl.pdpacameracensor.ui.gallery.GalleryFragment;
 import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
 import com.cekmitl.pdpacameracensor.ui.setting.SettingFragment;
+
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -36,6 +39,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private LinearLayout setting_button;
     private LinearLayout face_recog_button;
     private LinearLayout gallery_button;
+
+    PersonDatabase db = null;
 
     LinearLayout camera_button;
 
@@ -68,7 +73,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        com.cekmitl.pdpacameracensor.databinding.ActivityMain2Binding binding = ActivityMain2Binding.inflate(getLayoutInflater());
 //        setContentView(binding.getRoot());
 
-
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (db == null){
+                    try {
+                        db = new PersonDatabase(-1);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
 //
 //        BottomNavigationView navView = findViewById(R.id.nav_view);
 //        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_facerecognition).build();
@@ -148,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.setting_button :
 
-//                Intent myIntent = new Intent(MainActivity.this, SettingActivity.class);
+//                Intent myIntent = new Intent(MainActivity.this, PreviewActivity.class);
 //                MainActivity.this.startActivity(myIntent);
                 //replaceFragment(new NotificationsFragment());
 //                navController.navigate(R.id.navigation_setting);
@@ -182,6 +198,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 changColorNavebar(R.id.face_recog_button);
                 break;
         }
+    }
+
+    public void changFragment(){
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+        GalleryFragment gFrag = new GalleryFragment(this);
+        ft.replace(R.id.nav_host_fragment_activity_main, gFrag);
+        ft.addToBackStack(null);
+        ft.commit();
+        changColorNavebar(R.id.gallery_button);
     }
 
     public Bitmap[] thumbnails = null;
@@ -274,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
 //                imagecursor1.close();
-                imagecursor1 = null;
+//                imagecursor1 = null;
                 finish = true;
 
             }
@@ -307,7 +333,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
 //                imagecursor2.close();
-                imagecursor2 = null;
+
+//                imagecursor2 = null;
                 finish2 = true;
 
             }
@@ -340,7 +367,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
 //                imagecursor3.close();
-                imagecursor3 = null;
+//                imagecursor3 = null;
                 finish3 = true;
 
             }
@@ -373,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
 //                imagecursor4.close();
-                imagecursor4 = null;
+//                imagecursor4 = null;
                 finish4 = true;
 
             }

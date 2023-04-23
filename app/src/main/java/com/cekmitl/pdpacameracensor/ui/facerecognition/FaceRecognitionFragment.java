@@ -1,8 +1,5 @@
 package com.cekmitl.pdpacameracensor.ui.facerecognition;
 
-import static com.cekmitl.pdpacameracensor.ui.home.HomeFragment.getPersonData;
-
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,17 +16,23 @@ import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.R;
 import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewAdapter;
 
+import java.io.IOException;
+
 public class FaceRecognitionFragment extends Fragment {
 
     private FaceRecognitionViewModel mViewModel;
     Person[] persons;
-    PersonDatabase db;
+    PersonDatabase db = null;
 
-    public static android.app.Fragment newInstance() {
-        return new android.app.Fragment();
-    }
+//    public static android.app.Fragment newInstance() {
+//        return new android.app.Fragment();
+//    }
 
     GridView androidGridView;
+
+    public FaceRecognitionFragment(){
+        this.db = db;
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -40,10 +43,21 @@ public class FaceRecognitionFragment extends Fragment {
 
         final View rootView = inflater.inflate(R.layout.fragment_face_recognition, container, false);
 //        View root = rootView.getRootView();
+        if (db != null){
+            GridViewAdapter adapterViewAndroid = new GridViewAdapter(getActivity(), 1,db);
+            androidGridView = rootView.findViewById(R.id.grid_view);
+            androidGridView.setAdapter(adapterViewAndroid);
+        }else{
+            try {
+                db = new PersonDatabase(-1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            GridViewAdapter adapterViewAndroid = new GridViewAdapter(getActivity(), 1,db);
+            androidGridView = rootView.findViewById(R.id.grid_view);
+            androidGridView.setAdapter(adapterViewAndroid);
+        }
 
-        GridViewAdapter adapterViewAndroid = new GridViewAdapter(getActivity(), (String[]) getPersonData().get(0), (Bitmap[]) getPersonData().get(1), 1);
-        androidGridView = rootView.findViewById(R.id.grid_view);
-        androidGridView.setAdapter(adapterViewAndroid);
 
 /*
         TextView add_new_face = root.findViewById(R.id.add_new_face_button);

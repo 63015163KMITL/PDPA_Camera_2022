@@ -1,9 +1,9 @@
 package com.cekmitl.pdpacameracensor.Process;
 
 public class Person {
-    private final String name;
-    private final float[][] features;
-    private final String image_path;
+    public final String name;
+    public final float[][] features;
+    public final String image_path;
     public boolean isOn;
 
     public Person(String name, float[][] features,String path,boolean isOn){

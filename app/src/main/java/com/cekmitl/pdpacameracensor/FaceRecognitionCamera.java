@@ -126,9 +126,9 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                 while (isCamOn) {
                     try {
 
-                        Log.e("TIMER_CAM","Number of picutre" + face_crop_bitmap.size());
+//                        Log.e("TIMER_CAM","Number of picutre" + face_crop_bitmap.size());
 
-                        detectThread.join(200);
+                        detectThread.join(100);
 
 
                         Bitmap imageInput = null;

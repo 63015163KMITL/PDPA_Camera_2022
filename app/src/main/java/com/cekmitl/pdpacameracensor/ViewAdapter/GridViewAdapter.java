@@ -1,15 +1,13 @@
 package com.cekmitl.pdpacameracensor.ViewAdapter;
 
-import static com.cekmitl.pdpacameracensor.ui.home.HomeFragment.getPersonData;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,11 +22,11 @@ import com.cekmitl.pdpacameracensor.FaceRecognitionCamera;
 import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.R;
 
+import java.io.IOException;
+
 public class GridViewAdapter extends BaseAdapter {
 
     private Context mContext;
-    private final String[] gridViewString;
-    private final Bitmap[] gridViewImageId;
     private int fullView = 0;
 
     public PersonDatabase db = null;
@@ -38,16 +36,19 @@ public class GridViewAdapter extends BaseAdapter {
 
     LayoutInflater inflater;
 
-    public GridViewAdapter(Context context, String[] gridViewString, Bitmap[] gridViewImageId, int fullView) {
+    public GridViewAdapter(Context context, int fullView,PersonDatabase db) {
         mContext = context;
-        this.gridViewImageId = gridViewImageId;
-        this.gridViewString = gridViewString;
         this.fullView = fullView;
+        this.db = db;
+        this.count = db.persons.length +1;
+        this.perImg = new Bitmap[count-1];
+        this.perName = new String[count-1];
     }
 
+    int count = 0;
     @Override
     public int getCount() {
-        return gridViewString.length;
+        return count;
     }
 
     @Override
@@ -60,6 +61,9 @@ public class GridViewAdapter extends BaseAdapter {
         return 0;
     }
 
+    String[] perName = null;
+    Bitmap[] perImg = null;
+
     @Override
     public View getView(int i, View convertView, ViewGroup parent) {
         View gridViewAndroid;
@@ -67,8 +71,15 @@ public class GridViewAdapter extends BaseAdapter {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         if (convertView == null) {
-
+            if (db == null){
+                try {
+                    db = new PersonDatabase(-1);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             gridViewAndroid = new View(mContext);
+//            Log.d("SETPERSON", "getView: "+i);
             if(fullView == 1){
                 gridViewAndroid = inflater.inflate(R.layout.face_grid_view_menu_full, null);
             }else {
@@ -78,15 +89,20 @@ public class GridViewAdapter extends BaseAdapter {
             TextView textViewAndroid = (TextView) gridViewAndroid.findViewById(R.id.face_name_label);
             ImageView imageViewAndroid = (ImageView) gridViewAndroid.findViewById(R.id.face_thumnail);
 
-            if(gridViewImageId[i] != null) {
+            if (i<db.persons.length){
+
                 gridViewAndroid.setId(i);
-                imageViewAndroid.setImageBitmap(gridViewImageId[i]);
-                textViewAndroid.setText(gridViewString[i]);
-                gridViewAndroid.setTag(gridViewString[i]);
-            }else {
-                gridViewAndroid.setTag("add_face");
+                perImg[i] = BitmapFactory.decodeFile(db.persons[i].getImage());
+                perName[i] = db.persons[i].getName();
+                imageViewAndroid.setImageBitmap(perImg[i]);
+                textViewAndroid.setText(perName[i]);
+                gridViewAndroid.setTag(perName[i]);
+
+            }else{
+                gridViewAndroid.setTag("-1");
                 textViewAndroid.setText("");
             }
+
         } else {
             gridViewAndroid = (View) convertView;
         }
@@ -94,12 +110,10 @@ public class GridViewAdapter extends BaseAdapter {
         gridViewAndroid.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("GRID", "onClick: " + v );
-                //v.setBackgroundResource(R.drawable.ic_launcher_background);
-                //Toast.makeText(mContext, "CLICK " + v.getId(), Toast.LENGTH_SHORT).show();
+
                 AlertDialog.Builder builder =
                         new AlertDialog.Builder(mContext);
-                if(v.getTag() == "add_face"){
+                if(v.getTag() == "-1"){
 
                     builder.setTitle("Add new face");
                     builder.setItems(CLUBS, new DialogInterface.OnClickListener() {
@@ -123,20 +137,20 @@ public class GridViewAdapter extends BaseAdapter {
                 }else {
                     // Create an alert builder
 
-                    String[] psName = (String[]) getPersonData().get(0);
-                    Bitmap[] psBitmap = (Bitmap[]) getPersonData().get(1);
+
+
 
                     // set the custom layout
                     final View customLayout = inflater.inflate(R.layout.dialog_face_recog_edit_layout, null);
                     builder.setView(customLayout);
 
                     ImageView psImageView = customLayout.findViewById(R.id.psImageView);
-                    psImageView.setImageBitmap(psBitmap[v.getId()]);
+                    psImageView.setImageBitmap(perImg[v.getId()]);
 
                     //EditText edt_name = customLayout.findViewWithTag(v.getTag());
                     EditText edt_name = customLayout.findViewById(R.id.edittext_name_profile);
                     //edt_name.setText(v.getTag().toString());
-                    edt_name.setText(psName[v.getId()]);
+                    edt_name.setText(perName[v.getId()]);
                     edt_name.setSelection(edt_name.getText().length());
 
                     Button btn_update_face_camera = customLayout.findViewById(R.id.update_face_camera);
@@ -144,7 +158,7 @@ public class GridViewAdapter extends BaseAdapter {
                         @Override
                         public void onClick(View view) {
                             Intent i = new Intent(mContext, FaceRecognitionCamera.class);
-                            i.putExtra("psName", psName[v.getId()]); //Optional parameters
+                            i.putExtra("psName", perName[v.getId()]); //Optional parameters
                             mContext.startActivity(i);
                         }
                     });
@@ -154,7 +168,7 @@ public class GridViewAdapter extends BaseAdapter {
                         @Override
                         public void onClick(View view) {
                             Intent i = new Intent(mContext, AddNewFaceActivity.class);
-                            i.putExtra("psName", psName[v.getId()]); //Optional parameters
+                            i.putExtra("psName", perName[v.getId()]); //Optional parameters
                             mContext.startActivity(i);
                         }
                     });

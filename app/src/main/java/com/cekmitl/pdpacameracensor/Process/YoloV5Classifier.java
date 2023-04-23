@@ -162,8 +162,10 @@ public class YoloV5Classifier implements Classifier {
                         Math.max(0, yPos - h/2),
                         Math.min(bitmap.getWidth() - 1, xPos + w / 2),
                         Math.min(bitmap.getHeight() - 1, yPos+h/2));
+                if (detectedClass == 0){
+                    detections.add(new Recognition("" + offset, confidenceInClass, rect, detectedClass,xPos,yPos));
+                }
 
-                detections.add(new Recognition("" + offset, confidenceInClass, rect, detectedClass,xPos,yPos));
             }
         }
         return nms(detections);

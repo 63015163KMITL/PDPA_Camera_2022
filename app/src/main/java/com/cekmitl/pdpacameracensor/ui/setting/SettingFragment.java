@@ -33,6 +33,9 @@ public class SettingFragment extends Fragment implements View.OnClickListener{
 
         final View rootView = inflater.inflate(R.layout.fragment_setting, container, false);
 
+        getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        getActivity().getWindow().setStatusBarColor(getActivity().getColor(R.color.main_gray));
+
         switch_grid_line = rootView.findViewById(R.id.switch_grid_line);
         switch_location_tag = rootView.findViewById(R.id.switch_location_tag);
         switch_mirror_font_camera = rootView.findViewById(R.id.switch_mirroi_font_camera);

@@ -245,18 +245,22 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             uri = Uri.parse(path_name);
             inputVideo = path_name;
             video_thumbnail.setImageBitmap(ThumbnailUtils.createVideoThumbnail(String.valueOf(uri), MediaStore.Images.Thumbnails.MINI_KIND));
-
+            video_name =  path_name.substring(path_name.lastIndexOf("/")+1);
             isSelected = true;
+
+
 
         }else if (Intent.ACTION_SEND.equals(action) && type != null) {
             if (type.startsWith("video/")) {
                 // Handle single image being sent
+                makeText(this, "asda", LENGTH_SHORT).show();
                 String media_path = PreviewActivity.getRealPathFromURI(this, PreviewActivity.handleSendImage(intent));
-
                 uri = Uri.parse(media_path);
                 inputVideo = media_path;
                 video_thumbnail.setImageBitmap(ThumbnailUtils.createVideoThumbnail(String.valueOf(uri),
                         MediaStore.Images.Thumbnails.MINI_KIND));
+                video_name =  media_path.substring(media_path.lastIndexOf("/")+1);
+                path_name = media_path;
 
                 isSelected = true;
 
@@ -268,9 +272,10 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             isSelected = false;
         }
 
-        Log.d("PATHVIDEO", "onCreate: "+ path);
-        Log.d("PATHVIDEO", "onCreate: "+ inputVideo);
 
+
+//        makeText(this, media_path, LENGTH_SHORT).show();
+        uri = Uri.parse(path_name);
 
         tempeFramePool = video_name + "/";
         tempeVideo = video_name +"_temp.mp4";

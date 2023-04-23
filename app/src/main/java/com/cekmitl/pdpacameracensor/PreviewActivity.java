@@ -336,6 +336,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         String type = intent.getType();
 
 
+
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if (type.startsWith("image/")) {
                 // Handle single image being sent
@@ -361,7 +362,11 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        if (ei == null){
+            makeText(this, "Image not Found", LENGTH_SHORT).show();
+            finish();
+            return;
+        }
         int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION,
                 ExifInterface.ORIENTATION_UNDEFINED);
 
@@ -888,6 +893,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                         }
                     }).start();
                 }
+
+
                 return false;
             }
         });
