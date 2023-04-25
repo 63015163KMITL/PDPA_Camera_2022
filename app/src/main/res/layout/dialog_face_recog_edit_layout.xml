@@ -83,6 +83,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
+            <Button
+                android:id="@+id/button_check_face"
+                android:layout_marginTop="10dp"
+                android:layout_below="@id/edittext_name_profile"
+                android:background="@drawable/bg_round_stroke"
+                android:gravity="center"
+                android:text="CHECK"
+                android:textSize="18dp"
+                android:textColor="@color/white"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"

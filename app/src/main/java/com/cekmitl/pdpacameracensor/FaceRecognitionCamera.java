@@ -258,7 +258,15 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
         Intent intent = new Intent(getApplicationContext(), AddNewFaceActivity.class);
         intent.putExtra("key", "1");
+
+
+        Intent input_intent = getIntent();
+        Boolean check = input_intent.getBooleanExtra("check", false);
+        String psName = input_intent.getStringExtra("psName");
+
         //intent.putExtra("bitmap", b.get(0));
+        intent.putExtra("check", check);
+        intent.putExtra("psName", psName);
         intent.putExtra("temp_num", String.valueOf(NUM_SAVED));
         Log.d("PASSINGROUND", String.valueOf(round));
 

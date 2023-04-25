@@ -10,6 +10,7 @@ import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.image.ops.ResizeOp;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 public class FaceRecogitionProcessor {
     private final Interpreter faceNetModelInterpreter;
@@ -32,6 +33,15 @@ public class FaceRecogitionProcessor {
         faceNetModelInterpreter.run(faceNetByteBuffer, faceOutputArray);
         return faceOutputArray[0].clone();
 
+    }
+
+
+    public ArrayList<float[]> recognize(Bitmap[] bitmap){
+        ArrayList<float[]> arr = new ArrayList<>();
+        for (Bitmap b : bitmap){
+            arr.add(recognize(b));
+        }
+        return arr;
     }
 
 }

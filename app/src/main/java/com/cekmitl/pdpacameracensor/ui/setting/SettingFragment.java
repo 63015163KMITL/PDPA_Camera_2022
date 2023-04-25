@@ -2,12 +2,15 @@ package com.cekmitl.pdpacameracensor.ui.setting;
 
 import static android.content.Context.MODE_PRIVATE;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,11 +19,14 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.cekmitl.pdpacameracensor.R;
 
+import java.io.File;
+
 public class SettingFragment extends Fragment implements View.OnClickListener{
 
     private SettingViewModel mViewModel;
     public SharedPreferences sharedPreferences;
     public Switch switch_grid_line, switch_location_tag, switch_mirror_font_camera, switch_preview_after_shutter, switch_volume_kaye_shutter;
+    private Button button_clear_cache;
 
 
     public static SettingFragment newInstance() {
@@ -35,6 +41,8 @@ public class SettingFragment extends Fragment implements View.OnClickListener{
 
         getActivity().getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         getActivity().getWindow().setStatusBarColor(getActivity().getColor(R.color.main_gray));
+
+        button_clear_cache = rootView.findViewById(R.id.button_clear_cache);
 
         switch_grid_line = rootView.findViewById(R.id.switch_grid_line);
         switch_location_tag = rootView.findViewById(R.id.switch_location_tag);
@@ -57,6 +65,14 @@ public class SettingFragment extends Fragment implements View.OnClickListener{
         switch_preview_after_shutter.setOnClickListener((View.OnClickListener) this);
         switch_volume_kaye_shutter.setOnClickListener((View.OnClickListener) this);
 
+        button_clear_cache.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                deleteCache(getActivity());
+                Toast.makeText(getActivity(), "CLEAR CACHE", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         return rootView;
     }
 
@@ -78,5 +94,29 @@ public class SettingFragment extends Fragment implements View.OnClickListener{
         setting.putBoolean("switch_preview_after_shutter", switch_preview_after_shutter.isChecked());
         setting.putBoolean("switch_volume_kaye_shutter", switch_volume_kaye_shutter.isChecked());
         setting.apply();
+    }
+
+    public static void deleteCache(Context context) {
+        try {
+            File dir = context.getCacheDir();
+            deleteDir(dir);
+        } catch (Exception e) { e.printStackTrace();}
+    }
+
+    public static boolean deleteDir(File dir) {
+        if (dir != null && dir.isDirectory()) {
+            String[] children = dir.list();
+            for (int i = 0; i < children.length; i++) {
+                boolean success = deleteDir(new File(dir, children[i]));
+                if (!success) {
+                    return false;
+                }
+            }
+            return dir.delete();
+        } else if(dir!= null && dir.isFile()) {
+            return dir.delete();
+        } else {
+            return false;
+        }
     }
 }

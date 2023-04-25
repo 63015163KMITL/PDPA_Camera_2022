@@ -26,7 +26,7 @@ public class PersonDatabase {
         File[] person_list = getPersonList();
         persons = new Person[person_list.length];
         for (int i =0;i<persons.length;i++){
-            persons[i] = new Person(person_list[i].getName(),getVectorList(person_list[i].getName()),AIProperties.DOC_PATH  + "/Features/"+person_list[i].getName()+"/display.png",isOn(person_list[i].getName()));
+            persons[i] = new Person(person_list[i].getName(),getVectorList(person_list[i].getName()),AIProperties.DOC_PATH  + "/Features/"+person_list[i].getName()+"/display.jpg",isOn(person_list[i].getName()));
         }
     }
 
@@ -40,7 +40,7 @@ public class PersonDatabase {
             persons = new Person[person_list.length];
             for (int i =0;i<persons.length;i++){
 
-                persons[i] = new Person(person_list[i].getName(),null,AIProperties.DOC_PATH  + "/Features/"+person_list[i].getName()+"/display.png",isOn(person_list[i].getName()));
+                persons[i] = new Person(person_list[i].getName(),null,AIProperties.DOC_PATH  + "/Features/"+person_list[i].getName()+"/display.jpg",isOn(person_list[i].getName()));
             }
         }
     }
@@ -83,8 +83,8 @@ public class PersonDatabase {
     }
 
     public void save_image(Bitmap bmp,String person){
-        try (FileOutputStream out = new FileOutputStream(AIProperties.DOC_PATH  + "/Features/" +person+"/"+"display.png")) {
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+        try (FileOutputStream out = new FileOutputStream(AIProperties.DOC_PATH  + "/Features/" +person+"/"+"display.jpg")) {
+            bmp.compress(Bitmap.CompressFormat.JPEG, 100, out); // bmp is your Bitmap instance
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -267,6 +267,31 @@ public class PersonDatabase {
             writer.flush();
             writer.close();
         }
+    }
+
+
+    public boolean test(float[] arr,String person){
+        if (recognize(arr) != null){
+            if (Objects.equals(recognize(arr).name, person)){
+                return true;
+            }else {
+                return false;
+            }
+        }
+        return false;
+
+    }
+
+    public float test(ArrayList<float[]> arr,String person){
+        float true_predict = 0f;
+        float num = 10f;
+
+        for (float[] a : arr){
+            if (test(a, person)){
+                true_predict += 1;
+            }
+        }
+        return (true_predict / num) * 100;
     }
 
 

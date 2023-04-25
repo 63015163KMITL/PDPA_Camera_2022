@@ -122,7 +122,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     //PersonDatabase
     PersonDatabase db = null;
 
-    //Dispaly
+    //Display
     public Display display;
 
     public int old_height_header_layout = 0;
@@ -149,6 +149,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     public ArrayList<String> facePosition = new ArrayList<>();   //LEFT / TOP / RIGHT / BOTTOM / X / Y / ID
     public int[] faceCensorState = new int[20];
 
+    //Blur
+    private double blurRadius;
+    private int blur_percentage = 50;
     public TextView textview_blur_radius_value;
     public SeekBar seekbar_blur_radius;
 
@@ -484,7 +487,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         });
 
         handleResult(true);
-        blurFaceX(50);
+        blurFaceX(blur_percentage);
 
     }
 
@@ -676,6 +679,36 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.button_delete:
 
+                editMode(true);
+                editMode(false);
+
+                TextView okay_text, cancel_text;
+                Dialog dialog = new Dialog(PreviewActivity.this);
+
+                dialog.setContentView(R.layout.dialog_layout);
+                dialog.getWindow().setLayout(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+                okay_text = dialog.findViewById(R.id.button_dialog_ok);
+                cancel_text = dialog.findViewById(R.id.button_dialog_cancel);
+
+                okay_text.setOnClickListener(v -> {
+                    showHide_FocusView(false);
+                    Bitmap result_photo = BitmapEditor.loadBitmapFromView(FrameImagePreview);
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy-HH-mm-ss");
+                    Date date = new Date();
+                    BitmapEditor.saveImage(result_photo, formatter.format(date) + "");
+
+                    shareImageandText(result_photo);
+
+                    dialog.dismiss();
+                    finish();
+//                makeText(PreviewActivity.this, "Save Complete", LENGTH_SHORT).show();
+                });
+
+                cancel_text.setOnClickListener(v -> dialog.dismiss());
+
+                dialog.show();
                 break;
             case R.id.button_back:
                 editMode(false);
@@ -821,7 +854,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         layoutTOP.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
         LinearLayout layoutInner = new LinearLayout(PreviewActivity.this);
-        layoutInner.setBackgroundResource(R.drawable.bg_face_frame);
+
+        if(faceCensorState[Integer.parseInt(id)] == 0){
+            layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
+        }else {
+            layoutInner.setBackgroundResource(R.drawable.bg_face_frame);
+        }
+
         layoutInner.setTag("focus_frame" + id);
         layoutInner.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
@@ -829,7 +868,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         censor_layout.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         censor_layout.setTag("" + id);
 
-        if(first){
+//        if(first){
             Score score = db.recognize(array1);
             if (!(score == null)){
                 txt.setTextColor(Color.parseColor("#fbb040"));
@@ -840,7 +879,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             }else {
                 faceCensorState[Integer.parseInt(id)] = 1;
             }
-        }
+//        }
+
+        blurFaceX(blur_percentage);
+        Log.e("faceCensorState","faceCensorState : " + Arrays.toString(faceCensorState));
 
         //------------------------------------------------------------------------------------------------------
 
@@ -930,6 +972,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 }
                 makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
                 handleResult(false);
+                blurFaceX(blur_percentage);
             }
         });
 
@@ -938,6 +981,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 showAlertDialogButtonClicked(bitmap);
+
+                handleResult(false);
+                blurFaceX(blur_percentage);
             }
         });
 
@@ -986,6 +1032,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
         handleResult(false);
+        blurFaceX(blur_percentage);
     }
 
 
@@ -1021,7 +1068,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
     //จัดการกับ Label คำตอบ
     private void handleResult(boolean initStart) {
+
         clearFocus();
+
         bmp_images.removeAll(bmp_images);
         if (null != listView && listView.getChildCount() > 0) {
             listView.removeViews(0, listView.getChildCount());
@@ -1036,16 +1085,19 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
             for (final Classifier.Recognition result : results) {
                 final RectF location = result.getLocation();
-                //                           X - Y - Width - Height
-                if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
-                    try {
-                        setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d, initStart);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                if(result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API) {
+                    //                           X - Y - Width - Height
+                    if (result.getDetectedClass() == 0 || result.getDetectedClass() == 1 || result.getDetectedClass() == 2) {
+                        try {
+                            setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d, initStart);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        facePosition.add(location.left + "/" + location.top + "/" + location.right + "/" + location.bottom + "/" + result.getX() + "/" + result.getY() + "/" + i);
+                        i++;
                     }
-                    facePosition.add(location.left + "/" + location.top + "/" + location.right + "/" + location.bottom + "/" + result.getX() + "/" + result.getY() + "/" + i);
+
                 }
-                i++;
             }
             showHide_FocusView(false);
             run();
@@ -1096,6 +1148,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
         if (b){
+
             menu_bar.setVisibility(View.GONE);
             HeadLayout2.setVisibility(View.GONE);
             Touch_ImagePreview.setVisibility(View.GONE);
@@ -1152,7 +1205,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             slideView2(bottom_layout, 0, old_height_bottom_layout, old_width_bottom_layout, old_width_bottom_layout);
             slideView2(HeadLayout, 0, old_height_header_layout, old_width_bottom_layout, old_width_header_layout);
 
-//            handleResult();
+            handleResult(false);
+            blurFaceX(blur_percentage);
 
             state_Edite_Mode = false;
             menu_bar.setVisibility(View.GONE);
@@ -1202,7 +1256,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             xMAX_HEIGHT_PREVIEW = max_fram_focus_layout_height;
             xMAX_WIDTH_PREVIEW = display.getWidth();
 
-            //handleResult();
+            handleResult(false);
+            blurFaceX(blur_percentage);
 
             state_Edite_Mode = true;
 
@@ -1228,7 +1283,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     public void blurFaceX(int progress){
-        double blurRadius = (100 - progress ) * Math.pow(10,-3);
+        blurRadius = (100 - progress ) * Math.pow(10,-3);
+        blur_percentage = progress;
 
         for (int i = 0; i < facePosition.size(); i++){
 
@@ -1361,6 +1417,10 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 cursor.close();
             }
         }
+    }
+
+    private void saveAndSharePhoto(){
+
     }
 
 

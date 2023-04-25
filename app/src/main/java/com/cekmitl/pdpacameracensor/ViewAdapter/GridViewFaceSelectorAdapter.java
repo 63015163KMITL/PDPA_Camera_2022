@@ -17,9 +17,11 @@ public class GridViewFaceSelectorAdapter extends BaseAdapter {
     private final Context mContext;
     private final ArrayList<Bitmap> gridViewImageId;
     private final ArrayList<Bitmap>  faceSelected = new ArrayList<Bitmap>();
+    private  boolean selectAll;
 
-    public GridViewFaceSelectorAdapter(Context context, ArrayList<Bitmap> gridViewImageId) {
+    public GridViewFaceSelectorAdapter(Context context, ArrayList<Bitmap> gridViewImageId, Boolean selectAll) {
         mContext = context;
+        this.selectAll = selectAll;
         this.gridViewImageId = gridViewImageId;
     }
 
@@ -49,13 +51,18 @@ public class GridViewFaceSelectorAdapter extends BaseAdapter {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         if (convertView == null) {
-
             gridViewAndroid = new View(mContext);
             gridViewAndroid = inflater.inflate(R.layout.activity_grid_view_face_selector_adapter, null);
 
             ImageView imageViewAndroid = (ImageView) gridViewAndroid.findViewById(R.id.face_thumnail);
                 gridViewAndroid.setId(i);
                 imageViewAndroid.setImageBitmap(gridViewImageId.get(i));
+
+                if (selectAll){
+                    gridViewAndroid.setBackgroundResource(R.drawable.bg_gridview_image_focus);
+                    faceSelected.add(gridViewImageId.get(gridViewAndroid.getId()));
+                }
+
         } else {
             gridViewAndroid = (View) convertView;
         }

@@ -190,7 +190,7 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
         btnGallery.setOnClickListener(this);
         btnReverse.setOnClickListener(this);
         btnChangResol.setOnClickListener(this);
-        top_center.setOnClickListener(this);
+//        top_center.setOnClickListener(this);
 
         //เริ่มการทำงานของ Camera X
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
@@ -405,8 +405,10 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                 flipCamera();
                 break;
             case R.id.button_gallery:
+
                 Intent galleryIntent = new Intent(MainCameraActivity.this, GalleryActivity.class);
                 MainCameraActivity.this.startActivity(galleryIntent);
+
                 break;
             case R.id.change_resolution:
                 switch (state_serol) {
@@ -760,20 +762,49 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                                 Intent myIntent = new Intent(MainCameraActivity.this, PreviewActivity.class);
 
                                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                myBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                myBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
 
                                 myIntent.putExtra("key", file_temp2.getAbsolutePath()); //Optional parameters
                                 myIntent.putExtra("resolution", state_serol);
                                 MainCameraActivity.this.startActivity(myIntent);
 
 
-
                             }else {
                                 File file = new File(file_temp.getAbsolutePath());
-                                Bitmap bm = BitmapFactory.decodeFile(file.getAbsolutePath());
+                                Bitmap myBitmap = BitmapFactory.decodeFile(file.getAbsolutePath());
+
+                                int img_height = 0;
+                                int img_width = 0;
+                                int y = 0;
+                                int x = 0;
+
+                                if (state_serol.equals("4:3")) {
+                                    img_height = myBitmap.getWidth();
+                                    img_width = (myBitmap.getWidth() / 4) * 3;
+                                    y = (myBitmap.getHeight() - img_width) / 2;
+                                    x = (img_width - myBitmap.getHeight()) / 2;
+
+                                } else if (state_serol.equals("16:9")) {
+                                    img_height = myBitmap.getWidth();
+                                    img_width = (myBitmap.getWidth() / 16) * 9;
+                                    y = (myBitmap.getHeight() - img_width) / 2;
+                                    x = 0;//(img_width - myBitmap.getHeight()) / 2;
+
+                                } else if (state_serol.equals("1:1")) {
+                                    img_height = myBitmap.getHeight();
+                                    img_width = myBitmap.getHeight();
+                                    y = (myBitmap.getHeight() - img_width) / 2;
+                                    x = (myBitmap.getWidth() - myBitmap.getHeight()) / 2;
+                                }
+
+                                //ภาพถ่ายที่ผ่านการหมุนตามเข้มนาฬิกาแล้ว = Rotate
+                                //set photo rotate
+                                Matrix matrix = new Matrix();
+                                matrix.postRotate(90);
+                                Bitmap rotated = Bitmap.createBitmap(myBitmap, x, y, img_height, img_width, matrix, true);
 
                                 //บันทึกรูปลง Grallery
-                                String savedImageURL = MediaStore.Images.Media.insertImage((MainCameraActivity.this).getContentResolver(), bm, "filename", null);
+                                String savedImageURL = MediaStore.Images.Media.insertImage((MainCameraActivity.this).getContentResolver(), rotated, "filename", null);
                                 Uri savedImageURI = Uri.parse(savedImageURL);
                             }
 

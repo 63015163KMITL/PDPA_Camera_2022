@@ -82,6 +82,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:visibility="gone"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
@@ -246,10 +247,22 @@
 
                 </LinearLayout>
 
+                <Button
+                    android:visibility="gone"
+                    android:id="@+id/button_clear_cache"
+                    android:text="clear cache"
+                    android:background="@drawable/bg_round_stroke"
+                    android:layout_margin="20dp"
+                    android:textColor="@color/white"
+                    android:layout_alignParentRight="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
 
             </LinearLayout>
 
             <LinearLayout
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="30dp"
@@ -330,6 +343,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="30dp"
@@ -398,12 +412,7 @@
                                 android:text="Cash"
                                 android:textSize="@dimen/font_regular" />
 
-                            <Button
-                                android:text="clear"
-                                android:textColor="@color/white"
-                                android:layout_alignParentRight="true"
-                                android:layout_width="wrap_content"
-                                android:layout_height="35dp"/>
+
 
                             <TextView
                                 android:visibility="gone"
@@ -425,6 +434,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="30dp"

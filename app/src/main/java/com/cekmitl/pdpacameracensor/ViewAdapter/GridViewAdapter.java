@@ -137,9 +137,6 @@ public class GridViewAdapter extends BaseAdapter {
                 }else {
                     // Create an alert builder
 
-
-
-
                     // set the custom layout
                     final View customLayout = inflater.inflate(R.layout.dialog_face_recog_edit_layout, null);
                     builder.setView(customLayout);
@@ -169,6 +166,17 @@ public class GridViewAdapter extends BaseAdapter {
                         public void onClick(View view) {
                             Intent i = new Intent(mContext, AddNewFaceActivity.class);
                             i.putExtra("psName", perName[v.getId()]); //Optional parameters
+                            mContext.startActivity(i);
+                        }
+                    });
+
+                    Button button_check_face = customLayout.findViewById(R.id.button_check_face);
+                    button_check_face.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Intent i = new Intent(mContext, FaceRecognitionCamera.class);
+                            i.putExtra("psName", perName[v.getId()]); //Optional parameters
+                            i.putExtra("check", true);
                             mContext.startActivity(i);
                         }
                     });
