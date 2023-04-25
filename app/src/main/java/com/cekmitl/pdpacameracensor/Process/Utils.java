@@ -73,15 +73,21 @@ public class Utils {
 
     public static void deleteFolder(String path){
         File f = new File(path);
-        for (File child : Objects.requireNonNull(f.listFiles())){
-            child.delete();
+        if (f.exists()){
+            for (File child : Objects.requireNonNull(f.listFiles())){
+                child.delete();
+            }
+            f.delete();
         }
-        f.delete();
+
     }
 
     public static void deleteFiles(String path){
         File f = new File(path);
-        f.delete();
+        if (f.exists()){
+            f.delete();
+        }
+
     }
 
 

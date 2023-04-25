@@ -57,7 +57,7 @@
                         android:background="#00000000" />
 
                     <com.cekmitl.pdpacameracensor.ImageEditor.DrawingView
-                        android:visibility="gone"
+                        android:visibility="visible"
                         android:id="@+id/drawing"
                         android:layout_width="fill_parent"
                         android:layout_height="500dp"
@@ -97,7 +97,7 @@
 
                     <LinearLayout
                         android:id="@+id/paint_tools"
-                        android:visibility="invisible"
+                        android:visibility="gone"
                         android:layout_alignParentLeft="true"
                         android:orientation="vertical"
                         android:layout_width="wrap_content"
@@ -256,6 +256,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -876,7 +877,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:visibility="visible"
+        android:visibility="gone"
         android:id="@+id/menu_bar"
         android:layout_width="match_parent"
         android:layout_height="70dp"

@@ -55,7 +55,6 @@ import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.Process.Score;
 import com.cekmitl.pdpacameracensor.Process.YoloV5Classifier;
 import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewStickerListSelectorAdapter;
-import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
@@ -420,7 +419,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 shareImageandText(result_photo);
 
                 dialog.dismiss();
-                finish();
+
 //                makeText(PreviewActivity.this, "Save Complete", LENGTH_SHORT).show();
             });
 
@@ -601,6 +600,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.button_paint:
                 if (state_paint_button) {
+                    View drawing_layout = findViewById(R.id.drawing);
+                    drawing_layout.setEnabled(true);
 
                     findViewById(R.id.drawing).setFocusable(true);
                     findViewById(R.id.paint_tools).setVisibility(View.VISIBLE);
@@ -628,6 +629,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     state_paint_button = false;
 
                 } else {
+                    View drawing_layout = findViewById(R.id.drawing);
+                    drawing_layout.setEnabled(false);
+
                     findViewById(R.id.drawing).setFocusable(false);
                     findViewById(R.id.paint_tools).setVisibility(View.INVISIBLE);
 
@@ -702,7 +706,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     shareImageandText(result_photo);
 
                     dialog.dismiss();
-                    finish();
+//                    finish();
 //                makeText(PreviewActivity.this, "Save Complete", LENGTH_SHORT).show();
                 });
 
@@ -817,7 +821,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
-    public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius, boolean first) throws IOException {
+    public void setFocusView(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius, boolean first,int detected_class) throws IOException {
 
         height2 = xMAX_HEIGHT_PREVIEW;
         width2 = xMAX_WIDTH_PREVIEW;
@@ -868,7 +872,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         censor_layout.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         censor_layout.setTag("" + id);
 
-//        if(first){
+//        if(detected_class == 0){
             Score score = db.recognize(array1);
             if (!(score == null)){
                 txt.setTextColor(Color.parseColor("#fbb040"));
@@ -920,7 +924,11 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         layoutTOP.setOnLongClickListener(new OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                frameFocusOnLongClickListener(id, b);
+                try {
+                    frameFocusOnLongClickListener(id, b);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 //Reteive data
                 Intent intent = getIntent();
@@ -948,8 +956,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         fram_focus_layout.addView(txt, params1);
     }
 
-    public void frameFocusOnLongClickListener(String id, Bitmap bitmap){
-        String[] strName = (String[]) HomeFragment.getPersonData().get(0);
+    public void frameFocusOnLongClickListener(String id, Bitmap bitmap) throws IOException {
+        String[] strName = (String[]) db.getPersonData().get(0);
 
         // setup the alert builder
         AlertDialog.Builder builder = new AlertDialog.Builder(PreviewActivity.this);
@@ -977,15 +985,15 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         });
 
         // set the neutral button to do some actions
-        builder.setNeutralButton("NEW", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                showAlertDialogButtonClicked(bitmap);
-
-                handleResult(false);
-                blurFaceX(blur_percentage);
-            }
-        });
+//        builder.setNeutralButton("NEW", new DialogInterface.OnClickListener() {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which) {
+//                showAlertDialogButtonClicked(bitmap);
+//
+//                handleResult(false);
+//                blurFaceX(blur_percentage);
+//            }
+//        });
 
         // set the positive button to do some actions
         builder.setPositiveButton("CANCEL", new DialogInterface.OnClickListener() {
@@ -1089,7 +1097,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     //                           X - Y - Width - Height
                     if (result.getDetectedClass() == 0 || result.getDetectedClass() == 1 || result.getDetectedClass() == 2) {
                         try {
-                            setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d, initStart);
+                            setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d, initStart,result.getDetectedClass());
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -1148,7 +1156,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
         if (b){
-
             menu_bar.setVisibility(View.GONE);
             HeadLayout2.setVisibility(View.GONE);
             Touch_ImagePreview.setVisibility(View.GONE);
@@ -1377,6 +1384,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         // calling startactivity() to share
         startActivity(Intent.createChooser(intent, "Share Via"));
+//        finish();
     }
 
     private Uri getmageToShare(Bitmap bitmap) {

@@ -27,8 +27,8 @@ public class GridViewPersonListSelectorAdapter extends BaseAdapter {
 
     public GridViewPersonListSelectorAdapter(Context context, String[] gridViewString, Bitmap[] gridViewImageId, int fullView,ArrayList<String> selectedF) {
         mContext = context;
-        this.gridViewImageId = Arrays.copyOfRange(gridViewImageId, 0, gridViewImageId.length - 1);
-        this.gridViewString = Arrays.copyOfRange(gridViewString, 0, gridViewString.length - 1);
+        this.gridViewImageId = Arrays.copyOfRange(gridViewImageId, 0, gridViewImageId.length);
+        this.gridViewString = Arrays.copyOfRange(gridViewString, 0, gridViewString.length);
         this.selectedFace = selectedF;
     }
 

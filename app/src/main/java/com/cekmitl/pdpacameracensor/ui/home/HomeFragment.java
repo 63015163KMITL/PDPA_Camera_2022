@@ -126,7 +126,7 @@ public class HomeFragment extends Fragment {
         persons = db.persons;
 
         //Name----------------------------------------------------
-        String[] strName = new String[persons.length + 1];
+        String[] strName = new String[persons.length - 1];
         int i = 0;
         for (Person p : persons) {
             strName[i] = p.getName();
@@ -134,7 +134,7 @@ public class HomeFragment extends Fragment {
         }
         strName[persons.length] = "NEW";
 
-        Bitmap[] bitmapProfile = new Bitmap[persons.length + 1];
+        Bitmap[] bitmapProfile = new Bitmap[persons.length - 1];
         int j = 0;
         for (Person p : persons) {
             bitmapProfile[j] = BitmapFactory.decodeFile(p.getImage());

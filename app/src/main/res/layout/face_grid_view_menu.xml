@@ -54,4 +54,13 @@
 
     </LinearLayout>
 
+    <Switch
+        android:visibility="gone"
+        android:id="@+id/switch1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="12dp"
+        android:textColor="#AAA"
+        android:text="Enable" />
+
 </LinearLayout>

@@ -1,5 +1,7 @@
 package com.cekmitl.pdpacameracensor.ViewAdapter;
 
+import static com.cekmitl.pdpacameracensor.Process.PersonDatabase.delete;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,8 +15,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.cekmitl.pdpacameracensor.AddNewFaceActivity;
@@ -71,13 +75,7 @@ public class GridViewAdapter extends BaseAdapter {
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         if (convertView == null) {
-            if (db == null){
-                try {
-                    db = new PersonDatabase(-1);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+
             gridViewAndroid = new View(mContext);
 //            Log.d("SETPERSON", "getView: "+i);
             if(fullView == 1){
@@ -88,6 +86,15 @@ public class GridViewAdapter extends BaseAdapter {
 
             TextView textViewAndroid = (TextView) gridViewAndroid.findViewById(R.id.face_name_label);
             ImageView imageViewAndroid = (ImageView) gridViewAndroid.findViewById(R.id.face_thumnail);
+            Switch switch1 = gridViewAndroid.findViewById(R.id.switch1);
+
+            if (db == null){
+                try {
+                    db = new PersonDatabase(-1);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
             if (i<db.persons.length){
 
@@ -97,15 +104,34 @@ public class GridViewAdapter extends BaseAdapter {
                 imageViewAndroid.setImageBitmap(perImg[i]);
                 textViewAndroid.setText(perName[i]);
                 gridViewAndroid.setTag(perName[i]);
+                switch1.setChecked(db.persons[i].isOn);
+                //db.persons[i].isOn;
+//                boolean a = db.changState("Mik",false);
+
+                switch1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        // do something, the isChecked will be
+                        // true if the switch is in the On position
+                        try {
+                            db.changState(perName[i], isChecked);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
 
             }else{
                 gridViewAndroid.setTag("-1");
-                textViewAndroid.setText("");
+                textViewAndroid.setVisibility(View.GONE);
+                switch1.setVisibility(View.GONE);
             }
+
+
 
         } else {
             gridViewAndroid = (View) convertView;
         }
+
 
         gridViewAndroid.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,12 +226,30 @@ public class GridViewAdapter extends BaseAdapter {
                     button_delete.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
+
+                            delete(perName[v.getId()]);
+                            AlertDialog.Builder sBuilder =
+                                    new AlertDialog.Builder(mContext);
+                            sBuilder.setTitle("Confirm deletion");
+                            sBuilder.setMessage("Do you want to remove " + perName[v.getId()] + "'s data?");
+
+                            sBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    delete(perName[v.getId()]);
+                                }
+                            });
+
+                            sBuilder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+
+                                }
+                            });
+
+                            sBuilder.show();
                             dialog.dismiss();
                         }
                     });
-
                 }
-
             }
         });
 

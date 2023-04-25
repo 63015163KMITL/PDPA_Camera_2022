@@ -15,6 +15,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
@@ -95,11 +96,13 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
             }
         }, getExecutor());
 
-        Button next_button = findViewById(R.id.next_button);
+        Button next_button = findViewById(R.id.stop_button);
         next_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 //                SelectFace();
+                isCamOn = false;
+                finish();
             }
         });
 
@@ -292,5 +295,11 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         return false;
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Toast.makeText(this, "kill", Toast.LENGTH_SHORT).show();
+        isCamOn = false;
+    }
 }
 

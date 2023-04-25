@@ -1,6 +1,7 @@
 package com.cekmitl.pdpacameracensor.Process;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -245,6 +246,9 @@ public class PersonDatabase {
             }
             in.close();
 
+        }else{
+            createCheckingFile(person);
+            return true;
         }
         return false;
     }
@@ -269,6 +273,16 @@ public class PersonDatabase {
         }
     }
 
+    public static Bitmap getDisplay(String name){
+        return BitmapFactory.decodeFile(AIProperties.DOC_PATH  + "/Features/" +name+"/display.jpg");
+    }
+
+    public static void delete(String person){
+        File file = new File(AIProperties.DOC_PATH  + "/Features/" +person);
+        if (file.exists()){
+            Utils.deleteFolder(AIProperties.DOC_PATH  + "/Features/" +person);
+        }
+    }
 
     public boolean test(float[] arr,String person){
         if (recognize(arr) != null){
@@ -292,6 +306,24 @@ public class PersonDatabase {
             }
         }
         return (true_predict / num) * 100;
+    }
+
+    public ArrayList<Object> getPersonData() throws IOException {
+        ArrayList<Object> resulte = new ArrayList<>();
+
+        //Name----------------------------------------------------
+        String[] strName = new String[persons.length];
+        Bitmap[] bitmapProfile = new Bitmap[persons.length];
+        for (int i = 0;i<persons.length;i++){
+            strName[i] = persons[i].getName();
+            bitmapProfile[i] = BitmapFactory.decodeFile(persons[i].getImage());
+        }
+
+
+        resulte.add(strName);
+        resulte.add(bitmapProfile);
+
+        return resulte;
     }
 
 

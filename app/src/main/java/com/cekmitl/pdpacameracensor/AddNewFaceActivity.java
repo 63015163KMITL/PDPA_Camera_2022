@@ -10,13 +10,16 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.RectF;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
@@ -33,9 +36,9 @@ import com.cekmitl.pdpacameracensor.Process.AIProperties;
 import com.cekmitl.pdpacameracensor.Process.Classifier;
 import com.cekmitl.pdpacameracensor.Process.FaceRecogitionProcessor;
 import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
+import com.cekmitl.pdpacameracensor.Process.Utils;
 import com.cekmitl.pdpacameracensor.Process.YoloV5Classifier;
 import com.cekmitl.pdpacameracensor.ViewAdapter.GridViewFaceSelectorAdapter;
-import com.cekmitl.pdpacameracensor.ui.home.HomeFragment;
 
 import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.support.common.FileUtil;
@@ -179,27 +182,73 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                     }
 
                     if (check){
-                        AlertDialog.Builder builder =
-                                new AlertDialog.Builder(AddNewFaceActivity.this);
-                        builder.setMessage("ความเม้นยำ : " + Math.round((n_detect_face_true / 20) * 100)+ "%");
-                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
+                        // set the custom layout
+                        AlertDialog.Builder cBuilder = new AlertDialog.Builder(AddNewFaceActivity.this);
+                        final View customLayout = getLayoutInflater().inflate(R.layout.dialog_face_check_accuracy, null);
+                        cBuilder.setView(customLayout);
+
+                        ImageView psImageView = customLayout.findViewById(R.id.psImageView);
+
+                        psImageView.setImageBitmap(PersonDatabase.getDisplay(psName));
+
+                        //EditText edt_name = customLayout.findViewWithTag(v.getTag());
+                        EditText edt_name = customLayout.findViewById(R.id.edittext_name_profile);
+                        //edt_name.setText(v.getTag().toString());
+                        edt_name.setText(psName);
+                        edt_name.setSelection(edt_name.getText().length());
+
+//                        textview_input_image
+//                        textview_correct_prediction
+//                        textview_accuracy
+
+                        TextView textview_input_image = customLayout.findViewById(R.id.textview_input_image);
+                        textview_input_image.setText("Input image : " + faceSelect.size());
+
+                        TextView textview_correct_prediction = customLayout.findViewById(R.id.textview_correct_prediction);
+                        textview_correct_prediction.setText("Correct prediction : " + Math.round(n_detect_face_true));
+
+                        TextView textview_accuracy = customLayout.findViewById(R.id.textview_accuracy);
+                        textview_accuracy.setText("Accuracy : " + Math.round((n_detect_face_true / 20) * 100)+ "%");
+
+
+                        // create and show the alert dialog
+                        AlertDialog dialog = cBuilder.create();
+                        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                        dialog.show();
+
+                        Button button_ok = customLayout.findViewById(R.id.button_ok);
+                        button_ok.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                dialog.dismiss();
                                 finish();
                             }
                         });
-                        builder.show();
+//                        AlertDialog.Builder builder =
+//                                new AlertDialog.Builder(AddNewFaceActivity.this);
+//                        builder.setMessage("ความเม้นยำ : " + Math.round((n_detect_face_true / 20) * 100)+ "%");
+//                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//                            public void onClick(DialogInterface dialog, int id) {
+//                                finish();
+//                            }
+//                        });
+//                        builder.show();
                     }
 
 
                 }else {
-                    showAlertDialogButtonClicked();
+                    try {
+                        showAlertDialogButtonClicked();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
     }
 
-    public void showAlertDialogButtonClicked() {
-        String[] strName = (String[]) HomeFragment.getPersonData().get(0);
+    public void showAlertDialogButtonClicked() throws IOException {
+        String[] strName = (String[]) db.getPersonData().get(0);
 
         // Create an alert builder
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -274,7 +323,11 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
                 sBuilder.setNegativeButton("Rename", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        showAlertDialogButtonClicked();
+                        try {
+                            showAlertDialogButtonClicked();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
 
@@ -309,7 +362,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                             }
                         }
 
-                        if (j == 0){
+                        if (i == 0){
                             image_toSave = faceSelect.get(i);
                         }
 
@@ -320,69 +373,20 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                         }
                     }
 
-                    makeText(this, "Check : " + n_detect_face_true, Toast.LENGTH_SHORT).show();
+//                    makeText(this, "Check : " + n_detect_face_true, Toast.LENGTH_SHORT).show();
 
                     db.save_image(image_toSave,ps);
-                    makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
+//                    makeText(getApplicationContext(), "Delete" + num + " Images", Toast.LENGTH_SHORT).show();
                     //getFragmentManager().beginTransaction().replace(R.id.navigation_home,FaceRecognitionFragment.newInstance()).commit();
+
                     finish();
             }
-            
-//            for (int i = 0; i < strName.length; i++) {
-//                if (inputName.equals(strName[i])) {
-//                    makeText(this, "strName[i] : " + strName[i], Toast.LENGTH_SHORT).show();
-//                    makeText(this, "The name entered is a duplicate of an existing name. Do you need to re-record?", Toast.LENGTH_SHORT).show();
-//                }else {
-//                    makeText(this, "inputName : " + inputName, Toast.LENGTH_SHORT).show();
-//                    makeText(this, "strName["+i+"] : " + strName[i], Toast.LENGTH_SHORT).show();
-//                    makeText(this, "SAVE OK", Toast.LENGTH_SHORT).show();
-//                    db.add_newPerson_folder(editText.getText().toString());
-//                    makeText(getApplicationContext(), String.valueOf(editText.getText()) , Toast.LENGTH_SHORT).show();
-//                    int num = adapterViewAndroid.getCount();
-//
-//                    String ps = "";
-//
-//                    if (check){
-//                        editText.setText(psName);
-//                        ps = psName;
-//                    }else {
-//                        ps = editText.getText().toString();
-//                    }
-//
-//                    float[][] personList = new float[num][192];
-//
-//                    faceSelect = adapterViewAndroid.getFaceSelected();
-//                    num = faceSelect.size();
-//                    Bitmap image_toSave = null;
-//                    float n_detect_face_true = 0f;
-//                    for (int j = 0; j < num; j++) {
-//                        float[] arr = faceRecognitionProcesser.recognize(faceSelect.get(j));
-//
-//                        if (check){
-//                            if(db.test(arr,psName)){
-//                                n_detect_face_true++;
-//                            }
-//                        }
-//
-//                        if (j == 0){
-//                            image_toSave = faceSelect.get(i);
-//                        }
-//
-//                        try {
-//                            db.save2file(arr,ps);
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//
-//                    makeText(this, "Check : " + n_detect_face_true, Toast.LENGTH_SHORT).show();
-//
-//                    db.save_image(image_toSave,ps);
-//                    makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
-//                    //getFragmentManager().beginTransaction().replace(R.id.navigation_home,FaceRecognitionFragment.newInstance()).commit();
-//                    finish();
-//                }
-//            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Utils.deleteFolder(AIProperties.DOC_PATH+"/temp");
+                }
+            }).start();
         });
 
 //        // create and show the alert dialog
@@ -400,6 +404,18 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
     @Override
     public void onClick(View view) {
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Utils.deleteFolder(AIProperties.DOC_PATH+"/temp");
+            }
+        }).start();
 
     }
 
@@ -450,7 +466,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                     }
                 }
 
-            }else if(data.getData()!=null){
+            }else if(data.getData() != null){
                 String imgurl = data.getData().getPath();
                 //list.add(Uri.parse(imgurl));
             }

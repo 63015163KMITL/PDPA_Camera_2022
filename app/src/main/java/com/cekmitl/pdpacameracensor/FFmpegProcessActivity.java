@@ -11,7 +11,6 @@ import static com.cekmitl.pdpacameracensor.Process.AIProperties.TF_OD_API_LABELS
 import static com.cekmitl.pdpacameracensor.Process.AIProperties.TF_OD_API_MODEL_FILE;
 import static com.cekmitl.pdpacameracensor.Process.Utils.deleteFiles;
 import static com.cekmitl.pdpacameracensor.Process.Utils.deleteFolder;
-import static com.cekmitl.pdpacameracensor.ui.home.HomeFragment.getPersonData;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -248,7 +247,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             video_name =  path_name.substring(path_name.lastIndexOf("/")+1);
             isSelected = true;
 
-
+            Log.d("VIDEOTYPE", "onCreate: 0");
 
         }else if (Intent.ACTION_SEND.equals(action) && type != null) {
             if (type.startsWith("video/")) {
@@ -263,17 +262,19 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 path_name = media_path;
 
                 isSelected = true;
-
+                Log.d("VIDEOTYPE", "onCreate: 1");
             }
         }else{
             inputVideo = path + video_name + ".mp4";
             video_thumbnail.setImageBitmap(ThumbnailUtils.createVideoThumbnail(String.valueOf(uri),
                     MediaStore.Images.Thumbnails.MINI_KIND));
             isSelected = false;
+            path_name = path + video_name + ".mp4";
+
         }
 
 
-
+//        Log.d("VIDEOTYPE", "onCreate: "+inputVideo);
 //        makeText(this, media_path, LENGTH_SHORT).show();
         uri = Uri.parse(path_name);
 
@@ -284,8 +285,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         INPUT_PATH = DOC_PATH + "/" + video_name;
         OUTPUT_PATH = DOC_PATH + "/" + video_name;
         VIDEO_NAME = video_name;
-
-
 
 
         retriever = new MediaMetadataRetriever();
@@ -381,8 +380,13 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         }
 
         //Initial GridView list person
-        listPerson_name = (String[]) getPersonData().get(0);
-        listPerson_image = (Bitmap[]) getPersonData().get(1);
+        try {
+            listPerson_name = (String[]) db.getPersonData().get(0);
+            listPerson_image = (Bitmap[]) db.getPersonData().get(1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
@@ -431,7 +435,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                         ExtractVideoAudio("-i "+ inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
 
                     }else{
-                        ExtractVideoAudio("-i "+ path + inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
+                        ExtractVideoAudio("-i "+ inputVideo + "  -vn -ar 44100 -ac 2 -ab 192k -f mp3 "+ path + audio);
                     }
                 }
             }).start();
@@ -453,7 +457,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-
                     deleteFolder(INPUT_PATH);
                 }
             }).start();
@@ -881,7 +884,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                                     ExtractVideoFrame("-i " + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
 
                                 }else{
-                                    ExtractVideoFrame("-i " + path + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
+                                    ExtractVideoFrame("-i " + inputVideo + " -r " + video_frame_rate + " -threads 3 " + path + tempeFramePool + tempeFrame);
 
                                 }
                                 //progress();

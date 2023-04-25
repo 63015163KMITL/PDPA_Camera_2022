@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView icon_face_recog;
     private ImageView icon_setting;
     private TextView title_home, title_gallery, title_face_recog, title_setting;
-
+    private boolean firstTime = false;
     private NavController navController;
 
     public GalleryFragment galleryFragment;
@@ -142,6 +142,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+//        Toast.makeText(mainActivity, this.number_saved, Toast.LENGTH_SHORT).show();
+        if (firstTime){
+            Toast.makeText(mainActivity, "re", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    @Override
     public void onClick(View view) {
         switch (view.getId()) {
 
@@ -219,6 +229,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean finish2 = false;
     public boolean finish3 = false;
     public boolean finish4 = false;
+
+    int number_saved = 0;
+
     void getGallery(){
         String[] columns = new String[]{MediaStore.Files.FileColumns._ID,
                 MediaStore.Files.FileColumns.DATA,
@@ -268,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.thumbnails = new Bitmap[count];
         this.arrPath = new String[count];
         this.typeMedia = new int[count];
-
+        this.number_saved = 10;
         int p2 = (int) Math.round(count * 0.25);
         int p3 = (int) Math.round(count * 0.5);
         int p4 = (int) Math.round(count * 0.75);

@@ -31,7 +31,7 @@ public class FaceRecognitionFragment extends Fragment {
     GridView androidGridView;
 
     public FaceRecognitionFragment(){
-        this.db = db;
+
     }
 
     @Override
