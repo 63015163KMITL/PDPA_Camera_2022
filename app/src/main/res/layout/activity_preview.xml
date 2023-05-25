@@ -57,7 +57,7 @@
                         android:background="#00000000" />
 
                     <com.cekmitl.pdpacameracensor.ImageEditor.DrawingView
-                        android:visibility="visible"
+                        android:visibility="gone"
                         android:id="@+id/drawing"
                         android:layout_width="fill_parent"
                         android:layout_height="500dp"
@@ -176,36 +176,6 @@
 
         </LinearLayout>
 
-        <LinearLayout
-            android:visibility="gone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:orientation="horizontal">
-
-            <ImageButton
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="0dp"
-                android:layout_marginBottom="10dp"
-                android:background="#00000000"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_redo" />
-
-            <ImageButton
-                android:layout_width="25dp"
-                android:layout_height="25dp"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="#00000000"
-                android:scaleType="fitCenter"
-                android:src="@drawable/ic_undo" />
-
-        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -282,6 +252,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
@@ -289,6 +260,7 @@
             android:gravity="right">
 
             <ImageButton
+                android:id="@+id/button_save_imagex"
                 android:layout_width="50dp"
                 android:layout_height="40dp"
                 android:background="#00000000"

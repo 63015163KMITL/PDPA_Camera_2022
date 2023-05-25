@@ -50,6 +50,7 @@
             android:layout_height="wrap_content">
 
             <TextView
+                android:visibility="gone"
                 android:textColor="@color/white"
                 android:text="BLUR TYPLE"
                 android:textSize="18dp"
@@ -59,6 +60,7 @@
                 android:layout_height="wrap_content"/>
 
             <LinearLayout
+                android:visibility="gone"
                 android:background="@drawable/bg_round_gray"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"

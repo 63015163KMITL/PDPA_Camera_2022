@@ -66,15 +66,17 @@ public class GridViewStickerListSelectorAdapter extends BaseAdapter {
             imageViewAndroid.setImageBitmap(sticker[i]);
             gridViewAndroid.setTag(i);
 
+            gridViewAndroid.setOnClickListener(v -> {
+                v.setBackgroundResource(R.drawable.bg_round_list_selector);
+                selectedSticker[0] = sticker[i];
+                id[0] = (int) v.getTag();
+                previewActivity.onClickStickerItem();
+            });
+
         }else {
             gridViewAndroid = (View) convertView;
         }
-        gridViewAndroid.setOnClickListener(v -> {
-            v.setBackgroundResource(R.drawable.bg_round_list_selector);
-            selectedSticker[0] = sticker[i];
-            id[0] = (int) v.getTag();
-            previewActivity.onClickStickerItem();
-        });
+
         return gridViewAndroid;
     }
 

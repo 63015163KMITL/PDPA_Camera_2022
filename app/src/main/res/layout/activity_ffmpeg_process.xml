@@ -38,31 +38,32 @@
     </RelativeLayout>
 
         <LinearLayout
+            android:id="@+id/frame_vide_view"
             android:layout_below="@+id/header"
             android:gravity="center_vertical"
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="1080px">
+            android:layout_height="1440px">
 
             <RelativeLayout
                 android:layout_width="1080px"
-                android:layout_height="607px">
+                android:layout_height="1440px">
 
                 <VideoView
                     android:id="@+id/videoView"
                     android:layout_width="1080px"
-                    android:layout_height="607px" />
+                    android:layout_height="1440px" />
 
                 <ImageView
                     android:id="@+id/video_thumbnail"
                     android:src="@drawable/ic_app"
                     android:layout_width="1080px"
-                    android:layout_height="607px"/>
+                    android:layout_height="1440px"/>
 
             <RelativeLayout
                 android:id="@+id/fram_focus_layout"
                 android:layout_width="1080px"
-                android:layout_height="607px"/>
+                android:layout_height="1440px"/>
 
 
 
@@ -320,6 +321,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:visibility="gone"
                 android:id="@+id/button_option_cut"
                 android:layout_weight="1"
                 android:gravity="center"

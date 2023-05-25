@@ -2,8 +2,6 @@ package com.cekmitl.pdpacameracensor;
 
 import static android.view.ViewGroup.LayoutParams;
 import static android.view.ViewGroup.OnLongClickListener;
-import static android.widget.Toast.LENGTH_SHORT;
-import static android.widget.Toast.makeText;
 import static com.cekmitl.pdpacameracensor.MainCameraActivity.slideView2;
 import static com.cekmitl.pdpacameracensor.Process.AIProperties.FACE_NET_MODEL;
 
@@ -180,13 +178,13 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         db = (PersonDatabase) intent.getSerializableExtra("person");
         //Personal Data
         if (db == null){
-            new Thread(() -> {
+
                 try {
                     db = new PersonDatabase();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }).start();
+
         }
 
         //Face Recog
@@ -297,7 +295,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         androidGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                makeText(PreviewActivity.this, "androidGridView.setOnItemClickListener", LENGTH_SHORT).show();
+
             }
         });
 
@@ -346,14 +344,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 inputBitmap = BitmapFactory.decodeFile(new File(media_path).getAbsolutePath());
                 intenPath = media_path;
 
-//                makeText(this, "Recive Intent \npath : " + intenPath, LENGTH_SHORT).show();
                 Log.e("reciveintent","path : " + intenPath);
             }
         }else {
             intenPath = intent.getStringExtra("key");
             inputBitmap = BitmapFactory.decodeFile(new File(intenPath).getAbsolutePath());
 
-//                makeText(this, "X Intent \npath : " + intenPath, LENGTH_SHORT).show();
         }
 
         //Check image rotate
@@ -365,7 +361,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             e.printStackTrace();
         }
         if (ei == null){
-            makeText(this, "Image not Found", LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -420,7 +415,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
                 dialog.dismiss();
 
-//                makeText(PreviewActivity.this, "Save Complete", LENGTH_SHORT).show();
             });
 
             cancel_text.setOnClickListener(v -> dialog.dismiss());
@@ -449,6 +443,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         imgPreView.setImageBitmap(nowPhotoPreview);
 
         adjustImageDisplay(nowPhotoPreview);
+
 
         old_height_header_layout = BitmapEditor.getHeightOfView(HeadLayout);
         old_width_header_layout = 1080;
@@ -488,6 +483,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         handleResult(true);
         blurFaceX(blur_percentage);
 
+
+
     }
 
 
@@ -516,7 +513,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         switch (view.getId()) {
             case R.id.GridView_stricker:
-                makeText(this, "GridView_stricker CLICK", LENGTH_SHORT).show();
                 onClickStickerItem();
                 break;
             case R.id.button_hide_face_detect:
@@ -600,9 +596,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.button_paint:
                 if (state_paint_button) {
-                    View drawing_layout = findViewById(R.id.drawing);
-                    drawing_layout.setEnabled(true);
 
+                    findViewById(R.id.drawing).setVisibility(View.VISIBLE);
                     findViewById(R.id.drawing).setFocusable(true);
                     findViewById(R.id.paint_tools).setVisibility(View.VISIBLE);
 
@@ -629,9 +624,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     state_paint_button = false;
 
                 } else {
-                    View drawing_layout = findViewById(R.id.drawing);
-                    drawing_layout.setEnabled(false);
 
+                    findViewById(R.id.drawing).setVisibility(View.GONE);
                     findViewById(R.id.drawing).setFocusable(false);
                     findViewById(R.id.paint_tools).setVisibility(View.INVISIBLE);
 
@@ -677,9 +671,6 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 break;
             case R.id.button_edit:
                 editMode(true);
-                break;
-            case R.id.button_info:
-
                 break;
             case R.id.button_delete:
 
@@ -805,8 +796,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                         UUID.randomUUID().toString()+".png", "drawing");
                 if(imageSaved != null)
                 {
-                    Toast savedToast = Toast.makeText(getApplicationContext(),
-                            "Drawing saved to Gallery!", Toast.LENGTH_SHORT);
+                    Toast savedToast = Toast.makeText(getApplicationContext(),"Drawing saved to Gallery!", Toast.LENGTH_SHORT);
                     savedToast.show();
                 }else
                 {
@@ -844,9 +834,12 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         Log.e("getResizedBitmap","b = " + b.getWidth() + "x" + b.getHeight());
         bmp_images.add(b);
 
+        float[] array1 = null;
+        Log.d("DETECTCLASS", "setFocusView: "+detected_class);
+        if (detected_class == 0){
+            array1 = faceRecognitionProcesser.recognize(b);
+        }
 
-
-        float[] array1 = faceRecognitionProcesser.recognize(b);
         TextView txt = new TextView(this);
         txt.setTextSize(12);
         txt.setTextColor(Color.WHITE);
@@ -858,6 +851,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         layoutTOP.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
         LinearLayout layoutInner = new LinearLayout(PreviewActivity.this);
+        if (first && detected_class != 0){
+            faceCensorState[Integer.parseInt(id)] = 1;
+        }
 
         if(faceCensorState[Integer.parseInt(id)] == 0){
             layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
@@ -872,18 +868,39 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         censor_layout.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         censor_layout.setTag("" + id);
 
-//        if(detected_class == 0){
+    if(first) {
+
+        if (detected_class == 0 && array1 != null) {
+//            makeText(this, "A", LENGTH_SHORT).show();
             Score score = db.recognize(array1);
-            if (!(score == null)){
+            if (!(score == null)) {
                 txt.setTextColor(Color.parseColor("#fbb040"));
                 txt.setText(score.name);
+
                 txt.setTag("name_label" + id);
                 layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
                 faceCensorState[Integer.parseInt(id)] = 0;
-            }else {
+            } else {
                 faceCensorState[Integer.parseInt(id)] = 1;
             }
-//        }
+        }
+    }else{
+        if (detected_class == 0 && array1 != null) {
+//            makeText(this, "B", LENGTH_SHORT).show();
+            Score score = db.recognize(array1);
+            if (!(score == null)) {
+                txt.setTextColor(Color.parseColor("#fbb040"));
+                txt.setText(score.name);
+                txt.setTag("name_label" + id);
+//                layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
+            }
+        }
+        if (faceCensorState[Integer.parseInt(id)] == 1){
+            layoutInner.setBackgroundResource(R.drawable.bg_face_frame);
+        }else{
+            layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
+        }
+    }
 
         blurFaceX(blur_percentage);
         Log.e("faceCensorState","faceCensorState : " + Arrays.toString(faceCensorState));
@@ -956,6 +973,82 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         fram_focus_layout.addView(txt, params1);
     }
 
+    public void setFocusViewOther(double X, double Y, double width, double height, String id, float xPos, float yPos, int type, Double blurRadius, boolean first,int detected_class) throws IOException {
+
+        height2 = xMAX_HEIGHT_PREVIEW;
+        width2 = xMAX_WIDTH_PREVIEW;
+
+        Log.e("getResizedBitmap","height2X = " + width2 + "x" + height2);
+
+        if (db == null){
+            db = new PersonDatabase();
+        }
+
+        //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
+        h = (int) Math.round((float) ((2 * (height - yPos)) * height2));
+        w = (int) Math.round((float) ((2 * (width - xPos)) * width2));
+        x = (int) Math.round((float) (X * width2));
+        y = (int) Math.round((float) (Y * height2));
+
+        Bitmap bb = BitmapEditor.getResizedBitmap(nowPhotoPreview, width2, height2);
+        Log.e("getResizedBitmap","bb = " + width2 + "x" + height2);
+        Bitmap b = BitmapEditor.crop(bb, x, y, w, h);
+        Log.e("getResizedBitmap","b = " + b.getWidth() + "x" + b.getHeight());
+
+        RelativeLayout layoutTOP = new RelativeLayout(PreviewActivity.this);
+        layoutTOP.setLayoutParams(new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        LinearLayout layoutInner = new LinearLayout(PreviewActivity.this);
+        layoutInner.setBackgroundResource(R.drawable.bg_face_frame);
+
+        layoutInner.setTag("focus_frame" + id);
+        layoutInner.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        LinearLayout censor_layout = new LinearLayout(PreviewActivity.this);
+        censor_layout.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        censor_layout.setTag("" + id);
+
+        blurFaceX(blur_percentage);
+        Log.e("faceCensorState","faceCensorState : " + Arrays.toString(faceCensorState));
+
+        //------------------------------------------------------------------------------------------------------
+
+        //focus_frame.setOnClickListener(view -> frameFocusOnClickListener(id));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+
+        params.height = h;
+        params.width = w;
+        params.setMargins(x + h, y, 0, 0);
+
+        //-------------------------------------------------------------------
+        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        params1.height = h;
+        params1.width = w;
+        params1.setMargins(x, y, 0, 0);
+
+        layoutTOP.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(faceCensorState[Integer.parseInt(id)] == 1){
+                    faceCensorState[Integer.parseInt(id)] = 0;
+                    layoutInner.setBackgroundResource(R.drawable.bg_face_frame_focus);
+                    censor_layout.setAlpha(.0f);
+                }else {
+                    faceCensorState[Integer.parseInt(id)] = 1;
+//                    layoutInner.setVisibility(View.VISIBLE);
+                    layoutInner.setBackgroundResource(R.drawable.bg_face_frame);
+                    censor_layout.setAlpha(1f);
+                }
+            }
+        });
+
+
+        layoutTOP.addView(censor_layout);
+        layoutTOP.addView(layoutInner);
+
+        fram_focus_layout.addView(layoutTOP, params1);
+    }
+
     public void frameFocusOnLongClickListener(String id, Bitmap bitmap) throws IOException {
         String[] strName = (String[]) db.getPersonData().get(0);
 
@@ -978,7 +1071,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                makeText(getApplicationContext(), "Save Complete! " + num + " Images", Toast.LENGTH_SHORT).show();
+
                 handleResult(false);
                 blurFaceX(blur_percentage);
             }
@@ -999,7 +1092,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         builder.setPositiveButton("CANCEL", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Toast.makeText(PreviewActivity.this, "OKAY", Toast.LENGTH_SHORT).show();
+
                 dialog.cancel();
             }
         });
@@ -1018,7 +1111,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         // send data from the AlertDialog to the Activity
         EditText editText = customLayout.findViewById(R.id.editText);
-        makeText(getApplicationContext(), String.valueOf(editText.getText()) , Toast.LENGTH_SHORT).show();
+
 
         String ps = editText.getText().toString();
         ps = "TEST";
@@ -1085,7 +1178,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
         if (nowPhotoPreview == null) {
-            makeText(this, "ERROR", LENGTH_SHORT).show();
+//            makeText(this, "ERROR", LENGTH_SHORT).show();
         } else {
             List<Classifier.Recognition> results = detector.recognizeImage(BitmapEditor.getResizedBitmap(nowPhotoPreview, TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE));
             int i = 0;
@@ -1098,6 +1191,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                     if (result.getDetectedClass() == 0 || result.getDetectedClass() == 1 || result.getDetectedClass() == 2) {
                         try {
                             setFocusView(location.left, location.top, location.right, location.bottom, i + "", result.getX(), result.getY(), 1, 1d, initStart,result.getDetectedClass());
+
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -1116,6 +1210,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         if (bitmap != null){
             Display display = getWindowManager().getDefaultDisplay();
             int display_width = display.getWidth();
+            int display_height = display.getHeight();
 
             if (nowPhotoPreview.getWidth() > nowPhotoPreview.getHeight()){                                      //Landscape
                 float f = ((float) display_width / (float)nowPhotoPreview.getWidth());
@@ -1138,11 +1233,18 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 int fW = Math.round( f * (float)nowPhotoPreview.getWidth());
                 int fH = Math.round( f * (float)nowPhotoPreview.getHeight());
 
+
                 global_img_width = fW;
                 global_img_height = fH;
 
+                Log.e("adj", "global_img_width : " + global_img_width);
+                Log.e("adj", "global_img_height : " + global_img_height);
+
                 fram_focus_layout.getLayoutParams().height = fH;
                 fram_focus_layout.getLayoutParams().width = fW;
+
+                Log.e("adj", "fram_focus_layout H : " + fram_focus_layout);
+                Log.e("adj", "fram_focus_layout W : " + global_img_height);
 
                 imgPreView.setImageBitmap(BitmapEditor.getResizedBitmap(nowPhotoPreview, fW, fH));
 
@@ -1156,6 +1258,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
         }
 
         if (b){
+
             menu_bar.setVisibility(View.GONE);
             HeadLayout2.setVisibility(View.GONE);
             Touch_ImagePreview.setVisibility(View.GONE);
@@ -1212,6 +1315,9 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             slideView2(bottom_layout, 0, old_height_bottom_layout, old_width_bottom_layout, old_width_bottom_layout);
             slideView2(HeadLayout, 0, old_height_header_layout, old_width_bottom_layout, old_width_header_layout);
 
+            Log.e("adj", "FrameImagePreview.getHeight() : " + FrameImagePreview.getHeight());
+            Log.e("adj", "FrameImagePreview.getWidth() : " + FrameImagePreview.getWidth());
+
             handleResult(false);
             blurFaceX(blur_percentage);
 
@@ -1223,6 +1329,8 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
 
         }else {
             //Exit Edit mode
+            Log.e("adj", "global_img_width : " + global_img_width);
+            Log.e("adj", "global_img_height : " + global_img_height);
 
             showHide_FocusView(false);
 
@@ -1250,6 +1358,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
                 MAX_WIDTH_PREVIEW = fram_focus_layout.getWidth();
             }
 
+            //1080x2408
             nowPhoto_Width = nowPhotoPreview.getWidth();
             nowPhoto_Height = nowPhotoPreview.getHeight();
 
@@ -1399,7 +1508,7 @@ public class PreviewActivity extends AppCompatActivity implements View.OnClickLi
             outputStream.close();
             uri = FileProvider.getUriForFile(this, "com.anni.shareimage.fileprovider", file);
         } catch (Exception e) {
-            Toast.makeText(this, "" + e.getMessage(), Toast.LENGTH_LONG).show();
+
         }
         return uri;
     }
