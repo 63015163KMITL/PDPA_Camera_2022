@@ -44,7 +44,6 @@ public class SettingActivity extends AppCompatActivity implements View.OnClickLi
         switch_mirror_font_camera.setChecked(sh.getBoolean("switch_mirror_font_camera", true));
         switch_preview_after_shutter.setChecked(sh.getBoolean("switch_preview_after_shutter", true));
         switch_volume_kaye_shutter.setChecked(sh.getBoolean("switch_volume_kaye_shutter", true));
-//        Toast.makeText(this, sh.getStringSet("Person_Selected",null).toArray().toString(), Toast.LENGTH_SHORT).show();
 
         switch_grid_line.setOnClickListener(this);
         switch_location_tag.setOnClickListener(this);

@@ -210,29 +210,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
             e.printStackTrace();
         }
 
-//        detectThread = new Thread(new Runnable() {
-//            public void run() {
-//                while (true) {
-//
-//                    try {
-//                        detectThread.join(20);
-//                        Log.e("A","HandleResult"+String.valueOf(mPaused));
-//                        handleResult();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                    synchronized (mPauseLock){
-//                        while (mPaused){
-//                            try {
-//                                mPauseLock.wait();
-//                            } catch (InterruptedException e) {
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        });
-//        detectThread.start();
 
         //Timer
         chronometer = findViewById(R.id.idCMmeter);
@@ -245,9 +222,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
 
         manager = new PickerLayoutManager(this, PickerLayoutManager.HORIZONTAL, false,this);
         manager.setChangeAlpha(true);
-
-        //pickerLayoutManager.setScaleDownBy(0.99f);
-        //pickerLayoutManager.setScaleDownDistance(0.8f);
 
         ArrayList<String> menu_mode = new ArrayList<String>();
         menu_mode.add("VIDEO");
@@ -264,14 +238,9 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
             @Override
             public void selectedView(View view, int position) {
 
-                //TextView txt = findViewById(R.id.picker_item);
-                //txt.setTextColor(Color.parseColor("#FF0000"));
-               // makeText(MainCameraActivity.this, ("Selected value : "+((TextView) view).getText().toString()), LENGTH_SHORT).show();
-                //((TextView) view).setTextColor(Color.parseColor("#FBB040"));
                 adapter.changeColor(position, (TextView) view);
                 if("VIDEO".equals(((TextView) view).getText().toString())){
                     cameraMode = false;
-//                    Toast.makeText(MainCameraActivity.this, "cameraMode : " + cameraMode, LENGTH_SHORT).show();
                     clearFocus();
 
                     startCameraXVideo(cameraProvider);
@@ -295,7 +264,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                 }
 
                 if("PHOTO".equals(((TextView) view).getText().toString())){
-//                    Toast.makeText(MainCameraActivity.this, "cameraMode : " + cameraMode, LENGTH_SHORT).show();
                     cameraMode = true;
                     clearFocus();
                     startCameraX(cameraProvider);
@@ -305,7 +273,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                     head_layout.setVisibility(View.VISIBLE);
 
                     bCapture.setImageResource(R.drawable.ic_camera);
-                    //makeText(MainCameraActivity.this, "VIDEO MODE", LENGTH_SHORT).show();
 
                     //เริ่มการทำงานของ Camera X
                     cameraProviderFuture = ProcessCameraProvider.getInstance(MainCameraActivity.this);
@@ -356,10 +323,8 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
     @Override
     public void run() {
         if (isWorking){
-//            Log.d("TAG", "run: ");
             setBox();
         }
-//        Log.e("A","Set box");
 
         frameFocusLayout.postDelayed(this,20);
 
@@ -652,9 +617,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
             tempBitmap = BitmapEditor.flip(tempBitmap);
         }
 
-
-//        long endTime = System.currentTimeMillis();
-//        txtDebug.setText("Total Time = " + (endTime - startTime) + " ms" + "\nModule = " + processTime + "ms" + "\nLoop = " + ((endTime - startTime) - processTime) + "ms");
     }
 
     @SuppressLint("RestrictedApi")
@@ -847,15 +809,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
         LayoutInflater inflater = LayoutInflater.from(MainCameraActivity.this);
 
         @SuppressLint("InflateParams") View focus_frame = inflater.inflate(R.layout.focus_frame, null);
-
-
-/*
-        if ((h > 70 || w > 70) && ((h < 130 || w < 130))){
-            focus_frame = inflater.inflate(R.layout.focus_frame_m, null);
-        }else if ((h > 0 || w > 0) && ((h < 70 || w < 70))){
-            focus_frame = inflater.inflate(R.layout.focus_frame_s, null);
-        }
- */
         focus_frame = inflater.inflate(R.layout.focus_frame, null);
 
 
@@ -867,11 +820,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
         params1.height = h;
         params1.width = w;
         params1.setMargins(x, y, 0, 0);
-
-        //     TextView txt = new TextView(this);
-        //       txt.setTextSize(6);
-        //     txt.setText(h + "x" + w);
-
 
         frameFocusLayout.addView(focus_frame, params1);
         //     frameFocusLayout.addView(txt, params1);
@@ -895,10 +843,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
                 if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                     setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY());
                     Log.e("AAA","setFocusView OK");
-                    //}else if (result.getDetectedClass() == 1){
-                    //    setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 1);
-                    //}else{
-                    //setFocusView(location.left, location.top, location.right, location.bottom, 777, result.getX(), result.getY(), 2);
 
                 }
             }
@@ -943,7 +887,6 @@ public class MainCameraActivity extends AppCompatActivity implements ImageAnalys
             ay = sensorEvent.values[1];
             az = sensorEvent.values[2];
 
-            //Log.e("SN","X = " + ax + "  Y + " + ay + "  Z = " + az);
         }
     }
 

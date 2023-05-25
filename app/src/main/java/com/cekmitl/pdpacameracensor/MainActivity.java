@@ -23,7 +23,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.navigation.NavController;
 
 import com.cekmitl.pdpacameracensor.Process.PersonDatabase;
 import com.cekmitl.pdpacameracensor.ui.facerecognition.FaceRecognitionFragment;
@@ -50,12 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView icon_setting;
     private TextView title_home, title_gallery, title_face_recog, title_setting;
     private boolean firstTime = false;
-    private NavController navController;
-
     public GalleryFragment galleryFragment;
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,9 +64,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         View decorView = getWindow().getDecorView(); //set status background black
         decorView.setSystemUiVisibility(decorView.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 
-//        com.cekmitl.pdpacameracensor.databinding.ActivityMain2Binding binding = ActivityMain2Binding.inflate(getLayoutInflater());
-//        setContentView(binding.getRoot());
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -85,15 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         }).start();
-//
-//        BottomNavigationView navView = findViewById(R.id.nav_view);
-//        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_facerecognition).build();
-//
-//        navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
-//        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-//        NavigationUI.setupWithNavController(binding.navView, navController);
-//
-//        Toast.makeText(this,"Call",Toast.LENGTH_SHORT).show();
+
         finish = false;
         finish2 = false;
         finish3 = false;
@@ -103,7 +86,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         while (!finish && !finish2 && !finish3 && !finish4){
 
         }
-
 
         //Fragment frame
         FragmentManager fm4 = getSupportFragmentManager();
@@ -144,7 +126,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-//        Toast.makeText(mainActivity, this.number_saved, Toast.LENGTH_SHORT).show();
         if (firstTime){
             Toast.makeText(mainActivity, "re", Toast.LENGTH_SHORT).show();
         }
@@ -160,8 +141,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 MainActivity.this.startActivity(i);
                 break;
             case R.id.home_button :
-                //replaceFragment(new HomeFragment());
-//                navController.navigate(R.id.navigation_home);
 
                 FragmentManager fm4 = getSupportFragmentManager();
                 FragmentTransaction ft4 = fm4.beginTransaction();
@@ -173,11 +152,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 changColorNavebar(R.id.home_button);
                 break;
             case R.id.setting_button :
-
-//                Intent myIntent = new Intent(MainActivity.this, PreviewActivity.class);
-//                MainActivity.this.startActivity(myIntent);
-                //replaceFragment(new NotificationsFragment());
-//                navController.navigate(R.id.navigation_setting);
                 changColorNavebar(R.id.setting_button);
 
                 FragmentManager fm5 = getSupportFragmentManager();
@@ -187,7 +161,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ft5.commit();
                 break;
             case R.id.gallery_button :
-//                navController.navigate(R.id.navigation_facerecognition);
                 FragmentManager fm2 = getSupportFragmentManager();
                 FragmentTransaction ft2 = fm2.beginTransaction();
                 GalleryFragment gFrag = new GalleryFragment(this);
@@ -204,7 +177,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ft3.replace(R.id.nav_host_fragment_activity_main, new FaceRecognitionFragment());
                 ft3.addToBackStack(null);
                 ft3.commit();
-//                navController.navigate(R.id.navigation_gallery);
                 changColorNavebar(R.id.face_recog_button);
                 break;
         }
@@ -312,8 +284,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     typeMedia[i] = imagecursor1.getInt(type);
                 }
 
-//                imagecursor1.close();
-//                imagecursor1 = null;
                 finish = true;
 
             }
@@ -345,9 +315,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     typeMedia[i] = imagecursor2.getInt(type);
                 }
 
-//                imagecursor2.close();
-
-//                imagecursor2 = null;
                 finish2 = true;
 
             }
@@ -379,8 +346,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     typeMedia[i] = imagecursor3.getInt(type);
                 }
 
-//                imagecursor3.close();
-//                imagecursor3 = null;
                 finish3 = true;
 
             }
@@ -412,8 +377,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     typeMedia[i] = imagecursor4.getInt(type);
                 }
 
-//                imagecursor4.close();
-//                imagecursor4 = null;
                 finish4 = true;
 
             }
@@ -439,7 +402,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         public void replaceFragment (Fragment fragment){
             FragmentTransaction transaction_setting = getSupportFragmentManager().beginTransaction();
-            //transaction_setting.setCustomAnimations(R.anim.slide_in_left, R.anim.slide_in_left);
             transaction_setting.replace(R.id.nav_host_fragment_activity_main, fragment);
             transaction_setting.commit();
         }

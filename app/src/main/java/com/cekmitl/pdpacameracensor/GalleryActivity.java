@@ -64,17 +64,7 @@ public class GalleryActivity extends AppCompatActivity {
     }
 
     private void requestPermissions() {
-      //  Toast.makeText(this, "checkPermission() = " + checkPermission(), Toast.LENGTH_SHORT).show();
-       // if (checkPermission()) {
-       //     Toast.makeText(this, "checkPermission() = " + checkPermission(), Toast.LENGTH_SHORT).show();
-            // if the permissions are already granted we are calling
-            // a method to get all images from our external storage./    Toast.makeText(this, "Permissions granted..", Toast.LENGTH_SHORT).show();
             requestPermission();
-      //  } else {
-            // if the permissions are not granted we are
-            // calling a method to request permissions.
-       //     requestPermission();
-        //}
     }
 
     private void requestPermission() {
@@ -117,7 +107,6 @@ public class GalleryActivity extends AppCompatActivity {
 
             // this method will stores all the images
             // from the gallery in Cursor
-//            Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
 
             Cursor cursor_photo = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);
             Cursor cursor_video = getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, columns, null, null, orderBy);

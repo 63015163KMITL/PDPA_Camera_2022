@@ -73,11 +73,9 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
 
         try {
             Log.e("TEST", "detector OK");
-            //makeText(this, "detector OK", LENGTH_SHORT).show();
             detector = YoloV5Classifier.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, TF_OD_API_INPUT_SIZE);
         } catch (IOException e) {
             Log.e("TEST", "detector ERROR");
-            //makeText(this, "detector ERROR", LENGTH_SHORT).show();
             e.printStackTrace();
         }
 
@@ -128,12 +126,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
             public void run() {
                 while (isCamOn) {
                     try {
-
-//                        Log.e("TIMER_CAM","Number of picutre" + face_crop_bitmap.size());
-
                         detectThread.join(100);
-
-
                         Bitmap imageInput = null;
                         if (bb != null){
                             imageInput = BitmapEditor.rotateBitmap(bb,-90);
@@ -150,7 +143,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                                 progressBar_ring.setProgress(round);
                                 progressBar_ring.setMax(NUM_IMAGE);
 
-                                Button btn_x = findViewById(R.id.x_button);
 
                             }else{
                                 if (counting < count_to_capture){
@@ -186,7 +178,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
         detectThread.start();
     }
 
-
     public void saveTemp(ArrayList<Bitmap> bitmap){
         NUM_SAVED = 0;
         File DOC_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
@@ -207,7 +198,6 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                 e.printStackTrace();
             }
         }
-
     }
 
     // เริ่มต้นการทำงานของ Camera X
@@ -287,9 +277,7 @@ public class FaceRecognitionCamera extends AppCompatActivity implements ImageAna
                     Log.d("FOUNDFACE", "isFoundFace: True");
                     return true;
                 }
-
             }
-
         }
         Log.d("FOUNDFACE", "isFoundFace: False");
         return false;

@@ -191,15 +191,9 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
                         psImageView.setImageBitmap(PersonDatabase.getDisplay(psName));
 
-                        //EditText edt_name = customLayout.findViewWithTag(v.getTag());
                         EditText edt_name = customLayout.findViewById(R.id.edittext_name_profile);
-                        //edt_name.setText(v.getTag().toString());
                         edt_name.setText(psName);
                         edt_name.setSelection(edt_name.getText().length());
-
-//                        textview_input_image
-//                        textview_correct_prediction
-//                        textview_accuracy
 
                         TextView textview_input_image = customLayout.findViewById(R.id.textview_input_image);
                         textview_input_image.setText("Input image : " + faceSelect.size());
@@ -224,15 +218,6 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                                 finish();
                             }
                         });
-//                        AlertDialog.Builder builder =
-//                                new AlertDialog.Builder(AddNewFaceActivity.this);
-//                        builder.setMessage("ความเม้นยำ : " + Math.round((n_detect_face_true / 20) * 100)+ "%");
-//                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//                            public void onClick(DialogInterface dialog, int id) {
-//                                finish();
-//                            }
-//                        });
-//                        builder.show();
                     }
 
 
@@ -257,14 +242,6 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
         // set the custom layout
         final View customLayout = getLayoutInflater().inflate(R.layout.dialog_save_anme, null);
         builder.setView(customLayout);
-
-        // add a list
-//        builder.setItems(strName, new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                makeText(AddNewFaceActivity.this, "which : " + which, Toast.LENGTH_SHORT).show();
-//            }
-//        });
 
         // add a button
         builder.setPositiveButton("OK", (dialog, which) -> {
@@ -373,12 +350,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                         }
                     }
 
-//                    makeText(this, "Check : " + n_detect_face_true, Toast.LENGTH_SHORT).show();
-
                     db.save_image(image_toSave,ps);
-//                    makeText(getApplicationContext(), "Delete" + num + " Images", Toast.LENGTH_SHORT).show();
-                    //getFragmentManager().beginTransaction().replace(R.id.navigation_home,FaceRecognitionFragment.newInstance()).commit();
-
                     finish();
             }
             new Thread(new Runnable() {
@@ -445,7 +417,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                     for (final Classifier.Recognition result : results) {
 
                             final RectF location = result.getLocation();
-                            //                           X - Y - Width - Height
+                            //X - Y - Width - Height
                             if (result.getConfidence() >= MINIMUM_CONFIDENCE_TF_OD_API && result.getDetectedClass() == 0) {
                                 Log.d("LOCATION", String.valueOf(location.left)+" " +String.valueOf(location.top)+" " +String.valueOf(location.right)+" " +String.valueOf(location.bottom));
 
@@ -454,11 +426,7 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
                                         ImageView img = new ImageView(getApplication());
                                         img.setImageBitmap(m);
                                         ll.addView(img);
-                                        //faceSelect.add(j, m);
                                         insertFaceSelect.add(m);
-                                        if (check){
-//                                            insertFaceSelect
-                                        }
                                         Log.e("GRIDVIEW", "faceSelect[" + j + "] = " + m.toString());
                                         ++j;
                                 }
@@ -468,7 +436,6 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
 
             }else if(data.getData() != null){
                 String imgurl = data.getData().getPath();
-                //list.add(Uri.parse(imgurl));
             }
 
             adapterViewAndroid = new GridViewFaceSelectorAdapter(AddNewFaceActivity.this, insertFaceSelect, true);
@@ -516,11 +483,6 @@ public class AddNewFaceActivity extends AppCompatActivity implements View.OnClic
     public static Bitmap cropBitmap(double X, double Y, double width, double height, float xPos, float yPos, Bitmap bm, Bitmap realBitmap, int persen){
         int width2 = realBitmap.getWidth();
         int height2 = realBitmap.getHeight();
-
-//        int width2 = 1080;
-//        int height2 = 1080;
-        persen = 0;
-        //persen = Math.round(persen / 2);
 
         //1080 คือ ขนาดความกว้างสูงสุดของหน้าจอ
         int h = (int) Math.round((float) ((2 * (height - yPos)) * height2));

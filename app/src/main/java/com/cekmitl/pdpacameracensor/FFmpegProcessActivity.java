@@ -264,7 +264,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         }else if (Intent.ACTION_SEND.equals(action) && type != null) {
             if (type.startsWith("video/")) {
                 // Handle single image being sent
-//                makeText(this, "asda", LENGTH_SHORT).show();
                 String media_path = PreviewActivity.getRealPathFromURI(this, PreviewActivity.handleSendImage(intent));
                 uri = Uri.parse(media_path);
                 inputVideo = media_path;
@@ -285,11 +284,7 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
 
         }
 
-
-//        Log.d("VIDEOTYPE", "onCreate: "+inputVideo);
-//        makeText(this, media_path, LENGTH_SHORT).show();
         uri = Uri.parse(path_name);
-
         tempeFramePool = video_name + "/";
         tempeVideo = video_name +"_temp.mp4";
         audio = video_name + "/audio.mp3";
@@ -307,7 +302,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             finish();
         }
 
-
         videoView = findViewById(R.id.videoView);
         videoView.setVideoURI(uri);
         videoView.setOnCompletionListener(myVideoViewCompletionListener);
@@ -315,26 +309,12 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         videoView.setOnErrorListener(myVideoViewErrorListener);
         videoView.requestFocus();
 
-        //Size of frame preview
-//        video_width = videoView.getWidth();
-//        video_height = videoView.getHeight();
 
         video_width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
         video_height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
 
         Log.e("video_info", "video_width : " + video_width);
         Log.e("video_info", "video_height : " + video_height);
-//
-//        if(video_width > video_height){
-//            Log.e("video_info","HOR");
-//            float temp = video_height / video_width;
-//            frameSetFocusView_height = Math.round(video_height * temp);
-//            frameSetFocusView_width = Math.round(video_width * temp);
-//            Log.e("video_info","frameSetFocusView_height : " + frameSetFocusView_height);
-//            Log.e("video_info","frameSetFocusView_width : " + frameSetFocusView_width);
-//        }else if(video_height > video_width){
-//            Log.e("video_info","VER");
-//        }
 
         //SeekBar
         sk = findViewById(R.id.seekBar);
@@ -703,7 +683,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
     MediaPlayer.OnCompletionListener myVideoViewCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(MediaPlayer arg0) {
-//            Toast.makeText(FFmpegProcessActivity.this, "End of Video", Toast.LENGTH_LONG).show();
         }
     };
 
@@ -885,7 +864,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 spVdieoResol.setAdapter(spVideoResol);
 
                 String VideoTime = "00:05:00";
-                //String path = "Storage/Movies/";
 
                 //Dialog Content
                 TextView textview_vide_detail = layoutView_Render.findViewById(R.id.textview_vide_detail);
@@ -991,7 +969,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     @Override
                     public void onClick(View view) {
                         strShape = "REG";
-//                        makeText(FFmpegProcessActivity.this, "REG", LENGTH_SHORT).show();
                     }
                 });
 
@@ -1000,7 +977,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     @Override
                     public void onClick(View view) {
                         strShape = "CIR";
-//                        makeText(FFmpegProcessActivity.this, "CIR", LENGTH_SHORT).show();
                     }
                 });
 
@@ -1009,8 +985,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                 radio_color.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-//                        shapeColor = Color.parseColor("#000");
-//                        makeText(FFmpegProcessActivity.this, "COLOR", LENGTH_SHORT).show();
                     }
                 });
 
@@ -1066,7 +1040,6 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                         text_blur_radius.setText(i + "");
-                       // makeText(FFmpegProcessActivity.this, "sbBlurRadius : " + i, LENGTH_SHORT).show();
 
                     }
                     @Override
@@ -1103,52 +1076,14 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
             case R.id.button_option_sticker:
                     selectedSticker[0] = BitmapFactory.decodeResource(this.getResources(),
                             R.drawable.stricker1);
-
-                disableButton(button_option_sticker);
-//                dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
-//                View layoutView_dialog_option_sticker = getLayoutInflater().inflate(R.layout.dialog_option_sticker, null);
-//                dialogBuilder.setView(layoutView_dialog_option_sticker);
-//                alertDialog = dialogBuilder.create();
-//                alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-//                alertDialog.setCanceledOnTouchOutside(true);
-//                alertDialog.getWindow().setGravity(Gravity.BOTTOM);
-//
-//                GridViewStickerListSelectorAdapter dapterViewAndroid = new GridViewStickerListSelectorAdapter(FFmpegProcessActivity.this, selectedSticker,idSticker,null);
-//                GridView androidGridView = layoutView_dialog_option_sticker.findViewById(R.id.GridView_stricker);
-//                androidGridView.setAdapter(dapterViewAndroid);
-//                alertDialog.show();
-//                TextView text_sticker_size = layoutView_dialog_option_sticker.findViewById(R.id.text_sticker_size);
-//
-//                SeekBar seekbar_sticker_size = layoutView_dialog_option_sticker.findViewById(R.id.seekbar_sticker_size);
-//                seekbar_sticker_size.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-//                    @Override
-//                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-//                        text_sticker_size.setText(i + "");
-//
-//                    }
-//                    @Override
-//                    public void onStartTrackingTouch(SeekBar seekBar) {}
-//                    @Override
-//                    public void onStopTrackingTouch(SeekBar seekBar) {}
-//                });
-//
-//                TextView button_sticker_ok = layoutView_dialog_option_sticker.findViewById(R.id.button_sticker_ok);
-//                button_sticker_ok.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View view) {
-//                        renderOptionSelect("STICKER", seekbar_sticker_size.getProgress());
-//                        disableButton(button_option_sticker);
-//                        alertDialog.dismiss();
-//                    }
-//                });
-                break;
+                    disableButton(button_option_sticker);
+                    break;
             case R.id.button_option_face:
 
                 dialogBuilder = new AlertDialog.Builder(FFmpegProcessActivity.this);
                 View layoutView_dialog_option_face = getLayoutInflater().inflate(R.layout.dialog_option_face, null);
                 dialogBuilder.setView(layoutView_dialog_option_face);
                 alertDialog = dialogBuilder.create();
-//                alertDialog.getWindow().getAttributes().windowAnimations = R.style.DialogAnimation;
                 alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 alertDialog.setCanceledOnTouchOutside(true);
                 alertDialog.getWindow().setGravity(Gravity.BOTTOM);
@@ -1241,15 +1176,12 @@ public class FFmpegProcessActivity extends AppCompatActivity implements OnRangeS
         CENSOR_SIZE = size;
 
         if("SHAPE".equals(option)){
-//            makeText(this, "Censor Option : SHAPE", LENGTH_SHORT).show();
             CENSOR_TPYE = 2;
 
         }else if("STICKER".equals(option)){
-//            makeText(this, "Censor Option : STICKER", LENGTH_SHORT).show();
             CENSOR_TPYE = 1;
 
         }else {
-//            makeText(this, "Censor Option : BLUR", LENGTH_SHORT).show();
             CENSOR_TPYE = 0;
         }
     }

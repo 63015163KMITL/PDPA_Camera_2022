@@ -77,7 +77,6 @@ public class GridViewAdapter extends BaseAdapter {
         if (convertView == null) {
 
             gridViewAndroid = new View(mContext);
-//            Log.d("SETPERSON", "getView: "+i);
             if(fullView == 1){
                 gridViewAndroid = inflater.inflate(R.layout.face_grid_view_menu_full, null);
             }else {
@@ -105,8 +104,6 @@ public class GridViewAdapter extends BaseAdapter {
                 textViewAndroid.setText(perName[i]);
                 gridViewAndroid.setTag(perName[i]);
                 switch1.setChecked(db.persons[i].isOn);
-                //db.persons[i].isOn;
-//                boolean a = db.changState("Mik",false);
 
                 switch1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -125,8 +122,6 @@ public class GridViewAdapter extends BaseAdapter {
                 textViewAndroid.setVisibility(View.GONE);
                 switch1.setVisibility(View.GONE);
             }
-
-
 
         } else {
             gridViewAndroid = (View) convertView;
@@ -212,7 +207,6 @@ public class GridViewAdapter extends BaseAdapter {
                     dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                     dialog.show();
 
-                    //
 
                     Button button_save = customLayout.findViewById(R.id.button_save);
                     button_save.setOnClickListener(new View.OnClickListener() {
