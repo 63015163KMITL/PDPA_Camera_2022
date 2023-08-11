@@ -1,5 +1,5 @@
 "# PDPA_Camera_2022" 
-https://www.youtube.com/watch?v=qenB7elZav0&t=270s
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=qenB7elZav0&t=270s)
 ![image](https://user-images.githubusercontent.com/93083467/207726916-9719253d-56a0-40fd-b7d3-763a8c9260c3.png)
 ![image](https://user-images.githubusercontent.com/93083467/207726970-51c2a8ef-5607-4f62-a42b-c9c5692cb44c.png)
 ![image](https://user-images.githubusercontent.com/93083467/207726993-5fc46150-3a33-44ea-8cbf-bf5e655f00ab.png)
